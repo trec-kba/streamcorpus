@@ -24,8 +24,9 @@ clean_StreamCorpus:
 	rm -rf gen-py
 	rm -f src/StreamCorpus/ttypes.py
 	rm -f src/StreamCorpus/constants.py
+	rm -rf build dist
 
-StreamCorpus: clean_StreamCorpus
+build: clean_StreamCorpus
 	## The 'right' thing to do here is apparently to use the
 	## 'namespace' functionality in python setup tools.  However,
 	## this is not yet adopted into core python and has some
