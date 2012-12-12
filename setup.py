@@ -13,11 +13,11 @@ use_setuptools()
 
 from setuptools import setup, find_packages
 
-PROJECT = 'StreamCorpus'
+PROJECT = 'streamcorpus'
 VERSION = '0.1'
 URL = 'http://github.com/trec-kba/kba-corpus'
-AUTHOR = 'John R. Frank'
-AUTHOR_EMAIL = 'jrf@diffeo.com'
+AUTHOR = 'Diffeo, Inc.'
+AUTHOR_EMAIL = 'support@diffeo.com'
 DESC = 'Tools for organizing a collections of text for entity-centric stream processing.'
 
 def read_file(file_name):
