@@ -8,8 +8,8 @@ import fnmatch
 from distutils.core import Command
 
 ## explain this...
-from distribute_setup import use_setuptools
-use_setuptools()
+#from distribute_setup import use_setuptools
+#use_setuptools()
 
 from setuptools import setup, find_packages
 
@@ -53,7 +53,8 @@ setup(
     name=PROJECT,
     version=VERSION,
     description=DESC,
-    long_description=read_file('README.md'),
+    #long_description=read_file('README.md'),
+    long_description="",
     author=AUTHOR,
     author_email=AUTHOR_EMAIL,
     url=URL,
