@@ -43,3 +43,6 @@ build: clean_streamcorpus
 	cp gen-py/streamcorpus/ttypes.py src/streamcorpus/.
 	rm -rf gen-py
 
+build_rpm: build
+	python setup.py build
+	python setup.py bdist_rpm
