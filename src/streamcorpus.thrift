@@ -228,8 +228,9 @@ struct StreamItem {
   // other content items besides body, e.g. title, anchor
   10: optional map<string, ContentItem> other_content,  
 
-  // A single anchor text of a URL pointing to this doc.  Note that
-  // this does not have metadata like the URL of the page that
-  // contained this anchor.  Such general link graph data may
-  // eventually motivate an extension to this thrift definition.
+  // When present, 'anchor', is a single anchor text of a URL pointing
+  // to this doc.  Note that this does not have metadata like the URL
+  // of the page that contained this anchor.  Such general link graph
+  // data may eventually motivate an extension to this thrift
+  // definition.
 }
