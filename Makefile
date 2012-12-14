@@ -49,3 +49,7 @@ install: build
 build_rpm: build
 	python setup.py build
 	python setup.py bdist_rpm
+
+build_egg: build
+	python setup.py bdist_egg
+
