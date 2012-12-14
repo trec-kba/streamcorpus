@@ -47,10 +47,7 @@ build: clean_streamcorpus
 install: build
 	python setup.py install
 
-build_rpm: build
-	python setup.py build
-	python setup.py bdist_rpm
-
-build_egg: build
+build_packages: build
 	python setup.py bdist_egg
+	python setup.py bdist_rpm
 
