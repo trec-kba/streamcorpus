@@ -26,6 +26,7 @@ clean_streamcorpus:
 	rm -f src/streamcorpus/constants.py
 	rm -rf build dist
 
+.PHONY : build
 build: clean_streamcorpus
 	## The 'right' thing to do here is apparently to use the
 	## 'namespace' functionality in python setup tools.  However,
