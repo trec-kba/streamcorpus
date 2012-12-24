@@ -1,33 +1,12 @@
 
-
-all: clean
-	tar cf kba_corpus.tar  --exclude ".git"  kba_corpus.py argparse.py kba_thrift thrift
-	# trec-kba-rsa.secret-key is NOT part of this git repo, and
-	# anyone who has it has signed agreements with NIST promising
-	# to protect it from dissemination
-	tar rf kba_corpus.tar  ../trec-kba-rsa.secret-key
-	gzip kba_corpus.tar
-
 clean:
-	rm -f kba_corpus.tar.gz
-
-clean_thrift:
-	rm -rf kba_thrift_v1_1
-	rm -rf gen-py
-
-thrift: clean_thrift
-	thrift --gen py kba-v1.1.thrift
-	mv gen-py/kba kba_thrift_v1_1
-	rm -rf gen-py
-
-clean_streamcorpus:
 	rm -rf gen-py
 	rm -f src/streamcorpus/ttypes.py
 	rm -f src/streamcorpus/constants.py
 	rm -rf build dist
 
 .PHONY : build
-build: clean_streamcorpus
+build: clean
 	## The 'right' thing to do here is apparently to use the
 	## 'namespace' functionality in python setup tools.  However,
 	## this is not yet adopted into core python and has some
