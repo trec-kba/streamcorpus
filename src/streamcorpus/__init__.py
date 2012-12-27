@@ -10,7 +10,9 @@ from datetime import datetime
 from cStringIO import StringIO
 
 ## import the KBA-specific thrift types
-from .ttypes import StreamItem, ContentItem, Label, StreamTime, Offset, Rating, Annotator
+from .ttypes import StreamItem, ContentItem, Label, StreamTime, \
+    Offset, Rating, Annotator, Versions, Token, Sentence, EntityType, \
+    Tagging
 from ._chunk import Chunk
 
 def make_stream_time(zulu_timestamp=None):
@@ -41,6 +43,7 @@ def make_stream_item(zulu_timestamp, abs_url):
     '''
     st = make_stream_time(zulu_timestamp)
     si = StreamItem()
+    si.version = Versions.v0_1_0
     si.stream_time = st
     si.abs_url = abs_url
     si.doc_id = hashlib.md5(abs_url).hexdigest()
@@ -49,45 +52,6 @@ def make_stream_item(zulu_timestamp, abs_url):
 
 class TokenizationException(Exception):
     pass
-
-class Token(object):
-    '''
-    base class for tokens to be emitted from the tokens and sentences
-    iterators.
-    '''        
-    __slots__ = [
-        'token_number',       ## zero-based index into the stream of
-                              ## tokens from a document, does not
-                              ## count sentence boundaries as tokens.
-
-        'sentence_number',    ## zero-based index into the stream of
-                              ## sentences from a document.  Each
-                              ## sentence contains one or more tokens.
-
-        'sentence_position',  ## zero-basd index into the sentence
-
-        'token',              ## the actual token string
-
-        'lemma',              ## lemmatization of the token
-
-        'pos',                ## part of speech tagging
-
-        'entity_type',        ## from named entity classifier
-
-        'start_byte',         ## in original input text
-
-        'end_byte',           ## in original input text
-
-        'parent_id',          ## parent sentence_position in
-                              ## dependency parse of sentence
-
-        'dependency_path',    ## label on path to parent
-
-        'equivalence_id',     ## for in-doc coref
-
-        'labels',             ## array of instances of Label attached
-                              ## to this token
-        ]
 
 sent_num_re = re.compile('<SENT id="(\d+)">')
 
