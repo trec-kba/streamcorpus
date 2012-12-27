@@ -99,13 +99,13 @@ struct Annotator {
  */
 enum OffsetType {
   // annotation applies to a range of line numbers
-  LINES = 1,
+  LINES = 0,
 
   // annotation applies to a range of bytes
-  BYTES = 2,
+  BYTES = 1,
 
   // annotation applies to a range of chars, typically unicode chars
-  CHARS = 3,
+  CHARS = 2,
 }
 
 /*
@@ -172,7 +172,21 @@ struct LabelSet {
   1: Annotator annotator,
 
   // a set of several labels
-  2: list<Label> labels,
+  2: list<Label> labels = [],
+}
+
+/**
+ * Different tagging tools have different strings for labeling the
+ * various common entity types.  To avoid ambiguity, we define a
+ * canonical list here, which we will surely have to expand over time
+ * as new taggers recognize new types of entities.
+ */
+enum EntityType {
+  PER = 0,
+  ORG = 1,
+  LOC = 2,  // physical location
+  MALE_PRONOUN = 3, // necessary but crufty
+  FEMALE_PRONOUN = 4, // necessary but crufty
 }
 
 /**
@@ -182,7 +196,7 @@ struct LabelSet {
  */
 struct Token {
   // zero-based index into the stream of tokens from a document
-  1: i16 token_number,
+  1: i16 token_num,
 
   // actual token string
   2: binary token,
@@ -192,7 +206,7 @@ struct Token {
 
   // zero-basd index into the sentence, which is used for dependency
   // parsed data
-  4: optional i16 sentence_position = -1,
+  4: optional i16 sentence_pos = -1,
 
   // lemmatization of the token
   5: optional binary lemma,
@@ -202,7 +216,7 @@ struct Token {
   6: optional string pos,
 
   // entity type from named entity recognizer (classifier)
-  7: optional string entity_type,
+  7: optional EntityType entity_type,
 
   // parent sentence_position in dependency parse.  Default is -1, meaning None.
   8: optional i16 parent_id = -1,
@@ -213,7 +227,7 @@ struct Token {
 
   // Within-doc coref chain ID.  That is, identifier of equivalence
   // class of co-referent tokens.  Default is -1, meaning None.
-  10: optional i16 equivalence_id = -1,
+  10: optional i16 equiv_id = -1,
 
   // array of instances of Label attached to this token, defaults to
   // an empty list
@@ -222,7 +236,7 @@ struct Token {
 
 struct Sentence {
   // tokens in this sentence
-  1: list<Token> tokens,
+  1: list<Token> tokens = [],
 
   // array of instances of Label attached to this sentence, defaults to
   // an empty list
@@ -334,6 +348,14 @@ struct Rating {
 }
 
 /**
+ * Versions of this protocol are enumerated so that when we expand,
+ * everybody can see which version a particular data file used.
+ */
+enum Versions {
+  v0_1_0 = 0,
+}
+
+/**
  * This is the primary interface to the corpus data.  It is called
  * StreamItem rather than CorpusItem and has a required StreamTime
  * attribute, because even for a static corpus, each document was
@@ -350,43 +372,46 @@ struct Rating {
  * updated.
  */
 struct StreamItem {
+  // must provide a version number here
+  1: Versions version,
+
   // md5 hash of the abs_url
-  1: string doc_id,  
+  2: string doc_id,  
 
   // normalized form of the original_url
-  2: optional binary abs_url, 
+  3: optional binary abs_url, 
 
   // scheme://hostname parsed from abs_url
-  3: optional string schost,  
+  4: optional string schost,  
 
   // the original URL string obtain from some source
-  4: optional binary original_url, 
+  5: optional binary original_url, 
 
   // string uniquely identifying this data set, should start with a
   // year string, such as 2012-trec-kba-news or 2012-trec-kba-social
-  5: optional string source,  
+  6: optional string source,  
 
   // primary content
-  6: optional ContentItem body,
+  7: optional ContentItem body,
 
   // see above for explanation of the values that can appear in this
   // dictionary of metadata info from the source.  The string names in
   // this map should be short, descriptive, and free of whitespace.
-  7: optional map<string, SourceMetadata> source_metadata = {}, 
+  8: optional map<string, SourceMetadata> source_metadata = {}, 
 
   // stream_id is actual unique identifier for the corpus.  
   //
   //    Standard format is:
   // stream_id = '%d-%s' % (int(stream_time.epoch_ticks), doc_id)
-  8: string stream_id,
+  9: string stream_id,
 
   // The earliest time that this content was known to exist.  In most
   // cases, it was also saved into this format at the time of that
   // first observation.
-  9: StreamTime stream_time,
+  10: StreamTime stream_time,
 
   // other content items besides body, e.g. title, anchor
-  10: optional map<string, ContentItem> other_content = {},
+  11: optional map<string, ContentItem> other_content = {},
 
   // When present, 'anchor', is a single anchor text of a URL pointing
   // to this doc.  Note that this does not have metadata like the URL
@@ -396,5 +421,5 @@ struct StreamItem {
 
   // Document-level ratings that relate this entire StreamItem to a
   // topic or entity
-  11: optional list<Rating> ratings = [],
+  12: optional list<Rating> ratings = [],
 }
