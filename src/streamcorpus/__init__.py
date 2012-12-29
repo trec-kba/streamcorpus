@@ -45,6 +45,8 @@ def make_stream_item(zulu_timestamp, abs_url):
     si = StreamItem()
     si.version = Versions.v0_1_0
     si.stream_time = st
+    ## Always start with an abs_url and only move it to original_url
+    ## if some fetching process decides that the URL needs repair.
     si.abs_url = abs_url
     si.doc_id = hashlib.md5(abs_url).hexdigest()
     si.stream_id = '%d-%s' % (st.epoch_ticks, si.doc_id)
