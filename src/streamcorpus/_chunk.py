@@ -55,6 +55,7 @@ class Chunk(object):
         Close any chunk file that we might have had open for writing.
         '''
         if self._o_chunk_fh is not None:
+            self._o_transport.flush()
             self._o_chunk_fh.close()
 
     def __str__(self):
