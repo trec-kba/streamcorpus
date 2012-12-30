@@ -1,31 +1,66 @@
+#!/usr/bin/env python
+'''
+Provides a reader/writer for batches of streamcorpus.StreamItem
+instances stored in flat files using Thrift.
+
+This software is released under an MIT/X11 open source license.
+
+Copyright 2012 Diffeo, Inc.
+'''
 
 ## import the thrift library
 from thrift import Thrift
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
 
+import os
 from cStringIO import StringIO
 
 from .ttypes import StreamItem, ContentItem, Label, StreamTime, Offset, Rating, Annotator
 
 class Chunk(object):
     '''
-    A serialized batch of StreamItem instances.
+    reader/writer for batches of streamcorpus.StreamItem instances
+    stored in flat files using Thrift
     '''
-    def __init__(self, data=None, file_obj=None):
+    def __init__(self, path=None, data=None, file_obj=None, mode='rb'):
         '''
         Load a chunk from an existing file handle or buffer of data.
         If no data is passed in, then chunk starts as empty and
         chunk.add(stream_item) can be called to append to it.
+
+        mode is only used if you specify a path to an existing file to
+        open.
         '''
         self._count = 0
         self._o_chunk_fh = None
         self._o_protocol = None
         self._o_transport = None
+
+        ## open an existing file from path, or create it
+        if path is not None:
+            assert data is None and file_obj is None, \
+                'Must specify only path or data or file_obj'
+            if os.path.exists(path):
+                ## if the file is there, then use mode 
+                file_obj = open(path, mode)
+            else:
+                ## otherwise make one for writing
+                assert mode == 'wb', \
+                    '%s does not exist but mode=%r' % (path, mode)
+                file_obj = open(path, 'wb')
+
+        ## if created without any arguments, then prepare to add
+        ## stream_items to an in-memory file object
         if data is None and file_obj is None:
             ## Make output file obj for thrift, wrap in protocol
             self._o_transport = StringIO()
             self._o_protocol = TBinaryProtocol.TBinaryProtocol(self._o_transport)
+
+        elif file_obj is None:
+            ## wrap the data in a file obj for reading
+            file_obj = StringIO(data)
+            file_obj.seek(0)
 
         elif file_obj is not None and 'w' in file_obj.mode:
             ## use the file object for writing out the data as it
@@ -35,11 +70,6 @@ class Chunk(object):
             self._o_protocol = TBinaryProtocol.TBinaryProtocol(self._o_transport)
             ## this causes _i_chunk_fh to be None below
             file_obj = None
-
-        elif file_obj is None:
-            ## wrap it in a file obj
-            file_obj = StringIO(data)
-            file_obj.seek(0)
 
         ## set _i_chunk_fh, possibly to None
         self._i_chunk_fh = file_obj
