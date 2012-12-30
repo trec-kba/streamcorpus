@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 '''
-Tools for processing a Stream Corpus
+Python module of convenience functions around the structures defined
+in streamcorpus.thrift
+
+This software is released under an MIT/X11 open source license.
+
+Copyright 2012 Diffeo, Inc.
 '''
 
 import re
