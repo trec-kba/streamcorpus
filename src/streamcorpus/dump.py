@@ -32,12 +32,18 @@ def _dump(fpath, args):
                             if tok.labels:
                                 print tok.token, tok.labels
 
-        if not args.show_content_items:
+        if not args.show_all:
             si.body = None
             if si.other_content:
                 for oc in si.other_content:
                     si.other_content[oc] = None
-        print si
+
+        if args.show_content_field and si.body:
+            
+            print getattr(si.body, args.show_content_field)
+
+        else:
+            print si
 
     if args.count:
         print num
@@ -48,8 +54,10 @@ if __name__ == '__main__':
     parser.add_argument(
         'input_path', 
         help='Path to a single chunk file, or directory of chunks, or "-" for receiving paths over stdin')
-    parser.add_argument('--show-content-items', action='store_true', 
-                        default=False, dest='show_content_items')
+    parser.add_argument('--show-all', action='store_true', 
+                        default=False, dest='show_all')
+    parser.add_argument('--show-content-field', 
+                        default=None, dest='show_content_field')
     parser.add_argument('--count', action='store_true', 
                         default=False, help='print number of StreamItems')
     parser.add_argument('--tokens-only', action='store_true', 
