@@ -88,6 +88,12 @@ class Chunk(object):
             self._o_transport.flush()
             self._o_chunk_fh.close()
 
+    def __del__(self):
+        '''
+        If garbage collected, try to close.
+        '''
+        self.close()
+
     def __str__(self):
         'get the byte array of thrift data'
         if self._o_transport is None:
