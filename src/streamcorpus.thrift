@@ -285,8 +285,8 @@ struct ContentItem {
   // http://www.w3.org/TR/xml/#syntax
   5: optional string clean_visible, 
 
-  // Logs generated from converting raw to clean_html to clean_visible
-  6: optional string cleaner_log,
+  // Logs generated from processing pipeline, for forensics
+  6: optional list<string> logs = [],
 
   // A set of auto-generated taggings, such as a One-Word-Per-Line
   // (OWLP) tokenization and sentence chunking with part-of-speech,
