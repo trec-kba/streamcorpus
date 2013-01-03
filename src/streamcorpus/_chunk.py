@@ -87,11 +87,13 @@ class Chunk(object):
         if self._o_chunk_fh is not None:
             self._o_transport.flush()
             self._o_chunk_fh.close()
+            ## make this method idempotent
+            self._o_chunk_fh = None
 
     def __del__(self):
         '''
         If garbage collected, try to close.
-        '''
+        '''        
         self.close()
 
     def __str__(self):
