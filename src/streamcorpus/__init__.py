@@ -17,7 +17,7 @@ from cStringIO import StringIO
 ## import the KBA-specific thrift types
 from .ttypes import StreamItem, ContentItem, Label, StreamTime, \
     Offset, Rating, Annotator, Versions, Token, Sentence, EntityType, \
-    Tagging
+    Tagging, OffsetType, LabelSet
 from ._chunk import Chunk
 
 def make_stream_time(zulu_timestamp=None):
