@@ -162,7 +162,7 @@ struct Label {
   // Pointer to data to which this label applies.  If missing, then
   // label is either attached to a single Token or Sentence or
   // ContentItem, and applies to the entire thing.
-  2: optional Offset offset,
+  2: optional map<OffsetType, Offset> offsets = {},
 
   // description of person who asserted this rating.  If missing, then
   // this label should be part of a LabelSet that provides an
@@ -205,7 +205,7 @@ struct Token {
   2: binary token,
 
   // offset into the original data, typically 'clean_visible'
-  3: optional Offset offset,
+  3: optional map<OffsetType, Offset> offsets = {},
 
   // zero-basd index into the sentence, which is used for dependency
   // parsed data
