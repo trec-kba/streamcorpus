@@ -26,7 +26,9 @@ build: clean
 install: build
 	python setup.py install
 
-build_packages: build
+build_eggs: build
 	python setup.py bdist_egg
+
+build_packages: build_eggs
 	python setup.py bdist_rpm
 
