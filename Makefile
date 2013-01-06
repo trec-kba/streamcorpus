@@ -24,6 +24,9 @@ build: clean
 	rm -rf gen-py
 
 install: build
+	## I think this `clean --all` step removes existing versions
+	## from site-packages that would conflict when we install
+	python setup.py clean --all
 	python setup.py install
 
 build_eggs: build
