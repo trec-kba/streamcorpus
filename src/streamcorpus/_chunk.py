@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 '''
-Provides a reader/writer for batches of streamcorpus.StreamItem
-instances stored in flat files using Thrift.
+Provides a reader/writer for batches of Thrift messages stored in flat
+files.
+
+Defaults to streamcorpus.StreamItem and can be used with any
+Thrift-defined objects.
 
 This software is released under an MIT/X11 open source license.
 
@@ -16,22 +19,40 @@ from thrift.protocol import TBinaryProtocol
 import os
 from cStringIO import StringIO
 
-from .ttypes import StreamItem, ContentItem, Label, StreamTime, Offset, Rating, Annotator
+from .ttypes import StreamItem
 
 class Chunk(object):
     '''
-    reader/writer for batches of streamcorpus.StreamItem instances
-    stored in flat files using Thrift
+    reader/writer for batches of Thrift messages stored in flat files.
     '''
-    def __init__(self, path=None, data=None, file_obj=None, mode='rb'):
+    def __init__(self, path=None, data=None, file_obj=None, mode='rb',
+                 message=StreamItem):
         '''
         Load a chunk from an existing file handle or buffer of data.
         If no data is passed in, then chunk starts as empty and
-        chunk.add(stream_item) can be called to append to it.
+        chunk.add(message) can be called to append to it.
 
         mode is only used if you specify a path to an existing file to
         open.
+
+        :param path: path to a file in the local file system
+
+        :param mode: read/write mode for opening the file; if
+        mode='wb', then a file will be created.
+
+        :file_obj: already opened file, mode must agree with mode
+        parameter.
+
+        :param data: bytes of data from which to read messages
+
+        :param message: defaults to StreamItem; you can specify your
+        own Thrift-generated class here.
         '''
+        ## class for constructing messages when reading
+        self.message = message
+
+        ## initialize internal state before figuring out what data we
+        ## are acting on
         self._count = 0
         self._o_chunk_fh = None
         self._o_protocol = None
@@ -51,7 +72,7 @@ class Chunk(object):
                 file_obj = open(path, 'wb')
 
         ## if created without any arguments, then prepare to add
-        ## stream_items to an in-memory file object
+        ## messages to an in-memory file object
         if data is None and file_obj is None:
             ## Make output file obj for thrift, wrap in protocol
             self._o_transport = StringIO()
@@ -74,10 +95,10 @@ class Chunk(object):
         ## set _i_chunk_fh, possibly to None
         self._i_chunk_fh = file_obj
 
-    def add(self, stream_item):
-        'add stream_item object to chunk'
+    def add(self, msg):
+        'add message instance to chunk'
         assert self._o_protocol, 'cannot add to a Chunk instantiated with data'
-        stream_item.write(self._o_protocol)
+        msg.write(self._o_protocol)
         self._count += 1
 
     def close(self):
@@ -110,28 +131,35 @@ class Chunk(object):
 
     def __iter__(self):
         '''
-        Iterator over StreamItems in the chunk
+        Iterator over messages in the chunk
         '''
         assert self._i_chunk_fh, 'cannot iterate over a Chunk open for writing'
+
         ## seek to the start, so can iterate multiple times over the chunk
-        self._i_chunk_fh.seek(0)
+        try:
+            self._i_chunk_fh.seek(0)
+        except IOError:
+            pass
+            ## just assume that it is a pipe like stdin that need not
+            ## be seeked to start
+
         ## wrap the file handle in buffered transport
         i_transport = TTransport.TBufferedTransport(self._i_chunk_fh)
         ## use the Thrift Binary Protocol
         i_protocol = TBinaryProtocol.TBinaryProtocol(i_transport)
 
-        ## read StreamItem instances until input buffer is exhausted
+        ## read message instances until input buffer is exhausted
         while 1:
 
-            ## instantiate a StreamItem instance 
-            doc = StreamItem()
+            ## instantiate a message  instance 
+            msg = self.message()
 
             try:
                 ## read it from the thrift protocol instance
-                doc.read(i_protocol)
+                msg.read(i_protocol)
 
                 ## yield is python primitive for iteration
-                yield doc
+                yield msg
 
             except EOFError:
                 break
