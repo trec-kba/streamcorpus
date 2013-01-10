@@ -48,7 +48,7 @@ def make_stream_item(zulu_timestamp, abs_url):
     '''
     st = make_stream_time(zulu_timestamp)
     si = StreamItem()
-    si.version = Versions.v0_1_0
+    si.version = Versions.v0_2_0
     si.stream_time = st
     ## Always start with an abs_url and only move it to original_url
     ## if some fetching process decides that the URL needs repair.
