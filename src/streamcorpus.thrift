@@ -190,6 +190,11 @@ enum EntityType {
   LOC = 2,  // physical location
   MALE_PRONOUN = 3, // necessary but crufty
   FEMALE_PRONOUN = 4, // necessary but crufty
+  TIME = 5,
+  DATE = 6,
+  MONEY = 7,
+  PERCENT = 8,
+  MISC = 9, // uncategorized named entities, e.g. Civil War for Stanford CoreNLP
 }
 
 /**
