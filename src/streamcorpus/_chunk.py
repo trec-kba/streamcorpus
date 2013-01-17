@@ -83,7 +83,8 @@ class Chunk(object):
             file_obj = StringIO(data)
             file_obj.seek(0)
 
-        elif file_obj is not None and 'w' in file_obj.mode:
+        elif file_obj is not None and hasattr(file_obj, 'mode') \
+                and 'w' in file_obj.mode:
             ## use the file object for writing out the data as it
             ## happens, i.e. in streaming mode.
             self._o_chunk_fh = file_obj            
