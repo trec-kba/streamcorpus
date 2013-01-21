@@ -143,12 +143,12 @@ def _stats(fpaths):
                 target_ids = [rec['target_id'] for rec in json.loads( si.source_metadata['google'] )['MENTION']]
                 c['num_targets_from_google'] += len(target_ids)
                 c['raw'] += int(bool(si.body.raw))
-                c['raw_has_targs'] += sum(map(lambda targ: int(bool(targ in si.body.raw)), target_ids))
+                c['raw_has_targs'] += sum(map(lambda targ: int(bool(targ in repr(si.body.raw))), target_ids))
                 c['raw_has_wp'] += int(bool('wikipedia.org' in si.body.raw))
                 c['media_type'] += int(bool(si.body.media_type))
                 c['clean_html'] += int(bool(si.body.clean_html))
                 if si.body.clean_html:
-                    c['clean_has_targs'] += sum(map(lambda targ: int(bool(targ in si.body.clean_html)), target_ids))
+                    c['clean_has_targs'] += sum(map(lambda targ: int(bool(targ in si.body.clean_html.decode('utf8'))), target_ids))
                     c['clean_has_wp'] += int(bool('wikipedia.org' in si.body.clean_html))
 
                 c['clean_visible'] += int(bool(si.body.clean_visible))
