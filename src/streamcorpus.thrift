@@ -156,7 +156,8 @@ struct Offset {
  */
 struct Label {
   // string identifying the labeling target in the KB, e.g. a
-  // 'urlname' in WP or an 'id' in Freebase.
+  // 'urlname' in WP or an 'id' in Freebase.  
+  // Should be a full URL, if possible.
   1: string target_id,
 
   // Pointer to data to which this label applies.  If missing, then
@@ -215,7 +216,7 @@ struct Token {
 
   // zero-based index into the sentence, which is used for dependency
   // parsed data
-  4: optional i16 sentence_pos = -1,
+  4: optional i32 sentence_pos = -1,
 
   // lemmatization of the token, again must be UTF8
   5: optional string lemma,
@@ -238,10 +239,10 @@ struct Token {
 
   // Within-doc coref chain ID.  That is, identifier of equivalence
   // class of co-referent tokens.  Default is -1, meaning None.
-  9: optional i16 equiv_id = -1,
+  9: optional i32 equiv_id = -1,
 
-  // parent sentence_position in dependency parse.  Default is -1, meaning None.
-  10: optional i16 parent_id = -1,
+  // parent sentence_pos in dependency parse. Default is -1, ie None
+  10: optional i32 parent_id = -1,
 
   // grammatical relation label on path to parent in dependency parse,
   // defined by whatever tagger was used -- should pick a canonical
@@ -354,7 +355,7 @@ struct Rating {
   // description of person who asserted this rating
   1: Annotator annotator,
 
-  // .... should this be a full URL?  'urlname' in WP or an 'id' in Freebase.
+  // 'urlname' in WP or an 'id' in Freebase.
   2: string target_id,
 
   // relevance is a numerical score with meaning that depends on the
