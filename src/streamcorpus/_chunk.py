@@ -17,9 +17,44 @@ from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
 
 import os
+import hashlib
+import subprocess
 from cStringIO import StringIO
 
 from .ttypes import StreamItem
+from .ttypes_v0_1_0 import StreamItem as StreamItem_v0_1_0
+
+class md5_file(object):
+    '''
+    Adapter around a filehandle that wraps .read and .write so that it
+    can construct an md5_hexdigest property
+    '''
+    def __init__(self, fh):
+        self._fh = fh
+        self._md5 = hashlib.md5()
+        if hasattr(fh, 'get_value'):
+            self.get_value = fh.get_value
+        if hasattr(fh, 'seek'):
+            self.seek = fh.seek
+        if hasattr(fh, 'mode'):
+            self.mode = fh.mode
+        if hasattr(fh, 'flush'):
+            self.flush = fh.flush
+        if hasattr(fh, 'close'):
+            self.close = fh.close
+
+    def read(self, *args, **kwargs):
+        data = self._fh.read(*args, **kwargs)
+        self._md5.update(data)
+        return data
+
+    def write(self, data, *args, **kwargs):
+        self._md5.update(data)
+        self._fh.write(data, *args, **kwargs)
+
+    @property
+    def md5_hexdigest(self):
+        return self._md5.hexdigest()
 
 class Chunk(object):
     '''
@@ -57,6 +92,7 @@ class Chunk(object):
         self._o_chunk_fh = None
         self._o_protocol = None
         self._o_transport = None
+        self._md5_hexdigest = None
 
         ## open an existing file from path, or create it
         if path is not None:
@@ -75,7 +111,8 @@ class Chunk(object):
         ## messages to an in-memory file object
         if data is None and file_obj is None:
             ## Make output file obj for thrift, wrap in protocol
-            self._o_transport = StringIO()
+            self._o_chunk_fh = md5_file( StringIO() )
+            self._o_transport = self._o_chunk_fh
             self._o_protocol = TBinaryProtocol.TBinaryProtocol(self._o_transport)
 
         elif file_obj is None:
@@ -87,14 +124,17 @@ class Chunk(object):
                 and 'w' in file_obj.mode:
             ## use the file object for writing out the data as it
             ## happens, i.e. in streaming mode.
-            self._o_chunk_fh = file_obj            
+            self._o_chunk_fh = md5_file( file_obj )
             self._o_transport = TTransport.TBufferedTransport(self._o_chunk_fh)
             self._o_protocol = TBinaryProtocol.TBinaryProtocol(self._o_transport)
             ## this causes _i_chunk_fh to be None below
             file_obj = None
 
         ## set _i_chunk_fh, possibly to None
-        self._i_chunk_fh = file_obj
+        if file_obj:
+            self._i_chunk_fh = md5_file( file_obj )
+        else:
+            self._i_chunk_fh = None
 
     def add(self, msg):
         'add message instance to chunk'
@@ -110,7 +150,20 @@ class Chunk(object):
             self._o_transport.flush()
             self._o_chunk_fh.close()
             ## make this method idempotent
+            self._md5_hexdigest = self._o_chunk_fh.md5_hexdigest
             self._o_chunk_fh = None
+
+    @property
+    def md5_hexdigest(self):
+        if self._md5_hexdigest:
+            return self._md5_hexdigest
+        if self._o_chunk_fh:
+            return self._o_chunk_fh.md5_hexdigest
+        elif self._i_chunk_fh:
+            return self._i_chunk_fh.md5_hexdigest
+        else:
+            ## maybe return raise?
+            return None
 
     def __del__(self):
         '''
@@ -164,3 +217,107 @@ class Chunk(object):
 
             except EOFError:
                 break
+
+def decrypt_and_uncompress(data, gpg_private=None, gpg_dir='gnupg-dir'):
+    '''
+    Given a data buffer of bytes, if gpg_key_path is provided, decrypt
+    data using gnupg, and uncompress using xz.
+
+    :returns (logs, data): where logs is an array of strings, and data
+    is a binary string.
+    '''
+    _errors = []
+    if gpg_private is not None:
+        ### setup gpg for encryption
+        if not os.path.exists(gpg_dir):
+            os.makedirs(gpg_dir)
+        gpg_child = subprocess.Popen(
+            ['gpg', '--no-permission-warning', '--homedir', gpg_dir,
+             '--import', gpg_private],
+            stderr=subprocess.PIPE)
+        s_out, errors = gpg_child.communicate()
+        if errors:
+            _errors.append('gpg logs to stderr, read carefully:\n\n%s' % errors)
+
+        ## decrypt it, and free memory
+        ## encrypt using the fingerprint for our trec-kba-rsa key pair
+        gpg_child = subprocess.Popen(
+            ## setup gpg to decrypt with trec-kba private key
+            ## (i.e. make it the recipient), with zero compression,
+            ## ascii armoring is off by default, and --output - must
+            ## appear before --encrypt -
+            ['gpg',   '--no-permission-warning', '--homedir', gpg_dir,
+             '--trust-model', 'always', '--output', '-', '--decrypt', '-'],
+            stdin =subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE)
+        ## communicate with child via its stdin 
+        data, errors = gpg_child.communicate(data)
+        if errors:
+            _errors.append(errors)
+
+    ## launch xz child
+    xz_child = subprocess.Popen(
+        ['xz', '--decompress'],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE)
+    ## use communicate to pass the data incrementally to the child
+    ## while reading the output, to avoid blocking 
+    data, errors = xz_child.communicate(data)
+
+    assert not errors, errors
+
+    return _errors, data
+
+def compress_and_encrypt(data, gpg_public=None, gpg_dir='gnupg-dir', gpg_recipient='trec-kba'):
+    '''
+    Given a data buffer of bytes compress it using xz, if gpg_public
+    is provided, encrypt data using gnupg.
+    '''
+    _errors = []
+    ## launch xz child
+    xz_child = subprocess.Popen(
+        ['xz', '--compress'],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE)
+    ## use communicate to pass the data incrementally to the child
+    ## while reading the output, to avoid blocking 
+    data, errors = xz_child.communicate(data)
+
+    assert not errors, errors
+
+    if gpg_public is not None:
+        ### setup gpg for encryption.  
+        if not os.path.exists(gpg_dir):
+            os.makedirs(gpg_dir)
+
+        ## Load public key.  Could do this just once, but performance
+        ## hit is minor and code simpler to do it everytime
+        gpg_child = subprocess.Popen(
+            ['gpg', '--no-permission-warning', '--homedir', gpg_dir,
+             '--import', gpg_public],
+            stderr=subprocess.PIPE)
+        s_out, errors = gpg_child.communicate()
+        if errors:
+            _errors.append('gpg logs to stderr, read carefully:\n\n%s' % errors)
+
+        ## encrypt using the fingerprint for our trec-kba-rsa key pair
+        gpg_child = subprocess.Popen(
+            ## setup gpg to decrypt with trec-kba private key
+            ## (i.e. make it the recipient), with zero compression,
+            ## ascii armoring is off by default, and --output - must
+            ## appear before --encrypt -
+            ['gpg',  '--no-permission-warning', '--homedir', gpg_dir,
+             '-r', gpg_recipient, '-z', '0', '--trust-model', 'always',
+             '--output', '-', '--encrypt', '-'],
+            stdin =subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE)
+        ## communicate with child via its stdin 
+        data, errors = gpg_child.communicate(data)
+        if errors:
+            _errors.append(errors)
+
+    return _errors, data
