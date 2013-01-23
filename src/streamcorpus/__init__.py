@@ -18,7 +18,18 @@ from cStringIO import StringIO
 from .ttypes import StreamItem, ContentItem, Label, StreamTime, \
     Offset, Rating, Annotator, Versions, Token, Sentence, EntityType, \
     Tagging, OffsetType, LabelSet
-from ._chunk import Chunk
+
+from .ttypes_v0_1_0 import StreamItem as StreamItem_v0_1_0
+
+from ._chunk import Chunk, decrypt_and_uncompress, compress_and_encrypt
+
+__all__ = ['Chunk', 'decrypt_and_uncompress', 'compress_and_encrypt', 
+           'make_stream_time', 'make_stream_item',
+           'StreamItem', 'ContentItem', 'Label', 'StreamTime', 
+           'Offset', 'Rating', 'Annotator', 'Versions', 'Token', 'Sentence', 'EntityType', 
+           'Tagging', 'OffsetType', 'LabelSet',
+           'StreamItem_v0_1_0',
+           ]
 
 def make_stream_time(zulu_timestamp=None):
     '''

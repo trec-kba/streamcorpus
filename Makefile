@@ -23,6 +23,12 @@ build: clean
 	cp gen-py/streamcorpus/ttypes.py src/streamcorpus/.
 	rm -rf gen-py
 
+	## build the older thrift objects, so we can read them
+	thrift --gen py:new_style,slots src/streamcorpus-v0_1_0.thrift
+	cp gen-py/kba/constants.py src/streamcorpus/constants_v0_1_0.py
+	cp gen-py/kba/ttypes.py    src/streamcorpus/ttypes_v0_1_0.py
+	rm -rf gen-py
+
 install: build
 	## I think this `clean --all` step removes existing versions
 	## from site-packages that would conflict when we install
