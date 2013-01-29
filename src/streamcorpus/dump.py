@@ -24,7 +24,10 @@ def _dump(fpath, args):
         num_stream_items = 0
         num_labeled_stream_items = set()
 
-    for si in Chunk(path=fpath, mode='rb'):
+    for num, si in enumerate(Chunk(path=fpath, mode='rb')):
+        if args.limit and num >= args.limit:
+            break
+
         if args.count:
             num_stream_items += 1
             if not args.labels_only:
@@ -196,6 +199,8 @@ if __name__ == '__main__':
                         default=None, dest='show_content_field')
     parser.add_argument('--count', action='store_true', 
                         default=False, help='print number of StreamItems')
+    parser.add_argument('--limit', type=int,
+                        default=None, help='Limit the number of StreamItems checked')
     parser.add_argument('--labels-only', action='store_true', 
                         default=False, dest='labels_only')
     args = parser.parse_args()
