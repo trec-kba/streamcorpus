@@ -9,7 +9,8 @@ large streams of text.  It offers these benefits:
   to use language bindings for most languages.
 
 * Convenience methods are serializing into flat files, which we call
-  Chunks.  The TREC KBA corpus is stored in streamcorpus.Chunk files.
+  Chunks.  The TREC KBA (http://trec-kba.org) corpus is stored in
+  streamcorpus.Chunk files.
 
 * Unifies NLP data structures so that one pipeline can easily use
   different taggers in a unified way.  For example, tokenization,
