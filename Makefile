@@ -3,6 +3,8 @@ clean:
 	rm -rf gen-py
 	rm -f src/streamcorpus/ttypes.py
 	rm -f src/streamcorpus/constants.py
+	rm -f src/streamcorpus/ttypes_v0_1_0.py
+	rm -f src/streamcorpus/constants_v0_1_0.py
 	rm -rf build dist
 
 .PHONY : build
