@@ -53,8 +53,7 @@ setup(
     name=PROJECT,
     version=VERSION,
     description=DESC,
-    #long_description=read_file('README.md'),
-    long_description="",
+    long_description=read_file('README.rst'),
     author=AUTHOR,
     author_email=AUTHOR_EMAIL,
     url=URL,
@@ -65,7 +64,7 @@ setup(
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Topic :: Utilities',
-        'License :: MIT',  ## MIT/X11 license http://opensource.org/licenses/MIT
+        'License :: OSI Approved :: MIT License',  ## MIT/X11 license http://opensource.org/licenses/MIT
     ],
     install_requires=[
         'thrift',
