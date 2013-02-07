@@ -90,7 +90,11 @@ def _dump_tokens(fpaths, annotator_ids=[]):
     print '\t'.join(token_attrs + ['stream_id', 'labels'])
     for fpath in fpaths:
         for si in Chunk(path=fpath, mode='rb'):
+            if not si.body:
+                print 'no body: %s' % si.stream_id
+                continue
             if not si.body.sentences:
+                print 'no body.sentences: %s' % si.stream_id
                 continue
             tagger_ids = si.body.sentences.keys()
             tagger_ids.sort()
@@ -125,6 +129,39 @@ def _find(fpaths, stream_id):
                     sys.exit('Found %s without si.body.raw' % stream_id)
                 else:
                     sys.exit('Found %s without si.body' % stream_id)
+
+def _find_missing_labels(fpaths, annotator_ids):
+    '''
+    Read in a streamcorpus.Chunk file and if any of its stream_ids
+    match stream_id, then print stream_item.body.raw to stdout
+    '''
+    for fpath in fpaths:
+        for si in Chunk(path=fpath, mode='rb'):
+            if not si.body:
+                print 'no body on %s %r' % (si.stream_id, si.abs_url)
+                continue
+            if not si.body.raw:
+                print 'no body.raw on %s %r' % (si.stream_id, si.abs_url)
+                continue
+
+            found_annotator = False
+            for tagger_id in si.body.sentences:
+                for sent in si.body.sentences[tagger_id]:
+                    for tok in sent.tokens:
+                        for label in tok.labels:
+                            if label.annotator and label.annotator.annotator_id in annotator_ids:
+                                found_annotator = True
+                                break
+                        if found_annotator:
+                            break
+                    if found_annotator:
+                        break
+                if found_annotator:
+                    break
+            ## either we found_annotator or read all tokens
+            if not found_annotator:
+                print 'failed to find annotator_id in %r for %s' % (annotator_ids, si.stream_id)
+                print si.body.raw
 
 def _stats(fpaths):
     '''
@@ -189,6 +226,10 @@ if __name__ == '__main__':
     parser.add_argument('--stats', action='store_true', default=False,
                         help='print out the .body.raw of a specific stream_id')
     parser.add_argument('--find', dest='find', metavar='STREAM_ID', help='print out the .body.raw of a specific stream_id')
+    parser.add_argument(
+        '--find-missing', dest='find_missing', metavar='annotator_id', 
+        action='append', default=[],
+        help='print out the .body.raw of any stream_item that has no tokens with a label in annotator_ids')
     parser.add_argument('--tokens', action='store_true', 
                         default=False, dest='tokens')
     parser.add_argument('--annotator_id', action='append', default=[],
@@ -225,6 +266,9 @@ if __name__ == '__main__':
 
     elif args.tokens:
         _dump_tokens(args.input_path, args.annotator_ids)
+
+    elif args.find_missing:
+        _find_missing_labels(args.input_path, args.annotator_ids)
 
     else:
         for fpath in args.input_path:
