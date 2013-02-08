@@ -19,6 +19,7 @@ from thrift.protocol import TBinaryProtocol
 import os
 import hashlib
 import subprocess
+import exceptions
 from cStringIO import StringIO
 
 from .ttypes import StreamItem
@@ -83,16 +84,27 @@ class Chunk(object):
         :param message: defaults to StreamItem; you can specify your
         own Thrift-generated class here.
         '''
+        allowed_modes = ['wb', 'ab', 'rb']
+        assert mode in allowed_modes, 'mode=%r not in %r' % (mode, allowed_modes)
+        self.mode = mode
+
         ## class for constructing messages when reading
         self.message = message
 
         ## initialize internal state before figuring out what data we
         ## are acting on
         self._count = 0
-        self._o_chunk_fh = None
-        self._o_protocol = None
-        self._o_transport = None
         self._md5_hexdigest = None
+
+        ## might not have any output parts
+        self._o_chunk_fh = None
+        self._o_transport = None
+        self._o_protocol = None
+
+        ## might not have any input parts
+        self._i_chunk_fh = None
+        self._i_transport = None
+        self._i_protocol = None
 
         ## open an existing file from path, or create it
         if path is not None:
@@ -100,41 +112,52 @@ class Chunk(object):
                 'Must specify only path or data or file_obj'
             if os.path.exists(path):
                 ## if the file is there, then use mode 
+                assert mode in ['rb', 'ab'], \
+                    'mode=%r would overwrite existing %s' % (mode, path)
                 file_obj = open(path, mode)
             else:
                 ## otherwise make one for writing
-                assert mode == 'wb', \
+                assert mode in ['wb', 'ab'], \
                     '%s does not exist but mode=%r' % (path, mode)
-                file_obj = open(path, 'wb')
+                file_obj = open(path, mode)
 
         ## if created without any arguments, then prepare to add
         ## messages to an in-memory file object
         if data is None and file_obj is None:
-            ## Make output file obj for thrift, wrap in protocol
-            self._o_chunk_fh = md5_file( StringIO() )
-            self._o_transport = self._o_chunk_fh
-            self._o_protocol = TBinaryProtocol.TBinaryProtocol(self._o_transport)
+            ## make the default behavior when instantiated as Chunk()
+            ## to write to an in-memory buffer
+            file_obj = StringIO()
+            self.mode = 'wb'
+            mode = self.mode
 
-        elif file_obj is None:
+        elif file_obj is None: ## --> must have 'data'
             ## wrap the data in a file obj for reading
-            file_obj = StringIO(data)
-            file_obj.seek(0)
+            if mode == 'rb':
+                file_obj = StringIO(data)
+                file_obj.seek(0)
+            elif mode == 'ab':
+                file_obj = StringIO()
+                file_obj.write(data)
+                ## and let it just keep writing to it
+            else:
+                raise Exception('mode=%r but specified "data"' % mode)
 
-        elif file_obj is not None and hasattr(file_obj, 'mode') \
-                and 'w' in file_obj.mode:
+        elif file_obj is not None and hasattr(file_obj, 'mode'):
+            assert file_obj.mode[0] == mode[0], 'file_obj.mode=%r != %r=mode'\
+                % (file_obj.mode, mode)
             ## use the file object for writing out the data as it
             ## happens, i.e. in streaming mode.
+
+        if mode in ['ab', 'wb']:
             self._o_chunk_fh = md5_file( file_obj )
             self._o_transport = TTransport.TBufferedTransport(self._o_chunk_fh)
             self._o_protocol = TBinaryProtocol.TBinaryProtocol(self._o_transport)
-            ## this causes _i_chunk_fh to be None below
-            file_obj = None
 
-        ## set _i_chunk_fh, possibly to None
-        if file_obj:
-            self._i_chunk_fh = md5_file( file_obj )
         else:
-            self._i_chunk_fh = None
+            assert mode == 'rb', mode
+            self._i_chunk_fh = md5_file( file_obj )
+            self._i_transport = TTransport.TBufferedTransport(self._o_chunk_fh)
+            self._i_protocol = TBinaryProtocol.TBinaryProtocol(self._o_transport)
 
     def add(self, msg):
         'add message instance to chunk'
@@ -156,10 +179,13 @@ class Chunk(object):
     @property
     def md5_hexdigest(self):
         if self._md5_hexdigest:
+            ## only set if closed already
             return self._md5_hexdigest
         if self._o_chunk_fh:
+            ## get it directly from the output chunk
             return self._o_chunk_fh.md5_hexdigest
         elif self._i_chunk_fh:
+            ## get it directly from the input chunk
             return self._i_chunk_fh.md5_hexdigest
         else:
             ## maybe return raise?
@@ -172,12 +198,10 @@ class Chunk(object):
         self.close()
 
     def __str__(self):
-        'get the byte array of thrift data'
-        if self._o_transport is None:
-            return ''
-        self._o_transport.seek(0)
-        o_thrift_data = self._o_transport.getvalue()
-        return o_thrift_data
+        raise exceptions.NotImplementedError
+
+    def __repr__(self):
+        return 'Chunk(len=%d)' % len(self)
 
     def __len__(self):
         ## how to make this pythonic given that we have __iter__?
@@ -213,6 +237,7 @@ class Chunk(object):
                 msg.read(i_protocol)
 
                 ## yield is python primitive for iteration
+                self._count += 1
                 yield msg
 
             except EOFError:
