@@ -13,7 +13,8 @@ import sys
 import json
 import itertools
 import collections
-from ._chunk import Chunk
+from _chunk import Chunk
+from . import OffsetType
 
 def _dump(fpath, args):
     '''
@@ -119,6 +120,90 @@ def _dump_tokens(fpaths, annotator_ids=[]):
                                 break
                         if found_annotator or not annotator_ids:
                             print line
+
+
+def verify_offsets(fpaths):
+    '''
+    Read in a streamcorpus.Chunk files and verify that the 'value'
+    property in each offset matches the actual text at that offset.
+
+    :param fpaths: iterator over file paths to Chunks
+    '''
+    for fpath in fpaths:
+        print fpath
+        num_valid_line_offsets = 0
+        num_valid_byte_offsets = 0
+        num_valid_label_offsets = 0
+        for si in Chunk(path=fpath, mode='rb'):
+            if not si.body:
+                print 'no body: %s' % si.stream_id
+                continue
+            if not si.body.sentences:
+                print 'no body.sentences: %s' % si.stream_id
+                continue
+            for tagger_id in si.body.sentences:
+                for sent in si.body.sentences[tagger_id]:
+                    for tok in sent.tokens:
+                        if OffsetType.BYTES in tok.offsets:
+                            off = tok.offsets[OffsetType.BYTES]
+                            
+                            text = getattr(si.body, off.content_form)
+                            val = text[ off.first : off.first + off.length]
+
+                            if val != off.value:
+                                window = 20
+                                print 'ERROR:  %r != %r in %r' % (off.value, val, text[ off.first - window : off.first + off.length + window])
+
+                            else:
+                                num_valid_byte_offsets += 1
+
+                            for label in tok.labels:
+                                if OffsetType.BYTES in label.offsets:
+                                    ## get the offset from the label, and compare the value
+                                    off_label = label.offsets[OffsetType.BYTES]
+                                    if val != off_label.value:
+                                        window = 20
+                                        print 'ERROR:  %r != %r in %r' % (off.value, val, text[ off.first - window : off.first + off.length + window])
+                                    else:
+                                        num_valid_label_offsets += 1
+
+
+                        if OffsetType.LINES in tok.offsets:
+                            off = tok.offsets[OffsetType.LINES]
+                            
+                            text = getattr(si.body, off.content_form)
+                            def get_val(text, start, end):
+                                return '\n'.join( text.splitlines()[ start : end ] )
+
+                            val_lines = get_val(text, off.first, off.first + off.length)
+
+                            if not off.value:
+                                print 'UNKNOWN: .value not provided in offset'
+                                continue
+
+                            if off.value not in val_lines:
+                                window = 3
+                                print 'ERROR:  %r != %r in %r' % (off.value, val_lines, get_val(text, off.first - window, off.first + off.length + window))
+
+                            else:
+                                num_valid_line_offsets += 1
+
+                            for label in tok.labels:
+                                if OffsetType.LINES in label.offsets:
+                                    ## get the offset from the label, and compare the value
+                                    off_label = label.offsets[OffsetType.LINES]
+                                    if val != off_label.value:
+                                        window = 20
+                                        print 'ERROR:  %r != %r in %r' % (off.value, val, text[ off.first - window : off.first + off.length + window])
+                                    else:
+                                        num_valid_label_offsets += 1
+
+        print '''
+num_valid_byte_offsets: %d
+num_valid_line_offsets: %d
+num_valid_label_offsets: %d
+''' % (num_valid_byte_offsets, num_valid_line_offsets, num_valid_label_offsets)
+
 
 def _find(fpaths, stream_id):
     '''
@@ -257,6 +342,8 @@ if __name__ == '__main__':
                         default=None, help='Limit the number of StreamItems checked')
     parser.add_argument('--labels-only', action='store_true', 
                         default=False, dest='labels_only')
+    parser.add_argument('--verify-offsets', action='store_true', 
+                        default=False, dest='verify_offsets')
     args = parser.parse_args()
 
 
@@ -271,6 +358,7 @@ if __name__ == '__main__':
     else:
         args.input_path = [args.input_path]
 
+    ## now actually do whatever was requested
     if args.stats:
         _stats(args.input_path)
 
@@ -282,6 +370,9 @@ if __name__ == '__main__':
 
     elif args.find_missing:
         _find_missing_labels(args.input_path, args.annotator_ids, args.component)
+
+    elif args.verify_offsets:
+        verify_offsets(args.input_path)
 
     else:
         for fpath in args.input_path:
