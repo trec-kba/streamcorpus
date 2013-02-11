@@ -328,11 +328,11 @@ class Offset(object):
     (2, TType.I64, 'first', None, None, ), # 2
     (3, TType.I32, 'length', None, None, ), # 3
     (4, TType.STRING, 'xpath', None, None, ), # 4
-    (5, TType.STRING, 'content_form', None, None, ), # 5
+    (5, TType.STRING, 'content_form', None, "clean_visible", ), # 5
     (6, TType.STRING, 'value', None, None, ), # 6
   )
 
-  def __init__(self, type=None, first=None, length=None, xpath=None, content_form=None, value=None,):
+  def __init__(self, type=None, first=None, length=None, xpath=None, content_form=thrift_spec[5][4], value=None,):
     self.type = type
     self.first = first
     self.length = length

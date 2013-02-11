@@ -135,9 +135,9 @@ struct Offset {
   4: optional string xpath,
 
   // name of the data element inside a ContentItem to which this label
-  // applies, e.g. 'raw' 'clean_html' or 'clean_visible'.  If missing,
-  // then this offset should be part of a Token.
-  5: optional string content_form,
+  // applies, e.g. 'raw' 'clean_html' or 'clean_visible'.  Defaults to
+  // clean_visible, which is the most common case.
+  5: optional string content_form = "clean_visible",
 
   // bytes specified by this offset extracted from the original; just
   // to assist in debugging
