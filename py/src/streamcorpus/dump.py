@@ -106,7 +106,7 @@ def _dump_tokens(fpaths, annotator_ids=[]):
                         for attr in token_attrs:
                             val = getattr(tok, attr)
                             if isinstance(val, str):
-                                vals.append( val.decode('utf8').encode('utf8') )
+                                vals.append( val )
                             else:
                                 vals.append( repr(val) )
 
