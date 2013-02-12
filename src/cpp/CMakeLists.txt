@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 2.6.4)
+project(streamcorpus)
+add_definitions(-DHAVE_NETINET_IN_H)
+add_definitions(-DHAVE_INTTYPES_H)
+add_library(streamcorpus streamcorpus_constants.cpp  streamcorpus_constants.h streamcorpus_types.cpp  streamcorpus_types.h)
+TARGET_LINK_LIBRARIES(streamcorpus)
