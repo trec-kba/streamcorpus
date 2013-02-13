@@ -388,6 +388,12 @@ struct Rating {
   // entity only in chrome text on the side such that it is a
   // Garbage-rated text for that entity.
   4: optional bool mentions,
+
+  /**
+   * Annotators may record various notations about a given rating, and
+   * we want to keep them with the corpus.
+   */
+  5: optional string comments,
 }
 
 /**
