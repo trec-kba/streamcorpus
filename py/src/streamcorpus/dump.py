@@ -111,11 +111,17 @@ def _dump_tokens(fpaths, annotator_ids=[]):
                                 vals.append( repr(val) )
 
                         vals += [si.stream_id]
-                        vals += [','.join([label.target_id for label in tok.labels])]
+
+                        target_ids = []
+                        for labels in tok.labels.values():
+                            for label in labels:
+                                target_ids.append(label.target.target_id)
+                        vals += [','.join(target_ids)]
+
                         line = '\t'.join(vals)
                         found_annotator = False
-                        for label in tok.labels:
-                            if label.annotator and label.annotator.annotator_id in annotator_ids:
+                        for annotator_id in tok.labels:
+                            if annotator_id in annotator_ids:
                                 found_annotator = True
                                 break
                         if found_annotator or not annotator_ids:
@@ -157,15 +163,16 @@ def verify_offsets(fpaths):
                             else:
                                 num_valid_byte_offsets += 1
 
-                            for label in tok.labels:
-                                if OffsetType.BYTES in label.offsets:
-                                    ## get the offset from the label, and compare the value
-                                    off_label = label.offsets[OffsetType.BYTES]
-                                    if val != off_label.value:
-                                        window = 20
-                                        print 'ERROR:  %r != %r in %r' % (off.value, val, text[ off.first - window : off.first + off.length + window])
-                                    else:
-                                        num_valid_label_offsets += 1
+                            for labels in tok.labels.values():
+                                for label in labels:
+                                    if OffsetType.BYTES in label.offsets:
+                                        ## get the offset from the label, and compare the value
+                                        off_label = label.offsets[OffsetType.BYTES]
+                                        if val != off_label.value:
+                                            window = 20
+                                            print 'ERROR:  %r != %r in %r' % (off.value, val, text[ off.first - window : off.first + off.length + window])
+                                        else:
+                                            num_valid_label_offsets += 1
 
 
                         if OffsetType.LINES in tok.offsets:
@@ -188,15 +195,16 @@ def verify_offsets(fpaths):
                             else:
                                 num_valid_line_offsets += 1
 
-                            for label in tok.labels:
-                                if OffsetType.LINES in label.offsets:
-                                    ## get the offset from the label, and compare the value
-                                    off_label = label.offsets[OffsetType.LINES]
-                                    if val != off_label.value:
-                                        window = 20
-                                        print 'ERROR:  %r != %r in %r' % (off.value, val, text[ off.first - window : off.first + off.length + window])
-                                    else:
-                                        num_valid_label_offsets += 1
+                            for labels in tok.labels.values():
+                                for label in labels:
+                                    if OffsetType.LINES in label.offsets:
+                                        ## get the offset from the label, and compare the value
+                                        off_label = label.offsets[OffsetType.LINES]
+                                        if val != off_label.value:
+                                            window = 20
+                                            print 'ERROR:  %r != %r in %r' % (off.value, val, text[ off.first - window : off.first + off.length + window])
+                                        else:
+                                            num_valid_label_offsets += 1
 
         print '''
 num_valid_byte_offsets: %d
