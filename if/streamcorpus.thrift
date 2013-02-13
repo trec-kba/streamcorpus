@@ -373,25 +373,35 @@ struct ContentItem {
  * utility for a particular topic or entity in a reference KB.
  */
 struct Rating {
+  /**
+   * identifies the source of this Rating
+   */
   1: Annotator annotator,
 
+  /**
+   * identifies the information need assessed by annotator
+   */
   2: Target target,
 
-  // relevance is a numerical score with meaning that depends on the
-  // Rating.annotator.  This can represent a rank ordering or a short
-  // enumeration such as -1=Garbage, 0=Neutral, 1=Useful, 2=Vital
+  /**
+   * numerical score assigned by annotator to "judge" or "rate" the
+   * utility of this StreamItem to addressing the target information
+   * need.  The range and interpretation of relevance numbers depends
+   * on the annotator.  relevance can represent a rank ordering or an
+   * enumeration such as -1=Garbage, 0=Neutral, 1=Useful, 2=Vital
+   */
   3: optional i16 relevance,
 
-  // mentions is a true|false indication of whether the document
-  // mentions the target entity.  This is only partially correlated
-  // with the rating.  For example, a document might mention the
-  // entity only in chrome text on the side such that it is a
-  // Garbage-rated text for that entity.
+  /** 
+   * true|false indication of whether the document mentions the target
+   * entity.  This is only partially correlated with relevance.  For
+   * example, a document might mention the entity only in chrome text
+   * on the side such that it is a Garbage-rated text for that entity.
+   */
   4: optional bool mentions,
 
   /**
-   * Annotators may record various notations about a given rating, and
-   * we want to keep them with the corpus.
+   * Save notes from Annotator about this Rating
    */
   5: optional string comments,
 }
