@@ -17,7 +17,7 @@ from cStringIO import StringIO
 ## import the KBA-specific thrift types
 from .ttypes import StreamItem, ContentItem, Label, StreamTime, \
     Offset, Rating, Annotator, Versions, Token, Sentence, EntityType, \
-    Tagging, OffsetType, LabelSet
+    Tagging, OffsetType
 
 from .ttypes_v0_1_0 import StreamItem as StreamItem_v0_1_0
 
@@ -27,7 +27,7 @@ __all__ = ['Chunk', 'decrypt_and_uncompress', 'compress_and_encrypt',
            'make_stream_time', 'make_stream_item',
            'StreamItem', 'ContentItem', 'Label', 'StreamTime', 
            'Offset', 'Rating', 'Annotator', 'Versions', 'Token', 'Sentence', 'EntityType', 
-           'Tagging', 'OffsetType', 'LabelSet',
+           'Tagging', 'OffsetType', 
            'StreamItem_v0_1_0',
            ]
 
