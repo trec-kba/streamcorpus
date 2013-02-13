@@ -36,6 +36,7 @@
  */
 namespace java streamcorpus
 namespace py streamcorpus
+namespace cpp streamcorpus
 
 /**
  * StreamTime is a timestamp measured in seconds since the 1970 epoch.
