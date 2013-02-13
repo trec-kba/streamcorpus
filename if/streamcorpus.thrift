@@ -41,6 +41,10 @@ namespace py streamcorpus
  * StreamTime is a timestamp measured in seconds since the 1970 epoch.
  * epoch_ticks is always in the UTC timezone.  This is used in several
  * structs below to record various moments in history.
+ *
+ * Implementations of these interfaces in various languages may
+ * provide convenience methods for insuring that these two fields are
+ * consistent with each other.
  */
 struct StreamTime {
   1: double epoch_ticks,
