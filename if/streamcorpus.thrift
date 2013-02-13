@@ -64,33 +64,38 @@ struct StreamTime {
 typedef binary SourceMetadata
 
 /**
+ * AnnotatorID is used as a property in Annotator structs and also as
+ * a key on maps in ContentItem.
+ *
+ * It is just a string.  There is no enum for it, so consistency and
+ * uniqueness depends on the system generating the AnnotatorID.
+ *
+ * AnnotatorID identifies the source of a Label or Rating object.  It
+ * is not necessarily unique.  We use these conventions:
+ *
+ *  - Avoid whitespace.  
+ *
+ *  - email address is the best identifier
+ *
+ *  - when a single email address is not appropriate, create a
+ *    descriptive string, e.g. 'nist-trec-kba-2012-assessors'
+ *
+ *  - 'author' means the person who wrote the original text
+ */
+typedef string AnnotatorID
+
+/**
  * An Annotator object describes a human (or possibly a set of humans)
  * who generated the data stored in a Label or Rating object.
  */
 struct Annotator {
-  // annotator_id is a tring that identifies the source, possibly
-  // somewhat uniquely.  Avoid whitespace.  We use these conventions:
-  //
-  //    * email address is the best identifier
-  //
-  //    * when a single email address is not appropriate, create a
-  //    * descriptive string, e.g. nist-trec-kba-2012-assessors
-  //
-  //    * 'author' means the person who wrote the original text
-  1: string annotator_id,
+  1: AnnotatorID annotator_id,
 
   // Approximate time when annotations/judgments/labels was rendered
   // by human.  If this is missing, it means that the time was not
   // recorded, which often happens when the author made the
   // annotation.
   2: optional StreamTime annotation_time,
-
-  // target_kb is a knowledge base of topics or entities used to
-  // define the labels, e.g. http://en.wikipedia.org/wiki/ 
-  3: optional string reference_kb,
-
-  // moment in history that the target_kb was accessed
-  4: optional StreamTime kb_snapshot_time,
 }
 
 /**
@@ -145,38 +150,48 @@ struct Offset {
 }
 
 /**
+ * Targets are "informationt targets," such as entities or topics,
+ * usually from a knowledge base, such as Wikipedia.
+ */
+struct Target {
+  /**
+   * unique string identifier, usually a URL into Wikipedia, Freebase,
+   * or some other structured reference system for info targets.  
+   */
+  1: string target_id,
+
+  /**
+   * kb_id is usually redundant if the target_id is a full URL,
+   * e.g. en.wikipedia.org
+   */
+  2: optional string kb_id,
+
+  /**
+   * moment in history that the target_kb was accessed
+   */
+  3: optional StreamTime kb_snapshot_time,
+}
+
+/**
  * Labels are human generated assertions about a portion of a document
  * For example, a human author might label their own text by inserting
  * hyperlinks to Wikipedia, or a NIST assessor might record which
  * tokens in a text mention a target entity.
  * 
- * Label instances can be attached to an individual Token and
- * Sentence, or in a LabelSet.labels describing multiple parts of a
- * piece of data in a ContentItem.
+ * Label instances can be attached in three palces:
+ *  -  Token.labels  list
+ *  -  Sentence.labels  list
+ *  -  ContentItem.labels  map
  */
 struct Label {
-  // string identifying the labeling target in the KB, e.g. a
-  // 'urlname' in WP or an 'id' in Freebase.  
-  // Should be a full URL, if possible.
-  1: string target_id,
-
-  // Pointer to data to which this label applies.  If missing, then
-  // label is either attached to a single Token or Sentence or
-  // ContentItem, and applies to the entire thing.
-  2: optional map<OffsetType, Offset> offsets = {},
-
-  // description of person who asserted this rating.  If missing, then
-  // this label should be part of a LabelSet that provides an
-  // Annotator.
-  3: optional Annotator annotator,
-}
-
-struct LabelSet {
-  // description of person who asserted this rating.
   1: Annotator annotator,
 
-  // a set of several labels
-  2: list<Label> labels = [],
+  2: Target target,
+
+  // Pointer to data to which this label applies.  If missing, then
+  // label applies to the entire Token, Sentence, or ContentItem to
+  // which it is attached.
+  3: optional map<OffsetType, Offset> offsets = {},
 }
 
 /**
@@ -211,7 +226,7 @@ struct Token {
   // unicode string, because thrift stores them as 8-bit.
   2: string token,
 
-  // offsets into the original data, typically 'clean_visible'
+  // offsets into the original data (see Offset.content_form)
   3: optional map<OffsetType, Offset> offsets = {},
 
   // zero-based index into the sentence, which is used for dependency
@@ -249,9 +264,10 @@ struct Token {
   // definition here and convert it to an enum.
   11: optional string dependency_path,
 
-  // array of instances of Label attached to this token, defaults to
-  // an empty list
-  12: optional list<Label> labels = [],
+  /** 
+   * Labels attached to this token, defaults to an empty map
+   */
+  12: optional map<AnnotatorID, list<Label>> labels = {},
 }
 
 struct Sentence {
@@ -259,8 +275,8 @@ struct Sentence {
   1: list<Token> tokens = [],
 
   // array of instances of Label attached to this sentence, defaults to
-  // an empty list
-  2: optional list<Label> labels = [],
+  // an empty map
+  2: optional map<AnnotatorID, list<Label>> labels = {},
 }
 
 struct Tagging {
@@ -282,9 +298,10 @@ struct Tagging {
 }
 
 /**
- * TaggerID is used as a key on maps in ContentItem.  It is just a
- * string, and there is no enum for it, so its consistency and
- * uniqueness depends on the system generating the TaggerID
+ * TaggerID is used as a key on maps in ContentItem.  
+ *
+ * It is just a string.  There is no enum for it, so consistency and
+ * uniqueness depends on the system generating the TaggerID.
  */
 typedef string TaggerID
 
@@ -330,7 +347,7 @@ struct ContentItem {
   // not raw.
 
   // sets of annotations
-  8: optional list<LabelSet> labelsets = [],
+  8: optional map<AnnotatorID, list<Label>> labels = {},
 
   // parsed Sentence objects generated by an NLP pipeline identified
   // by the string name, which is a tagger_id that connects this
@@ -352,11 +369,9 @@ struct ContentItem {
  * utility for a particular topic or entity in a reference KB.
  */
 struct Rating {
-  // description of person who asserted this rating
   1: Annotator annotator,
 
-  // 'urlname' in WP or an 'id' in Freebase.
-  2: string target_id,
+  2: Target target,
 
   // relevance is a numerical score with meaning that depends on the
   // Rating.annotator.  This can represent a rank ordering or a short
@@ -447,5 +462,5 @@ struct StreamItem {
 
   // Document-level ratings that relate this entire StreamItem to a
   // topic or entity
-  12: optional list<Rating> ratings = [],
+  12: optional map<AnnotatorID, list<Rating>> ratings = {},
 }
