@@ -335,7 +335,7 @@ struct Sentence {
 typedef string TaggerID
 
 struct Tagging {
-  1: string tagger_id,
+  1: TaggerID tagger_id,
 
   /**
    * raw output of the tagging tool
