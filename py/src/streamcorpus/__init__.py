@@ -17,7 +17,7 @@ from cStringIO import StringIO
 ## import the KBA-specific thrift types
 from .ttypes import StreamItem, ContentItem, Label, StreamTime, \
     Offset, Rating, Annotator, Versions, Token, Sentence, EntityType, \
-    Tagging, OffsetType
+    Tagging, OffsetType, Target
 
 from .ttypes_v0_1_0 import StreamItem as StreamItem_v0_1_0
 
@@ -27,6 +27,7 @@ __all__ = ['Chunk', 'decrypt_and_uncompress', 'compress_and_encrypt',
            'make_stream_time', 'make_stream_item',
            'StreamItem', 'ContentItem', 'Label', 'StreamTime', 
            'Offset', 'Rating', 'Annotator', 'Versions', 'Token', 'Sentence', 'EntityType', 
+           'Target',
            'Tagging', 'OffsetType', 
            'StreamItem_v0_1_0',
            ]
@@ -67,3 +68,31 @@ def make_stream_item(zulu_timestamp, abs_url):
     si.doc_id = hashlib.md5(abs_url).hexdigest()
     si.stream_id = '%d-%s' % (st.epoch_ticks, si.doc_id)
     return si
+
+def add_annotation(data_item, *annotations):
+    '''
+    adds each item in annotations to data_item.labels or .ratings
+
+    :type data_item: StreamItem, ContentItem, Sentence, Token
+    :type labels_or_ratings: list of Rating or Label objects
+    '''
+    for anno in annotations:
+        try:
+            annotator_id = anno.annotator.annotator_id
+        except Exception, exc:
+            raise Exception('programmer error: passed a faulty annotation  %r' % exc)
+        if isinstance(anno, Label):
+            assert isinstance(data_item, (ContentItem, Sentence, Token)), data_item
+            if annotator_id not in data_item.labels:
+                data_item.labels[annotator_id] = []
+            data_item.labels[annotator_id].append( anno )
+
+        elif isinstance(anno, Rating):
+            assert isinstance(data_item, StreamItem), data_item
+            if annotator_id not in data_item.ratings:
+                data_item.ratings[annotator_id] = []
+            data_item.ratings[annotator_id].append( anno )
+
+        else:
+            raise Exception('programmer error: attempted add_annotation(%s...)' % type(data_item))
+
