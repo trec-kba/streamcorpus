@@ -53,22 +53,6 @@ struct StreamTime {
 }
 
 /**
- * SourceMetadata is a binary object with format determined by
- * StreamItem.source.
- * 
- * For the kba-stream-corpus-2012, the SourceMetadata was always one
- * of these schemas where 'news', 'social', 'linking' is the string
- * found in CorpusItem.source
- *  - http://trec-kba.org/schemas/v1.0/news-metadata.json
- *  - http://trec-kba.org/schemas/v1.0/linking-metadata.json
- *  - http://trec-kba.org/schemas/v1.0/social-metadata.json
- *
- * Other types of SourceMetadata include:
- *  - http_headers
- */
-typedef binary SourceMetadata
-
-/**
  * AnnotatorID is used as a property in Annotator structs and also as
  * a key on maps in ContentItem.
  *
@@ -406,6 +390,24 @@ struct Rating {
    */
   5: optional string comments,
 }
+
+/**
+ * SourceMetadata is a binary object with format determined by the key
+ * in StreamItem.source_metadata, which is often the same as
+ * StreamItem.source.
+ * 
+ * For the kba-stream-corpus-2012, the SourceMetadata was always one
+ * of these schemas where 'news', 'social', 'linking' is the string
+ * found in StreamItem.source and the source_metadata map's key:
+ *  - http://trec-kba.org/schemas/v1.0/news-metadata.json
+ *  - http://trec-kba.org/schemas/v1.0/linking-metadata.json
+ *  - http://trec-kba.org/schemas/v1.0/social-metadata.json
+ *
+ * Other keys in the source_metadata map can be:
+ *
+ *  - http_headers
+ */
+typedef binary SourceMetadata
 
 /**
  * Versions of this protocol are enumerated so that when we expand,
