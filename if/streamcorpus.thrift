@@ -80,10 +80,12 @@ typedef string AnnotatorID
 struct Annotator {
   1: AnnotatorID annotator_id,
 
-  // Approximate time when annotations/judgments/labels was rendered
-  // by human.  If this is missing, it means that the time was not
-  // recorded, which often happens when the author made the
-  // annotation.
+  /**
+   * Approximate time when annotations/judgments/labels was rendered
+   * by human.  If this is missing, it means that the time was not
+   * recorded, which often happens when the author made the
+   * annotation.
+   */
   2: optional StreamTime annotation_time,
 }
 
@@ -92,49 +94,65 @@ struct Annotator {
  * portion of a ContentItem that a human labeled with a tag.
  */
 enum OffsetType {
-  // annotation applies to a range of line numbers
+  /**
+   * annotation applies to a range of line numbers
+   */
   LINES = 0,
 
-  // annotation applies to a range of bytes
+  /**
+   * annotation applies to a range of bytes
+   */
   BYTES = 1,
 
-  // annotation applies to a range of chars, typically unicode chars
+  /**
+   * annotation applies to a range of chars, typically unicode chars
+   */
   CHARS = 2,
 }
 
-/*
+/**
  * Offset specifies a range within a field of data in this ContentItem
  */
 struct Offset {
-  // see above
+  /**
+   * see comments on OffsetType
+   */
   1: OffsetType type,
 
-  // actual offset, which could be measured in bytes, chars, or lines.
-  // The data element identified by 'first' is included, and that
-  // identified by first+length is also included.
-  //
-  // In set notation, 
-  //     [first:first+length]
-  //
-  // or equivalently
-  //     [first:first+length+1)
-  //
-  // While thrift treats these as signed integers, negative values are
-  // meaningless in this context, i.e. we do not end wrap.
+  /**
+   * actual offset, which could be measured in bytes, chars, or lines.
+   * The data element identified by 'first' is included, and that
+   * identified by first+length is also included.
+   *
+   * In set notation, 
+   *     [first:first+length]
+   *
+   * or equivalently
+   *     [first:first+length+1)
+   *
+   * While thrift treats these as signed integers, negative values are
+   * meaningless in this context, i.e. we do not end wrap.
+   */
   2: i64 first,
   3: i32 length,
 
-  // if xpath is not empty, then annotation applies to an offset
-  // within data that starts with an XPATH query into XHTML or XML
+  /**
+   * if xpath is not empty, then annotation applies to an offset
+   * within data that starts with an XPATH query into XHTML or XML
+   */
   4: optional string xpath,
 
-  // name of the data element inside a ContentItem to which this label
-  // applies, e.g. 'raw' 'clean_html' or 'clean_visible'.  Defaults to
-  // clean_visible, which is the most common case.
+  /**
+   * name of the data element inside a ContentItem to which this label
+   * applies, e.g. 'raw' 'clean_html' or 'clean_visible'.  Defaults to
+   * clean_visible, which is the most common case.
+   */
   5: optional string content_form = "clean_visible",
 
-  // bytes specified by this offset extracted from the original; just
-  // to assist in debugging
+  /**
+   * bytes specified by this offset extracted from the original; just
+   * to assist in debugging
+   */
   6: optional binary value,
 }
 
@@ -173,13 +191,21 @@ struct Target {
  *  -  ContentItem.labels  map
  */
 struct Label {
+  /**
+   * identifies the source of this Rating
+   */
   1: Annotator annotator,
 
+  /**
+   * identifies the information need assessed by annotator
+   */
   2: Target target,
 
-  // Pointer to data to which this label applies.  If missing, then
-  // label applies to the entire Token, Sentence, or ContentItem to
-  // which it is attached.
+  /**
+   * pointers to data to which this label applies.  If empty, then
+   * label applies to the entire Token, Sentence, or ContentItem to
+   * which it is attached.
+   */
   3: optional map<OffsetType, Offset> offsets = {},
 }
 
@@ -192,14 +218,20 @@ struct Label {
 enum EntityType {
   PER = 0,
   ORG = 1,
-  LOC = 2,  // physical location
+  /**
+   * physical location
+   */
+  LOC = 2,
   MALE_PRONOUN = 3, // necessary but crufty
   FEMALE_PRONOUN = 4, // necessary but crufty
   TIME = 5,
   DATE = 6,
   MONEY = 7,
   PERCENT = 8,
-  MISC = 9, // uncategorized named entities, e.g. Civil War for Stanford CoreNLP
+  /**
+   * uncategorized named entities, e.g. Civil War for Stanford CoreNLP
+   */
+  MISC = 9, 
 }
 
 /**
@@ -208,49 +240,71 @@ enum EntityType {
  * humans.
  */
 struct Token {
-  // zero-based index into the stream of tokens from a document
+  /**
+   * zero-based index into the stream of tokens from a document
+   */
   1: i32 token_num,
 
-  // actual token string, must always be a UTF8 encoded string, not a
-  // unicode string, because thrift stores them as 8-bit.
+  /**
+   * actual token string, must always be a UTF8 encoded string, not a
+   * unicode string, because thrift stores them as 8-bit.
+   */
   2: string token,
 
-  // offsets into the original data (see Offset.content_form)
+  /**
+   * offsets into the original data (see Offset.content_form)
+   */
   3: optional map<OffsetType, Offset> offsets = {},
 
-  // zero-based index into the sentence, which is used for dependency
-  // parsed data
+  /**
+   * zero-based index into the sentence, which is used for dependency
+   * parsed data
+   */
   4: optional i32 sentence_pos = -1,
 
-  // lemmatization of the token, again must be UTF8
+  /**
+   * lemmatization of the token, again must be UTF8
+   */
   5: optional string lemma,
 
-  // part of speech labels defined by Penn TreeBank:
-  // http://www.ling.upenn.edu/courses/Fall_2003/ling001/penn_treebank_pos.html
-  // Should probably convert this to an enum, analogous to EntityType
+  /**
+   * part of speech labels defined by Penn TreeBank:
+   * http://www.ling.upenn.edu/courses/Fall_2003/ling001/penn_treebank_pos.html
+   * Should probably convert this to an enum, analogous to EntityType
+   */
   6: optional string pos,
 
-  // entity type from named entity recognizer (classifier)
+  /**
+   * entity type from named entity recognizer (classifier)
+   */
   7: optional EntityType entity_type,
 
-  // Identifier for a multi-token mention starts at zero for each
-  // sentence, because we assume mentions cannot cross sentence
-  // boundaries.  Really only needed when the entity_type and equiv_id
-  // do not change between tokens that are part of separate mentions,
-  // e.g. "The senator is known to his friends as David, Davy, Zeus,
-  // and Mr. Elephant."
+  /**
+   * Identifier for a multi-token mention starts at zero for each
+   * sentence, because we assume mentions cannot cross sentence
+   * boundaries.  Really only needed when the entity_type and equiv_id
+   * do not change between tokens that are part of separate mentions,
+   * e.g. "The senator is known to his friends as David, Davy, Zeus,
+   * and Mr. Elephant."
+   */
   8: optional i16 mention_id = -1,
 
-  // Within-doc coref chain ID.  That is, identifier of equivalence
-  // class of co-referent tokens.  Default is -1, meaning None.
+  /**
+   * Within-doc coref chain ID.  That is, identifier of equivalence
+   * class of co-referent tokens.  Default is -1, meaning None.
+   */
   9: optional i32 equiv_id = -1,
 
-  // parent sentence_pos in dependency parse. Default is -1, ie None
+  /**
+   * parent sentence_pos in dependency parse. Default is -1, ie None
+   */
   10: optional i32 parent_id = -1,
 
-  // grammatical relation label on path to parent in dependency parse,
-  // defined by whatever tagger was used -- should pick a canonical
-  // definition here and convert it to an enum.
+  /**
+   * grammatical relation label on path to parent in dependency parse,
+   * defined by whatever tagger was used -- should pick a canonical
+   * definition here and convert it to an enum.
+   */
   11: optional string dependency_path,
 
   /** 
@@ -260,30 +314,16 @@ struct Token {
 }
 
 struct Sentence {
-  // tokens in this sentence
+  /**
+   * tokens in this sentence
+   */
   1: list<Token> tokens = [],
 
-  // array of instances of Label attached to this sentence, defaults to
-  // an empty map
+  /**
+   * array of instances of Label attached to this sentence, defaults to
+   * an empty map
+   */
   2: optional map<AnnotatorID, list<Label>> labels = {},
-}
-
-struct Tagging {
-  // short string identifying the tagger type, e.g. stanford-corenlp
-  // or lingpipe
-  1: string tagger_id,
-
-  // raw output of the tagging tool
-  2: binary raw_tagging,
-
-  // short human-readable description of configuration parameters
-  3: optional string tagger_config,
-
-  // short human-readable version string of the tagging tool
-  4: optional string tagger_version,
-
-  // time that tagging was generated
-  5: optional StreamTime generation_time,
 }
 
 /**
@@ -294,62 +334,106 @@ struct Tagging {
  */
 typedef string TaggerID
 
+struct Tagging {
+  1: string tagger_id,
+
+  /**
+   * raw output of the tagging tool
+   */
+  2: binary raw_tagging,
+
+  /**
+   * short human-readable description of configuration parameters
+   */
+  3: optional string tagger_config,
+
+  /**
+   * short human-readable version string of the tagging tool
+   */
+  4: optional string tagger_version,
+
+  /**
+   * time that tagging was generated
+   */
+  5: optional StreamTime generation_time,
+}
+
 /**
  * ContentItem contains raw data, an indication of its character
  * encoding, and various transformed versions of the raw data.
  */
 struct ContentItem {
-  // original download, raw byte array
+  /**
+   * original download, raw byte array
+   */
   1: optional binary raw, 
   
-  // guessed from raw and/or headers, e.g. by python-requests.org
+  /**
+   * guessed from raw and/or headers, e.g. by python-requests.org
+   */
   2: optional string encoding, 
 
-  // Content-type header from fetching the data, or MIME type
+  /**
+   * Content-type header from fetching the data, or MIME type
+   */
   3: optional string media_type,
 
-  // HTML-formatted version of raw with UTF8 encoding and no broken
-  // tags.  All HTML-escaped characters are converted to their UTF8
-  // equivalents.  < > & are escaped.
+  /**
+   * HTML-formatted version of raw with UTF8 encoding and no broken
+   * tags.  All HTML-escaped characters are converted to their UTF8
+   * equivalents.  < > & are escaped.
+   */
   4: optional string clean_html,
 
-  // All tags stripped from clean_html and replaced with whitespace,
-  // so they have the same byte offsets.  The only escaped characters
-  // are < > &, so that this can be treated as Character Data in XML:
-  // http://www.w3.org/TR/xml/#syntax
-    // again, must be UTF8
+  /**
+   * All tags stripped from clean_html and replaced with whitespace,
+   * so they have the same byte offsets.  The only escaped characters
+   * are < > &, so that this can be treated as Character Data in XML:
+   * http://www.w3.org/TR/xml/#syntax
+   *
+   * Again: must be UTF8
+   */
   5: optional string clean_visible, 
 
-  // Logs generated from processing pipeline, for forensics
+  /**
+   * Logs generated from processing pipeline, for forensics
+   */
   6: optional list<string> logs = [],
 
-  // A set of auto-generated taggings, such as a One-Word-Per-Line
-  // (OWLP) tokenization and sentence chunking with part-of-speech,
-  // lemmatization, and NER classification.  The string name should be
-  // the same as the tagger_id and also corresponds to the key in
-  // sentences or sentence_blobs, which get generated by transforming
-  // a Tagging.raw_tagging into Sentence and Token instances
+  /**
+   * A set of auto-generated taggings, such as a One-Word-Per-Line
+   * (OWLP) tokenization and sentence chunking with part-of-speech,
+   * lemmatization, and NER classification.  The string name should be
+   * the same as the tagger_id and also corresponds to the key in
+   * sentences or sentence_blobs, which get generated by transforming
+   * a Tagging.raw_tagging into Sentence and Token instances
+   *
+   * Taggings are generated from 'clean_visible' so offsets (byte,
+   * char, line) refer to clean_visible and clean_html -- not raw.
+   */
   7: optional map<TaggerID, Tagging> taggings = {}, 
 
-  // Taggings are generated from 'clean_visible' so offsets (byte,
-  // char, line) are only valid for clean_visible and clean_html --
-  // not raw.
-
-  // sets of annotations
+  /**
+   * sets of annotations
+   */
   8: optional map<AnnotatorID, list<Label>> labels = {},
 
-  // parsed Sentence objects generated by an NLP pipeline identified
-  // by the string name, which is a tagger_id that connects this
-  // Sentences instance to the Tagging struct from which it came
+  /**
+   * parsed Sentence objects generated by an NLP pipeline identified
+   * by the string name, which is a tagger_id that connects this
+   * Sentences instance to the Tagging struct from which it came
+   */
   9: optional map<TaggerID, list<Sentence>> sentences = {},
 
-  // same as 'sentences' except the array of Sentence instances are
-  // serialized into a binary string that can be read by the Thrift's
-  // binary protocol.  This allows lazy deserialization via an
-  // iterator -- one sentence at a time.  This might be totally
-  // unnecessary, because at least some of the Thrift language
-  // implementations have lazy object construction, e.g. --gen
-  // py:dynamic,slots
+  /**
+   * same as 'sentences' except the array of Sentence instances are
+   * serialized into a binary string that can be read by the Thrift's
+   * binary protocol.  This allows lazy deserialization via an
+   * iterator -- one sentence at a time.  This might be totally
+   * unnecessary, because at least some of the Thrift language
+   * implementations have lazy object construction, e.g. --gen
+   * py:dynamic,slots
+   */
   10: optional map<TaggerID, binary> sentence_blobs = {},
 }
 
@@ -412,10 +496,11 @@ typedef binary SourceMetadata
 /**
  * Versions of this protocol are enumerated so that when we expand,
  * everybody can see which version a particular data file used.
+ *
+ * v0_1_0 refers to the kba.thrift definition, which was before
+ * Versions was included in the spec.
  */
 enum Versions {
-  // v0_1_0 refers to the kba.thrift definition, which was before
-  // Versions was included in the spec.
   v0_2_0 = 0,
 }
 
@@ -429,61 +514,81 @@ enum Versions {
  *
  * stream_id is the unique identifier for documents in the corpus.
  * 
- * This is mostly the same as the StreamItem defined in kba.thrift for
- * TREC KBA 2012, however it removes the 'title' and 'anchor' fields,
- * which can now be represented in other_content.  This means that
- * code that was written to read messages from kba.thrift must be
- * updated.
+ * This is similar to the StreamItem defined in kba.thrift for TREC
+ * KBA 2012, however it removes the 'title' and 'anchor' fields, which
+ * can now be represented in other_content.  This means that code that
+ * was written to read messages from kba.thrift must be updated.
  */
 struct StreamItem {
-  // must provide a version number here
+  /**
+   * must provide a version number here
+   */
   1: Versions version,
 
-  // md5 hash of the abs_url
+  /**
+   * md5 hash of the abs_url
+   */
   2: string doc_id,  
 
-  // normalized form of the original_url
+  /**
+   * normalized form of the original_url, should be a valid URL
+   */
   3: optional binary abs_url, 
 
-  // scheme://hostname parsed from abs_url
+  /**
+   * scheme://hostname parsed from abs_url
+   */
   4: optional string schost,  
 
-  // the original URL string obtain from some source
+  /**
+   * string obtain from some source.  Only present if not a valid URL,
+   * in which case abs_url was derived from original_url
+   */
   5: optional binary original_url, 
 
-  // string uniquely identifying this data set, should start with a
-  // year string, such as 2012-trec-kba-news or 2012-trec-kba-social
+  /**
+   * string uniquely identifying this data set, should start with a
+   * year string, such as 'news' or 'social'
+   */
   6: optional string source,
 
-  // primary content
+  /**
+   * primary content
+   */
   7: optional ContentItem body,
 
-  // see above for explanation of the values that can appear in this
-  // dictionary of metadata info from the source.  The string names in
-  // this map should be short, descriptive, and free of whitespace.
+  /**
+   * see above for explanation of the values that can appear in this
+   * dictionary of metadata info from the source.  The string keys in
+   * this map should be short, descriptive, and free of whitespace.
+   */
   8: optional map<string, SourceMetadata> source_metadata = {}, 
 
-  // stream_id is actual unique identifier for the corpus.  
-  //
-  //    Standard format is:
-  // stream_id = '%d-%s' % (int(stream_time.epoch_ticks), doc_id)
+  /**
+   * stream_id is actual unique identifier for a StreamItem.  The
+   * format is:
+   *
+   * stream_id = '%d-%s' % (int(stream_time.epoch_ticks), doc_id)
+   */
   9: string stream_id,
 
-  // The earliest time that this content was known to exist.  In most
-  // cases, the raw content was also saved at the time of that first
-  // observation.
+  /** 
+   * earliest time that this content was known to exist.  Usually,
+   * body.raw was also saved at the time of that first observation.
+   */
   10: StreamTime stream_time,
 
-  // other content items besides body, e.g. title, anchor
+  /**
+   * such as title, anchor, extracted, etc.  When present, 'anchor',
+   * is a single anchor text of a URL pointing to this doc.  Note that
+   * this does not have metadata like the URL of the page that
+   * contained this anchor.  Such general link graph data may
+   * eventually motivate an extension to this thrift interface.
+   */
   11: optional map<string, ContentItem> other_content = {},
 
-  // When present, 'anchor', is a single anchor text of a URL pointing
-  // to this doc.  Note that this does not have metadata like the URL
-  // of the page that contained this anchor.  Such general link graph
-  // data may eventually motivate an extension to this thrift
-  // definition.
-
-  // Document-level ratings that relate this entire StreamItem to a
-  // topic or entity
+  /**
+   * doc-level judgments relating entire StreamItem to a Target
+   */
   12: optional map<AnnotatorID, list<Rating>> ratings = {},
 }
