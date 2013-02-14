@@ -120,7 +120,7 @@ class Chunk(object):
                 assert mode in ['wb', 'ab'], \
                     '%s does not exist but mode=%r' % (path, mode)
                 dirname = os.path.dirname(path)
-                if not os.path.exists(dirname):
+                if dirname and not os.path.exists(dirname):
                     os.makedirs(dirname)
                 file_obj = open(path, mode)
 
