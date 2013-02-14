@@ -46,7 +46,7 @@ def _dump(fpath, args):
                                     num_labeled_stream_items.add(si.stream_id)
                                     break
                                 else:
-                                    print tok.token, tok.labels
+                                    print si.stream_id, tok.token.decode('utf8').encode('utf8'), tok.labels
 
         elif not args.show_all:
             si.body = None
@@ -106,7 +106,7 @@ def _dump_tokens(fpaths, annotator_ids=[]):
                         for attr in token_attrs:
                             val = getattr(tok, attr)
                             if isinstance(val, str):
-                                vals.append( val )
+                                vals.append( val.decode('utf8').encode('utf8') )
                             else:
                                 vals.append( repr(val) )
 
@@ -156,7 +156,7 @@ def verify_offsets(fpaths):
                             text = getattr(si.body, off.content_form)
                             val = text[ off.first : off.first + off.length]
 
-                            if val != off.value:
+                            if off.value and val != off.value:
                                 window = 20
                                 print 'ERROR:  %r != %r in %r' % (off.value, val, text[ off.first - window : off.first + off.length + window])
 
@@ -168,7 +168,7 @@ def verify_offsets(fpaths):
                                     if OffsetType.BYTES in label.offsets:
                                         ## get the offset from the label, and compare the value
                                         off_label = label.offsets[OffsetType.BYTES]
-                                        if val != off_label.value:
+                                        if off_label.value and val != off_label.value:
                                             window = 20
                                             print 'ERROR:  %r != %r in %r' % (off.value, val, text[ off.first - window : off.first + off.length + window])
                                         else:
@@ -188,7 +188,7 @@ def verify_offsets(fpaths):
                                 print 'UNKNOWN: .value not provided in offset'
                                 continue
 
-                            if off.value not in val_lines:
+                            elif off.value and off.value not in val_lines:
                                 window = 3
                                 print 'ERROR:  %r != %r in %r' % (off.value, val_lines, get_val(text, off.first - window, off.first + off.length + window))
 
@@ -200,7 +200,7 @@ def verify_offsets(fpaths):
                                     if OffsetType.LINES in label.offsets:
                                         ## get the offset from the label, and compare the value
                                         off_label = label.offsets[OffsetType.LINES]
-                                        if val != off_label.value:
+                                        if off_label.value and val != off_label.value:
                                             window = 20
                                             print 'ERROR:  %r != %r in %r' % (off.value, val, text[ off.first - window : off.first + off.length + window])
                                         else:
@@ -218,6 +218,7 @@ def _find(fpaths, stream_id):
     Read in a streamcorpus.Chunk file and if any of its stream_ids
     match stream_id, then print stream_item.body.raw to stdout
     '''
+    sys.stderr.write('hunting for %r\n' % stream_id)
     for fpath in fpaths:
         for si in Chunk(path=fpath, mode='rb'):
             if si.stream_id == stream_id:
