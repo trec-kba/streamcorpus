@@ -53,7 +53,7 @@ setup(
     name=PROJECT,
     version=VERSION,
     description=DESC,
-    long_description=read_file('../README.rst'),
+    long_description=read_file('README.rst'),
     author=AUTHOR,
     author_email=AUTHOR_EMAIL,
     url=URL,
