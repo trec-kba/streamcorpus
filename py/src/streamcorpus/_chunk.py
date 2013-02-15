@@ -25,6 +25,26 @@ from cStringIO import StringIO
 from .ttypes import StreamItem
 from .ttypes_v0_1_0 import StreamItem as StreamItem_v0_1_0
 
+def serialize(msg):
+    '''
+    Generate a serialized binary blob for a single message
+    '''
+    o_transport = StringIO()
+    o_protocol = TBinaryProtocol.TBinaryProtocol(o_transport)
+    msg.write(o_protocol)
+    o_transport.seek(0)
+    return o_transport.getvalue()
+
+def deserialize(blob):
+    '''
+    Generate a msg from a serialized binary blob for a single msg
+    '''
+    chunk = Chunk(data=blob)
+    mesgs = list(chunk)
+    assert len(mesgs) == 1, 'got %d messages to deserialize instead of one: %r' % (
+        len(mesgs), mesgs)
+    return mesgs[0]
+
 class md5_file(object):
     '''
     Adapter around a filehandle that wraps .read and .write so that it

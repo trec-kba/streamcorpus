@@ -1,5 +1,5 @@
 import uuid
-from . import make_stream_item, ContentItem, Chunk
+from . import make_stream_item, ContentItem, Chunk, serialize, deserialize
 
 def make_si():
     si = make_stream_item( None, 'http://example.com' )
@@ -60,5 +60,10 @@ def test_chunk_data_append():
     assert len(ch) == 1
     print repr(ch)
 
+def test_serialize():
+    si = make_si()
+    blob = serialize(si)
+    si2 = deserialize(blob)
+    assert si.stream_id == si2.stream_id
 
-
+    
