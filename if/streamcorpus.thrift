@@ -192,7 +192,7 @@ struct Target {
  */
 struct Label {
   /**
-   * identifies the source of this Rating
+   * identifies the source of this Label
    */
   1: Annotator annotator,
 
@@ -467,12 +467,18 @@ struct Rating {
    * example, a document might mention the entity only in chrome text
    * on the side such that it is a Garbage-rated text for that entity.
    */
-  4: optional bool mentions,
+  4: optional bool contains_mentions,
 
   /**
    * Save notes from Annotator about this Rating
    */
   5: optional string comments,
+
+
+  /**
+   * Record strings that are "mentions" of the target in this text
+   */
+  6: optional list<string> mentions,
 }
 
 /**
