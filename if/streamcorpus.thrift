@@ -467,7 +467,7 @@ struct Rating {
    * example, a document might mention the entity only in chrome text
    * on the side such that it is a Garbage-rated text for that entity.
    */
-  4: optional bool contains_mentions,
+  4: optional bool contains_mention,
 
   /**
    * Save notes from Annotator about this Rating
