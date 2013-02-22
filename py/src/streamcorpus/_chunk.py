@@ -17,6 +17,8 @@ from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
 
 import os
+import uuid
+import shutil
 import hashlib
 import subprocess
 import exceptions
@@ -276,7 +278,7 @@ def decrypt_and_uncompress(data, gpg_private=None, gpg_dir='gnupg-dir'):
     '''
     _errors = []
     if gpg_private is not None:
-        ### setup gpg for encryption
+        ### setup gpg for decryption
         if not os.path.exists(gpg_dir):
             os.makedirs(gpg_dir)
         gpg_child = subprocess.Popen(
@@ -293,7 +295,7 @@ def decrypt_and_uncompress(data, gpg_private=None, gpg_dir='gnupg-dir'):
             ## setup gpg to decrypt with trec-kba private key
             ## (i.e. make it the recipient), with zero compression,
             ## ascii armoring is off by default, and --output - must
-            ## appear before --encrypt -
+            ## appear before --decrypt -
             ['gpg',   '--no-permission-warning', '--homedir', gpg_dir,
              '--trust-model', 'always', '--output', '-', '--decrypt', '-'],
             stdin =subprocess.PIPE,
@@ -318,7 +320,7 @@ def decrypt_and_uncompress(data, gpg_private=None, gpg_dir='gnupg-dir'):
 
     return _errors, data
 
-def compress_and_encrypt(data, gpg_public=None, gpg_dir='gnupg-dir', gpg_recipient='trec-kba'):
+def compress_and_encrypt(data, gpg_public=None, gpg_recipient='trec-kba'):
     '''
     Given a data buffer of bytes compress it using xz, if gpg_public
     is provided, encrypt data using gnupg.
@@ -338,8 +340,8 @@ def compress_and_encrypt(data, gpg_public=None, gpg_dir='gnupg-dir', gpg_recipie
 
     if gpg_public is not None:
         ### setup gpg for encryption.  
-        if not os.path.exists(gpg_dir):
-            os.makedirs(gpg_dir)
+        gpg_dir = '/tmp/%s' % uuid.uuid1()
+        os.makedirs(gpg_dir)
 
         ## Load public key.  Could do this just once, but performance
         ## hit is minor and code simpler to do it everytime
@@ -367,5 +369,7 @@ def compress_and_encrypt(data, gpg_public=None, gpg_dir='gnupg-dir', gpg_recipie
         data, errors = gpg_child.communicate(data)
         if errors:
             _errors.append(errors)
+
+        shutil.rmtree(gpg_dir, ignore_errors=True)
 
     return _errors, data
