@@ -268,7 +268,7 @@ class Chunk(object):
             except EOFError:
                 break
 
-def decrypt_and_uncompress(data, gpg_private=None, gpg_dir='gnupg-dir'):
+def decrypt_and_uncompress(data, gpg_private=None):
     '''
     Given a data buffer of bytes, if gpg_key_path is provided, decrypt
     data using gnupg, and uncompress using xz.
@@ -279,8 +279,9 @@ def decrypt_and_uncompress(data, gpg_private=None, gpg_dir='gnupg-dir'):
     _errors = []
     if gpg_private is not None:
         ### setup gpg for decryption
-        if not os.path.exists(gpg_dir):
-            os.makedirs(gpg_dir)
+        gpg_dir = '/tmp/%s' % uuid.uuid1()
+        os.makedirs(gpg_dir)
+
         gpg_child = subprocess.Popen(
             ['gpg', '--no-permission-warning', '--homedir', gpg_dir,
              '--import', gpg_private],
@@ -305,6 +306,9 @@ def decrypt_and_uncompress(data, gpg_private=None, gpg_dir='gnupg-dir'):
         data, errors = gpg_child.communicate(data)
         if errors:
             _errors.append(errors)
+
+        ## remove the gpg_dir
+        shutil.rmtree(gpg_dir, ignore_errors=True)
 
     ## launch xz child
     xz_child = subprocess.Popen(
