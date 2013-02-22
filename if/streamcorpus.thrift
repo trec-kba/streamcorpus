@@ -359,6 +359,17 @@ struct Tagging {
 }
 
 /**
+ * Description of a natural language used in text
+ */
+struct Language {
+  /**
+   * two letter code for the language
+   */
+  1: string code,
+  2: optional string name, 
+}
+
+/**
  * ContentItem contains raw data, an indication of its character
  * encoding, and various transformed versions of the raw data.
  */
@@ -435,6 +446,11 @@ struct ContentItem {
    * py:dynamic,slots
    */
   10: optional map<TaggerID, binary> sentence_blobs = {},
+
+  /**
+   * indication of which natural language is used in the text
+   */
+  11: optional Language language,
 }
 
 /**
