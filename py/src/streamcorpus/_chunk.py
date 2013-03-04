@@ -141,9 +141,13 @@ class Chunk(object):
                     'mode=%r would overwrite existing %s' % (mode, path)
                 if path.endswith('.xz'):
                     assert mode == 'rb', 'mode=%r for .xz' % mode
-                    data = open(path).read()
-                    logs, data = decrypt_and_uncompress(data)
-                    file_obj = StringIO(data)
+                    ## launch xz child
+                    xz_child = subprocess.Popen(
+                        ['xzcat', path],
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE)
+                    file_obj = xz_child.stdout
+                    ## what to do with stderr
                 else:
                     file_obj = open(path, mode)
             else:
