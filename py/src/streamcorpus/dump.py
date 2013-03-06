@@ -13,8 +13,13 @@ import sys
 import json
 import itertools
 import collections
-from _chunk import Chunk
+from _chunk import Chunk, StreamItem, StreamItem_v0_1_0
 from . import OffsetType
+
+versioned_classes = {
+    "v0.2.0": StreamItem,
+    "v0.1.0": StreamItem_v0_1_0,
+    }
 
 def _dump(fpath, args):
     '''
@@ -25,7 +30,8 @@ def _dump(fpath, args):
         num_stream_items = 0
         num_labeled_stream_items = set()
 
-    for num, si in enumerate(Chunk(path=fpath, mode='rb')):
+    global message_class
+    for num, si in enumerate(Chunk(path=fpath, mode='rb', message=message_class)):
         if args.limit and num >= args.limit:
             break
 
@@ -50,7 +56,7 @@ def _dump(fpath, args):
 
         elif not args.show_all:
             si.body = None
-            if si.other_content:
+            if getattr(si, 'other_content', None):
                 for oc in si.other_content:
                     si.other_content[oc] = None
 
@@ -88,9 +94,10 @@ def _dump_tokens(fpaths, annotator_ids=[]):
     :paramm annotator_ids: if present, only print tokens with labels
     from one of these annotators
     '''
+    global message_class
     print '\t'.join(token_attrs + ['stream_id', 'labels'])
     for fpath in fpaths:
-        for si in Chunk(path=fpath, mode='rb'):
+        for si in Chunk(path=fpath, mode='rb', message=message_class):
             if not si.body:
                 print 'no body: %s' % si.stream_id
                 continue
@@ -135,12 +142,13 @@ def verify_offsets(fpaths):
 
     :param fpaths: iterator over file paths to Chunks
     '''
+    global message_class
     for fpath in fpaths:
         print fpath
         num_valid_line_offsets = 0
         num_valid_byte_offsets = 0
         num_valid_label_offsets = 0
-        for si in Chunk(path=fpath, mode='rb'):
+        for si in Chunk(path=fpath, mode='rb', message=message_class):
             if not si.body:
                 print 'no body: %s' % si.stream_id
                 continue
@@ -218,9 +226,10 @@ def _find(fpaths, stream_id):
     Read in a streamcorpus.Chunk file and if any of its stream_ids
     match stream_id, then print stream_item.body.raw to stdout
     '''
+    global message_class
     sys.stderr.write('hunting for %r\n' % stream_id)
     for fpath in fpaths:
-        for si in Chunk(path=fpath, mode='rb'):
+        for si in Chunk(path=fpath, mode='rb', message=message_class):
             if si.stream_id == stream_id:
                 if si.body and si.body.raw:
                     print si.body.raw
@@ -235,8 +244,9 @@ def _find_missing_labels(fpaths, annotator_ids, component):
     Read in a streamcorpus.Chunk file and if any of its stream_ids
     match stream_id, then print stream_item.body.raw to stdout
     '''
+    global message_class
     for fpath in fpaths:
-        for si in Chunk(path=fpath, mode='rb'):
+        for si in Chunk(path=fpath, mode='rb', message=message_class):
             if not si.body:
                 print 'no body on %s %r' % (si.stream_id, si.abs_url)
                 continue
@@ -272,6 +282,7 @@ def _stats(fpaths):
     '''
     Read streamcorpus.Chunk files and print their stats
     '''
+    global message_class
     keys = ['stream_ids', 'num_targets_from_google', 'raw', 'raw_has_targs', 'raw_has_wp', 'media_type', 'clean_html', 'clean_has_targs', 'clean_has_wp',
             'clean_visible', 'labelsets', 'labels', 'labels_has_targs', 'sentences', 'tokens', 'at_least_one_label']
     print '\t'.join(keys)
@@ -280,7 +291,7 @@ def _stats(fpaths):
         sys.stdout.flush()
         c = collections.Counter()
         labels = collections.Counter()
-        for num, si in enumerate( Chunk(path=fpath, mode='rb') ):
+        for num, si in enumerate( Chunk(path=fpath, mode='rb', message=message_class) ):
             #print si.stream_id
             sys.stdout.flush()
             c['stream_ids'] += 1
@@ -337,6 +348,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--component', dest='component', metavar='raw|clean_html|clean_visible', 
         help='print out the .body.<component>')
+    parser.add_argument('--version', default='v0.2.0')
     parser.add_argument('--tokens', action='store_true', 
                         default=False, dest='tokens')
     parser.add_argument('--annotator_id', action='append', default=[],
@@ -355,6 +367,12 @@ if __name__ == '__main__':
                         default=False, dest='verify_offsets')
     args = parser.parse_args()
 
+    if args.version not in versioned_classes:
+        sys.exit('--version=%r is not in "%s"' \
+                     % (args.version, '", "'.join(versioned_classes.keys())))
+
+    global message_class
+    message_class = versioned_classes[args.version]
 
     ## make input_path into an iterable over path strings
     if args.input_path == '-':
