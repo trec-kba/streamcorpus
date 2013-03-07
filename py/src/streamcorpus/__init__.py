@@ -27,6 +27,7 @@ from ._chunk import Chunk, decrypt_and_uncompress, compress_and_encrypt, \
 
 __all__ = ['Chunk', 'decrypt_and_uncompress', 'compress_and_encrypt', 
            'make_stream_time', 'make_stream_item',
+           'get_date_hour',
            'StreamItem', 'ContentItem', 'Label', 'StreamTime', 
            'Offset', 'Rating', 'Annotator', 'Versions', 'Token', 'Sentence', 'EntityType', 
            'Target',
@@ -34,6 +35,21 @@ __all__ = ['Chunk', 'decrypt_and_uncompress', 'compress_and_encrypt',
            'Language',
            'StreamItem_v0_1_0',
            ]
+
+def get_date_hour(stream_thing):
+    '''
+    Returns a date_hour string in the format '2000-01-01-12'
+    :param stream_time: a StreamTime or StreamItem object
+    '''
+    if type(stream_thing) == StreamItem:
+        stream_thing = stream_thing.stream_time
+
+    assert type(stream_thing) == StreamTime, \
+        'must be StreamTime or StreamItem, not %r <-- %r' \
+        % (type(stream_thing), stream_thing)
+
+    return stream_thing.zulu_timestamp.split(':')[0].replace('T', '-')
+
 
 def make_stream_time(zulu_timestamp=None):
     '''
