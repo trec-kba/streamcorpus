@@ -1,5 +1,6 @@
+import java.io.FileInputStream
 import org.apache.thrift.protocol.TBinaryProtocol
-import org.apache.thrift.transport.TFileTransport
+import org.apache.thrift.transport.{TIOStreamTransport, TTransport, TFileTransport}
 import streamcorpus.StreamItem
 
 /**
@@ -9,7 +10,7 @@ import streamcorpus.StreamItem
 
 object Test {
   def main(args: Array[String]) {
-    val transport: TFileTransport = new TFileTransport("test-data/john-smith-tagged-by-lingpipe-0.sc", true)
+    val transport: TTransport = new TIOStreamTransport(new FileInputStream("test-data/john-smith-tagged-by-lingpipe-0.sc"))
     val binProto: TBinaryProtocol = new TBinaryProtocol(transport)
     transport.open()
     println(binProto)

@@ -1,8 +1,12 @@
 package test;
 
 import org.apache.thrift.protocol.TBinaryProtocol;
-import org.apache.thrift.transport.TFileTransport;
+import org.apache.thrift.transport.TIOStreamTransport;
+import org.apache.thrift.transport.TTransport;
 import streamcorpus.StreamItem;
+
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
 
 /**
  * User: jacek
@@ -12,10 +16,11 @@ import streamcorpus.StreamItem;
 public final class ReadThrift {
     public static void main(String[] args) {
         try {
-            TFileTransport transport = new TFileTransport("test-data/john-smith-tagged-by-lingpipe-0.sc", true);
-            transport.open();
-
+            // File transport magically doesn't work
+//            TTransport transport = new TFileTransport("test-data/john-smith-tagged-by-lingpipe-0.sc", true);
+            TTransport transport = new TIOStreamTransport(new BufferedInputStream(new FileInputStream("test-data/john-smith-tagged-by-lingpipe-0.sc")));
             TBinaryProtocol protocol = new TBinaryProtocol(transport);
+            transport.open();
             int counter = 0;
             while (true) {
                 final StreamItem item = new StreamItem();
