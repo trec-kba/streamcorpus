@@ -302,9 +302,8 @@ struct Token {
    *   part of separate mentions, e.g. "The senator is known to his
    *   friends as David, Davy, Zeus, and Mr. Elephant."
    *
-   *   2) Refering to mentions used in Relation objects.  For taggers
-   *   that produce data in ContentItem.relations, this index must be
-   *   unique across the document.
+   *   2) Refering to mentions used in Relation objects.  Used in
+   *   conjunction with sentence_id
    */
   8: optional MentionID mention_id = -1,
 
