@@ -16,8 +16,17 @@ import org.apache.thrift.TEnum;
  * portion of a ContentItem that a human labeled with a tag.
  */
 public enum OffsetType implements org.apache.thrift.TEnum {
+  /**
+   * annotation applies to a range of line numbers
+   */
   LINES(0),
+  /**
+   * annotation applies to a range of bytes
+   */
   BYTES(1),
+  /**
+   * annotation applies to a range of chars, typically unicode chars
+   */
   CHARS(2);
 
   private final int value;

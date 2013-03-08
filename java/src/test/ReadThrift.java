@@ -51,7 +51,7 @@ public final class ReadThrift {
         });
 
         try {
-            TFileTransport transport = new TFileTransport("/tmp/john-smith-tagged-by-lingpipe-0.sc", true);
+            TFileTransport transport = new TFileTransport("test-data/john-smith-tagged-by-lingpipe-0.sc", true);
             TBinaryProtocol protocol = new TBinaryProtocol(transport);
             transport.open();
             int counter = 0;

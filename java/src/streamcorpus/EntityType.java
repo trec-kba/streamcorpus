@@ -20,6 +20,9 @@ import org.apache.thrift.TEnum;
 public enum EntityType implements org.apache.thrift.TEnum {
   PER(0),
   ORG(1),
+  /**
+   * physical location
+   */
   LOC(2),
   MALE_PRONOUN(3),
   FEMALE_PRONOUN(4),
@@ -27,7 +30,17 @@ public enum EntityType implements org.apache.thrift.TEnum {
   DATE(6),
   MONEY(7),
   PERCENT(8),
-  MISC(9);
+  /**
+   * uncategorized named entities, e.g. Civil War for Stanford CoreNLP
+   */
+  MISC(9),
+  GPE(10),
+  FAC(11),
+  VEH(12),
+  WEA(13),
+  phone(14),
+  email(15),
+  URL(16);
 
   private final int value;
 
@@ -68,6 +81,20 @@ public enum EntityType implements org.apache.thrift.TEnum {
         return PERCENT;
       case 9:
         return MISC;
+      case 10:
+        return GPE;
+      case 11:
+        return FAC;
+      case 12:
+        return VEH;
+      case 13:
+        return WEA;
+      case 14:
+        return phone;
+      case 15:
+        return email;
+      case 16:
+        return URL;
       default:
         return null;
     }

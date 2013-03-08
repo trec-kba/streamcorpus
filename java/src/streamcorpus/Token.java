@@ -92,12 +92,17 @@ public class Token implements org.apache.thrift.TBase<Token, Token._Fields>, jav
    */
   public EntityType entity_type; // optional
   /**
-   * Identifier for a multi-token mention starts at zero for each
-   * sentence, because we assume mentions cannot cross sentence
-   * boundaries.  Really only needed when the entity_type and equiv_id
-   * do not change between tokens that are part of separate mentions,
-   * e.g. "The senator is known to his friends as David, Davy, Zeus,
-   * and Mr. Elephant."
+   * Identifier for a each mention in a sentence.  Must be zero-based
+   * within each sentence, so is not unique at the document level.
+   * Serves two purposes:
+   * 
+   *   1) Distinguishing multi-token mention.  Needed when the
+   *   entity_type and equiv_id do not change between tokens that are
+   *   part of separate mentions, e.g. "The senator is known to his
+   *   friends as David, Davy, Zeus, and Mr. Elephant."
+   * 
+   *   2) Refering to mentions used in Relation objects.  Used in
+   *   conjunction with sentence_id
    */
   public short mention_id; // optional
   /**
@@ -157,12 +162,17 @@ public class Token implements org.apache.thrift.TBase<Token, Token._Fields>, jav
      */
     ENTITY_TYPE((short)7, "entity_type"),
     /**
-     * Identifier for a multi-token mention starts at zero for each
-     * sentence, because we assume mentions cannot cross sentence
-     * boundaries.  Really only needed when the entity_type and equiv_id
-     * do not change between tokens that are part of separate mentions,
-     * e.g. "The senator is known to his friends as David, Davy, Zeus,
-     * and Mr. Elephant."
+     * Identifier for a each mention in a sentence.  Must be zero-based
+     * within each sentence, so is not unique at the document level.
+     * Serves two purposes:
+     * 
+     *   1) Distinguishing multi-token mention.  Needed when the
+     *   entity_type and equiv_id do not change between tokens that are
+     *   part of separate mentions, e.g. "The senator is known to his
+     *   friends as David, Davy, Zeus, and Mr. Elephant."
+     * 
+     *   2) Refering to mentions used in Relation objects.  Used in
+     *   conjunction with sentence_id
      */
     MENTION_ID((short)8, "mention_id"),
     /**
@@ -289,7 +299,7 @@ public class Token implements org.apache.thrift.TBase<Token, Token._Fields>, jav
     tmpMap.put(_Fields.ENTITY_TYPE, new org.apache.thrift.meta_data.FieldMetaData("entity_type", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.EnumMetaData(org.apache.thrift.protocol.TType.ENUM, EntityType.class)));
     tmpMap.put(_Fields.MENTION_ID, new org.apache.thrift.meta_data.FieldMetaData("mention_id", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I16)));
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I16        , "MentionID")));
     tmpMap.put(_Fields.EQUIV_ID, new org.apache.thrift.meta_data.FieldMetaData("equiv_id", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
     tmpMap.put(_Fields.PARENT_ID, new org.apache.thrift.meta_data.FieldMetaData("parent_id", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
@@ -649,24 +659,34 @@ public class Token implements org.apache.thrift.TBase<Token, Token._Fields>, jav
   }
 
   /**
-   * Identifier for a multi-token mention starts at zero for each
-   * sentence, because we assume mentions cannot cross sentence
-   * boundaries.  Really only needed when the entity_type and equiv_id
-   * do not change between tokens that are part of separate mentions,
-   * e.g. "The senator is known to his friends as David, Davy, Zeus,
-   * and Mr. Elephant."
+   * Identifier for a each mention in a sentence.  Must be zero-based
+   * within each sentence, so is not unique at the document level.
+   * Serves two purposes:
+   * 
+   *   1) Distinguishing multi-token mention.  Needed when the
+   *   entity_type and equiv_id do not change between tokens that are
+   *   part of separate mentions, e.g. "The senator is known to his
+   *   friends as David, Davy, Zeus, and Mr. Elephant."
+   * 
+   *   2) Refering to mentions used in Relation objects.  Used in
+   *   conjunction with sentence_id
    */
   public short getMention_id() {
     return this.mention_id;
   }
 
   /**
-   * Identifier for a multi-token mention starts at zero for each
-   * sentence, because we assume mentions cannot cross sentence
-   * boundaries.  Really only needed when the entity_type and equiv_id
-   * do not change between tokens that are part of separate mentions,
-   * e.g. "The senator is known to his friends as David, Davy, Zeus,
-   * and Mr. Elephant."
+   * Identifier for a each mention in a sentence.  Must be zero-based
+   * within each sentence, so is not unique at the document level.
+   * Serves two purposes:
+   * 
+   *   1) Distinguishing multi-token mention.  Needed when the
+   *   entity_type and equiv_id do not change between tokens that are
+   *   part of separate mentions, e.g. "The senator is known to his
+   *   friends as David, Davy, Zeus, and Mr. Elephant."
+   * 
+   *   2) Refering to mentions used in Relation objects.  Used in
+   *   conjunction with sentence_id
    */
   public Token setMention_id(short mention_id) {
     this.mention_id = mention_id;

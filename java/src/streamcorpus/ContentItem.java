@@ -48,6 +48,7 @@ public class ContentItem implements org.apache.thrift.TBase<ContentItem, Content
   private static final org.apache.thrift.protocol.TField SENTENCES_FIELD_DESC = new org.apache.thrift.protocol.TField("sentences", org.apache.thrift.protocol.TType.MAP, (short)9);
   private static final org.apache.thrift.protocol.TField SENTENCE_BLOBS_FIELD_DESC = new org.apache.thrift.protocol.TField("sentence_blobs", org.apache.thrift.protocol.TType.MAP, (short)10);
   private static final org.apache.thrift.protocol.TField LANGUAGE_FIELD_DESC = new org.apache.thrift.protocol.TField("language", org.apache.thrift.protocol.TType.STRUCT, (short)11);
+  private static final org.apache.thrift.protocol.TField RELATIONS_FIELD_DESC = new org.apache.thrift.protocol.TField("relations", org.apache.thrift.protocol.TType.MAP, (short)12);
 
   private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
   static {
@@ -122,6 +123,10 @@ public class ContentItem implements org.apache.thrift.TBase<ContentItem, Content
    * indication of which natural language is used in the text
    */
   public Language language; // optional
+  /**
+   * List of relations discovered in clean_visible
+   */
+  public Map<String,List<Relation>> relations; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -191,7 +196,11 @@ public class ContentItem implements org.apache.thrift.TBase<ContentItem, Content
     /**
      * indication of which natural language is used in the text
      */
-    LANGUAGE((short)11, "language");
+    LANGUAGE((short)11, "language"),
+    /**
+     * List of relations discovered in clean_visible
+     */
+    RELATIONS((short)12, "relations");
 
     private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -228,6 +237,8 @@ public class ContentItem implements org.apache.thrift.TBase<ContentItem, Content
           return SENTENCE_BLOBS;
         case 11: // LANGUAGE
           return LANGUAGE;
+        case 12: // RELATIONS
+          return RELATIONS;
         default:
           return null;
       }
@@ -268,7 +279,7 @@ public class ContentItem implements org.apache.thrift.TBase<ContentItem, Content
   }
 
   // isset id assignments
-  private _Fields optionals[] = {_Fields.RAW,_Fields.ENCODING,_Fields.MEDIA_TYPE,_Fields.CLEAN_HTML,_Fields.CLEAN_VISIBLE,_Fields.LOGS,_Fields.TAGGINGS,_Fields.LABELS,_Fields.SENTENCES,_Fields.SENTENCE_BLOBS,_Fields.LANGUAGE};
+  private _Fields optionals[] = {_Fields.RAW,_Fields.ENCODING,_Fields.MEDIA_TYPE,_Fields.CLEAN_HTML,_Fields.CLEAN_VISIBLE,_Fields.LOGS,_Fields.TAGGINGS,_Fields.LABELS,_Fields.SENTENCES,_Fields.SENTENCE_BLOBS,_Fields.LANGUAGE,_Fields.RELATIONS};
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -305,6 +316,11 @@ public class ContentItem implements org.apache.thrift.TBase<ContentItem, Content
             new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING            , true))));
     tmpMap.put(_Fields.LANGUAGE, new org.apache.thrift.meta_data.FieldMetaData("language", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, Language.class)));
+    tmpMap.put(_Fields.RELATIONS, new org.apache.thrift.meta_data.FieldMetaData("relations", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.MapMetaData(org.apache.thrift.protocol.TType.MAP, 
+            new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING            , "TaggerID"), 
+            new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST, 
+                new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, Relation.class)))));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(ContentItem.class, metaDataMap);
   }
@@ -319,6 +335,8 @@ public class ContentItem implements org.apache.thrift.TBase<ContentItem, Content
     this.sentences = new HashMap<String,List<Sentence>>();
 
     this.sentence_blobs = new HashMap<String,ByteBuffer>();
+
+    this.relations = new HashMap<String,List<Relation>>();
 
   }
 
@@ -419,6 +437,24 @@ public class ContentItem implements org.apache.thrift.TBase<ContentItem, Content
     if (other.isSetLanguage()) {
       this.language = new Language(other.language);
     }
+    if (other.isSetRelations()) {
+      Map<String,List<Relation>> __this__relations = new HashMap<String,List<Relation>>();
+      for (Map.Entry<String, List<Relation>> other_element : other.relations.entrySet()) {
+
+        String other_element_key = other_element.getKey();
+        List<Relation> other_element_value = other_element.getValue();
+
+        String __this__relations_copy_key = other_element_key;
+
+        List<Relation> __this__relations_copy_value = new ArrayList<Relation>();
+        for (Relation other_element_value_element : other_element_value) {
+          __this__relations_copy_value.add(new Relation(other_element_value_element));
+        }
+
+        __this__relations.put(__this__relations_copy_key, __this__relations_copy_value);
+      }
+      this.relations = __this__relations;
+    }
   }
 
   public ContentItem deepCopy() {
@@ -443,6 +479,8 @@ public class ContentItem implements org.apache.thrift.TBase<ContentItem, Content
     this.sentence_blobs = new HashMap<String,ByteBuffer>();
 
     this.language = null;
+    this.relations = new HashMap<String,List<Relation>>();
+
   }
 
   /**
@@ -890,6 +928,47 @@ public class ContentItem implements org.apache.thrift.TBase<ContentItem, Content
     }
   }
 
+  public int getRelationsSize() {
+    return (this.relations == null) ? 0 : this.relations.size();
+  }
+
+  public void putToRelations(String key, List<Relation> val) {
+    if (this.relations == null) {
+      this.relations = new HashMap<String,List<Relation>>();
+    }
+    this.relations.put(key, val);
+  }
+
+  /**
+   * List of relations discovered in clean_visible
+   */
+  public Map<String,List<Relation>> getRelations() {
+    return this.relations;
+  }
+
+  /**
+   * List of relations discovered in clean_visible
+   */
+  public ContentItem setRelations(Map<String,List<Relation>> relations) {
+    this.relations = relations;
+    return this;
+  }
+
+  public void unsetRelations() {
+    this.relations = null;
+  }
+
+  /** Returns true if field relations is set (has been assigned a value) and false otherwise */
+  public boolean isSetRelations() {
+    return this.relations != null;
+  }
+
+  public void setRelationsIsSet(boolean value) {
+    if (!value) {
+      this.relations = null;
+    }
+  }
+
   public void setFieldValue(_Fields field, Object value) {
     switch (field) {
     case RAW:
@@ -980,6 +1059,14 @@ public class ContentItem implements org.apache.thrift.TBase<ContentItem, Content
       }
       break;
 
+    case RELATIONS:
+      if (value == null) {
+        unsetRelations();
+      } else {
+        setRelations((Map<String,List<Relation>>)value);
+      }
+      break;
+
     }
   }
 
@@ -1018,6 +1105,9 @@ public class ContentItem implements org.apache.thrift.TBase<ContentItem, Content
     case LANGUAGE:
       return getLanguage();
 
+    case RELATIONS:
+      return getRelations();
+
     }
     throw new IllegalStateException();
   }
@@ -1051,6 +1141,8 @@ public class ContentItem implements org.apache.thrift.TBase<ContentItem, Content
       return isSetSentence_blobs();
     case LANGUAGE:
       return isSetLanguage();
+    case RELATIONS:
+      return isSetRelations();
     }
     throw new IllegalStateException();
   }
@@ -1164,6 +1256,15 @@ public class ContentItem implements org.apache.thrift.TBase<ContentItem, Content
       if (!(this_present_language && that_present_language))
         return false;
       if (!this.language.equals(that.language))
+        return false;
+    }
+
+    boolean this_present_relations = true && this.isSetRelations();
+    boolean that_present_relations = true && that.isSetRelations();
+    if (this_present_relations || that_present_relations) {
+      if (!(this_present_relations && that_present_relations))
+        return false;
+      if (!this.relations.equals(that.relations))
         return false;
     }
 
@@ -1289,6 +1390,16 @@ public class ContentItem implements org.apache.thrift.TBase<ContentItem, Content
     }
     if (isSetLanguage()) {
       lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.language, typedOther.language);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = Boolean.valueOf(isSetRelations()).compareTo(typedOther.isSetRelations());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetRelations()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.relations, typedOther.relations);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -1419,6 +1530,16 @@ public class ContentItem implements org.apache.thrift.TBase<ContentItem, Content
         sb.append("null");
       } else {
         sb.append(this.language);
+      }
+      first = false;
+    }
+    if (isSetRelations()) {
+      if (!first) sb.append(", ");
+      sb.append("relations:");
+      if (this.relations == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.relations);
       }
       first = false;
     }
@@ -1638,6 +1759,37 @@ public class ContentItem implements org.apache.thrift.TBase<ContentItem, Content
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 12: // RELATIONS
+            if (schemeField.type == org.apache.thrift.protocol.TType.MAP) {
+              {
+                org.apache.thrift.protocol.TMap _map89 = iprot.readMapBegin();
+                struct.relations = new HashMap<String,List<Relation>>(2*_map89.size);
+                for (int _i90 = 0; _i90 < _map89.size; ++_i90)
+                {
+                  String _key91; // required
+                  List<Relation> _val92; // required
+                  _key91 = iprot.readString();
+                  {
+                    org.apache.thrift.protocol.TList _list93 = iprot.readListBegin();
+                    _val92 = new ArrayList<Relation>(_list93.size);
+                    for (int _i94 = 0; _i94 < _list93.size; ++_i94)
+                    {
+                      Relation _elem95; // required
+                      _elem95 = new Relation();
+                      _elem95.read(iprot);
+                      _val92.add(_elem95);
+                    }
+                    iprot.readListEnd();
+                  }
+                  struct.relations.put(_key91, _val92);
+                }
+                iprot.readMapEnd();
+              }
+              struct.setRelationsIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -1693,9 +1845,9 @@ public class ContentItem implements org.apache.thrift.TBase<ContentItem, Content
           oprot.writeFieldBegin(LOGS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.logs.size()));
-            for (String _iter89 : struct.logs)
+            for (String _iter96 : struct.logs)
             {
-              oprot.writeString(_iter89);
+              oprot.writeString(_iter96);
             }
             oprot.writeListEnd();
           }
@@ -1707,10 +1859,10 @@ public class ContentItem implements org.apache.thrift.TBase<ContentItem, Content
           oprot.writeFieldBegin(TAGGINGS_FIELD_DESC);
           {
             oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRUCT, struct.taggings.size()));
-            for (Map.Entry<String, Tagging> _iter90 : struct.taggings.entrySet())
+            for (Map.Entry<String, Tagging> _iter97 : struct.taggings.entrySet())
             {
-              oprot.writeString(_iter90.getKey());
-              _iter90.getValue().write(oprot);
+              oprot.writeString(_iter97.getKey());
+              _iter97.getValue().write(oprot);
             }
             oprot.writeMapEnd();
           }
@@ -1722,14 +1874,14 @@ public class ContentItem implements org.apache.thrift.TBase<ContentItem, Content
           oprot.writeFieldBegin(LABELS_FIELD_DESC);
           {
             oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.LIST, struct.labels.size()));
-            for (Map.Entry<String, List<Label>> _iter91 : struct.labels.entrySet())
+            for (Map.Entry<String, List<Label>> _iter98 : struct.labels.entrySet())
             {
-              oprot.writeString(_iter91.getKey());
+              oprot.writeString(_iter98.getKey());
               {
-                oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, _iter91.getValue().size()));
-                for (Label _iter92 : _iter91.getValue())
+                oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, _iter98.getValue().size()));
+                for (Label _iter99 : _iter98.getValue())
                 {
-                  _iter92.write(oprot);
+                  _iter99.write(oprot);
                 }
                 oprot.writeListEnd();
               }
@@ -1744,14 +1896,14 @@ public class ContentItem implements org.apache.thrift.TBase<ContentItem, Content
           oprot.writeFieldBegin(SENTENCES_FIELD_DESC);
           {
             oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.LIST, struct.sentences.size()));
-            for (Map.Entry<String, List<Sentence>> _iter93 : struct.sentences.entrySet())
+            for (Map.Entry<String, List<Sentence>> _iter100 : struct.sentences.entrySet())
             {
-              oprot.writeString(_iter93.getKey());
+              oprot.writeString(_iter100.getKey());
               {
-                oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, _iter93.getValue().size()));
-                for (Sentence _iter94 : _iter93.getValue())
+                oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, _iter100.getValue().size()));
+                for (Sentence _iter101 : _iter100.getValue())
                 {
-                  _iter94.write(oprot);
+                  _iter101.write(oprot);
                 }
                 oprot.writeListEnd();
               }
@@ -1766,10 +1918,10 @@ public class ContentItem implements org.apache.thrift.TBase<ContentItem, Content
           oprot.writeFieldBegin(SENTENCE_BLOBS_FIELD_DESC);
           {
             oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRING, struct.sentence_blobs.size()));
-            for (Map.Entry<String, ByteBuffer> _iter95 : struct.sentence_blobs.entrySet())
+            for (Map.Entry<String, ByteBuffer> _iter102 : struct.sentence_blobs.entrySet())
             {
-              oprot.writeString(_iter95.getKey());
-              oprot.writeBinary(_iter95.getValue());
+              oprot.writeString(_iter102.getKey());
+              oprot.writeBinary(_iter102.getValue());
             }
             oprot.writeMapEnd();
           }
@@ -1780,6 +1932,28 @@ public class ContentItem implements org.apache.thrift.TBase<ContentItem, Content
         if (struct.isSetLanguage()) {
           oprot.writeFieldBegin(LANGUAGE_FIELD_DESC);
           struct.language.write(oprot);
+          oprot.writeFieldEnd();
+        }
+      }
+      if (struct.relations != null) {
+        if (struct.isSetRelations()) {
+          oprot.writeFieldBegin(RELATIONS_FIELD_DESC);
+          {
+            oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.LIST, struct.relations.size()));
+            for (Map.Entry<String, List<Relation>> _iter103 : struct.relations.entrySet())
+            {
+              oprot.writeString(_iter103.getKey());
+              {
+                oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, _iter103.getValue().size()));
+                for (Relation _iter104 : _iter103.getValue())
+                {
+                  _iter104.write(oprot);
+                }
+                oprot.writeListEnd();
+              }
+            }
+            oprot.writeMapEnd();
+          }
           oprot.writeFieldEnd();
         }
       }
@@ -1834,7 +2008,10 @@ public class ContentItem implements org.apache.thrift.TBase<ContentItem, Content
       if (struct.isSetLanguage()) {
         optionals.set(10);
       }
-      oprot.writeBitSet(optionals, 11);
+      if (struct.isSetRelations()) {
+        optionals.set(11);
+      }
+      oprot.writeBitSet(optionals, 12);
       if (struct.isSetRaw()) {
         oprot.writeBinary(struct.raw);
       }
@@ -1853,33 +2030,33 @@ public class ContentItem implements org.apache.thrift.TBase<ContentItem, Content
       if (struct.isSetLogs()) {
         {
           oprot.writeI32(struct.logs.size());
-          for (String _iter96 : struct.logs)
+          for (String _iter105 : struct.logs)
           {
-            oprot.writeString(_iter96);
+            oprot.writeString(_iter105);
           }
         }
       }
       if (struct.isSetTaggings()) {
         {
           oprot.writeI32(struct.taggings.size());
-          for (Map.Entry<String, Tagging> _iter97 : struct.taggings.entrySet())
+          for (Map.Entry<String, Tagging> _iter106 : struct.taggings.entrySet())
           {
-            oprot.writeString(_iter97.getKey());
-            _iter97.getValue().write(oprot);
+            oprot.writeString(_iter106.getKey());
+            _iter106.getValue().write(oprot);
           }
         }
       }
       if (struct.isSetLabels()) {
         {
           oprot.writeI32(struct.labels.size());
-          for (Map.Entry<String, List<Label>> _iter98 : struct.labels.entrySet())
+          for (Map.Entry<String, List<Label>> _iter107 : struct.labels.entrySet())
           {
-            oprot.writeString(_iter98.getKey());
+            oprot.writeString(_iter107.getKey());
             {
-              oprot.writeI32(_iter98.getValue().size());
-              for (Label _iter99 : _iter98.getValue())
+              oprot.writeI32(_iter107.getValue().size());
+              for (Label _iter108 : _iter107.getValue())
               {
-                _iter99.write(oprot);
+                _iter108.write(oprot);
               }
             }
           }
@@ -1888,14 +2065,14 @@ public class ContentItem implements org.apache.thrift.TBase<ContentItem, Content
       if (struct.isSetSentences()) {
         {
           oprot.writeI32(struct.sentences.size());
-          for (Map.Entry<String, List<Sentence>> _iter100 : struct.sentences.entrySet())
+          for (Map.Entry<String, List<Sentence>> _iter109 : struct.sentences.entrySet())
           {
-            oprot.writeString(_iter100.getKey());
+            oprot.writeString(_iter109.getKey());
             {
-              oprot.writeI32(_iter100.getValue().size());
-              for (Sentence _iter101 : _iter100.getValue())
+              oprot.writeI32(_iter109.getValue().size());
+              for (Sentence _iter110 : _iter109.getValue())
               {
-                _iter101.write(oprot);
+                _iter110.write(oprot);
               }
             }
           }
@@ -1904,22 +2081,38 @@ public class ContentItem implements org.apache.thrift.TBase<ContentItem, Content
       if (struct.isSetSentence_blobs()) {
         {
           oprot.writeI32(struct.sentence_blobs.size());
-          for (Map.Entry<String, ByteBuffer> _iter102 : struct.sentence_blobs.entrySet())
+          for (Map.Entry<String, ByteBuffer> _iter111 : struct.sentence_blobs.entrySet())
           {
-            oprot.writeString(_iter102.getKey());
-            oprot.writeBinary(_iter102.getValue());
+            oprot.writeString(_iter111.getKey());
+            oprot.writeBinary(_iter111.getValue());
           }
         }
       }
       if (struct.isSetLanguage()) {
         struct.language.write(oprot);
       }
+      if (struct.isSetRelations()) {
+        {
+          oprot.writeI32(struct.relations.size());
+          for (Map.Entry<String, List<Relation>> _iter112 : struct.relations.entrySet())
+          {
+            oprot.writeString(_iter112.getKey());
+            {
+              oprot.writeI32(_iter112.getValue().size());
+              for (Relation _iter113 : _iter112.getValue())
+              {
+                _iter113.write(oprot);
+              }
+            }
+          }
+        }
+      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, ContentItem struct) throws org.apache.thrift.TException {
       TTupleProtocol iprot = (TTupleProtocol) prot;
-      BitSet incoming = iprot.readBitSet(11);
+      BitSet incoming = iprot.readBitSet(12);
       if (incoming.get(0)) {
         struct.raw = iprot.readBinary();
         struct.setRawIsSet(true);
@@ -1942,94 +2135,94 @@ public class ContentItem implements org.apache.thrift.TBase<ContentItem, Content
       }
       if (incoming.get(5)) {
         {
-          org.apache.thrift.protocol.TList _list103 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-          struct.logs = new ArrayList<String>(_list103.size);
-          for (int _i104 = 0; _i104 < _list103.size; ++_i104)
+          org.apache.thrift.protocol.TList _list114 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+          struct.logs = new ArrayList<String>(_list114.size);
+          for (int _i115 = 0; _i115 < _list114.size; ++_i115)
           {
-            String _elem105; // required
-            _elem105 = iprot.readString();
-            struct.logs.add(_elem105);
+            String _elem116; // required
+            _elem116 = iprot.readString();
+            struct.logs.add(_elem116);
           }
         }
         struct.setLogsIsSet(true);
       }
       if (incoming.get(6)) {
         {
-          org.apache.thrift.protocol.TMap _map106 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.taggings = new HashMap<String,Tagging>(2*_map106.size);
-          for (int _i107 = 0; _i107 < _map106.size; ++_i107)
+          org.apache.thrift.protocol.TMap _map117 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.taggings = new HashMap<String,Tagging>(2*_map117.size);
+          for (int _i118 = 0; _i118 < _map117.size; ++_i118)
           {
-            String _key108; // required
-            Tagging _val109; // required
-            _key108 = iprot.readString();
-            _val109 = new Tagging();
-            _val109.read(iprot);
-            struct.taggings.put(_key108, _val109);
+            String _key119; // required
+            Tagging _val120; // required
+            _key119 = iprot.readString();
+            _val120 = new Tagging();
+            _val120.read(iprot);
+            struct.taggings.put(_key119, _val120);
           }
         }
         struct.setTaggingsIsSet(true);
       }
       if (incoming.get(7)) {
         {
-          org.apache.thrift.protocol.TMap _map110 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.LIST, iprot.readI32());
-          struct.labels = new HashMap<String,List<Label>>(2*_map110.size);
-          for (int _i111 = 0; _i111 < _map110.size; ++_i111)
+          org.apache.thrift.protocol.TMap _map121 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.LIST, iprot.readI32());
+          struct.labels = new HashMap<String,List<Label>>(2*_map121.size);
+          for (int _i122 = 0; _i122 < _map121.size; ++_i122)
           {
-            String _key112; // required
-            List<Label> _val113; // required
-            _key112 = iprot.readString();
+            String _key123; // required
+            List<Label> _val124; // required
+            _key123 = iprot.readString();
             {
-              org.apache.thrift.protocol.TList _list114 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-              _val113 = new ArrayList<Label>(_list114.size);
-              for (int _i115 = 0; _i115 < _list114.size; ++_i115)
+              org.apache.thrift.protocol.TList _list125 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+              _val124 = new ArrayList<Label>(_list125.size);
+              for (int _i126 = 0; _i126 < _list125.size; ++_i126)
               {
-                Label _elem116; // required
-                _elem116 = new Label();
-                _elem116.read(iprot);
-                _val113.add(_elem116);
+                Label _elem127; // required
+                _elem127 = new Label();
+                _elem127.read(iprot);
+                _val124.add(_elem127);
               }
             }
-            struct.labels.put(_key112, _val113);
+            struct.labels.put(_key123, _val124);
           }
         }
         struct.setLabelsIsSet(true);
       }
       if (incoming.get(8)) {
         {
-          org.apache.thrift.protocol.TMap _map117 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.LIST, iprot.readI32());
-          struct.sentences = new HashMap<String,List<Sentence>>(2*_map117.size);
-          for (int _i118 = 0; _i118 < _map117.size; ++_i118)
+          org.apache.thrift.protocol.TMap _map128 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.LIST, iprot.readI32());
+          struct.sentences = new HashMap<String,List<Sentence>>(2*_map128.size);
+          for (int _i129 = 0; _i129 < _map128.size; ++_i129)
           {
-            String _key119; // required
-            List<Sentence> _val120; // required
-            _key119 = iprot.readString();
+            String _key130; // required
+            List<Sentence> _val131; // required
+            _key130 = iprot.readString();
             {
-              org.apache.thrift.protocol.TList _list121 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-              _val120 = new ArrayList<Sentence>(_list121.size);
-              for (int _i122 = 0; _i122 < _list121.size; ++_i122)
+              org.apache.thrift.protocol.TList _list132 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+              _val131 = new ArrayList<Sentence>(_list132.size);
+              for (int _i133 = 0; _i133 < _list132.size; ++_i133)
               {
-                Sentence _elem123; // required
-                _elem123 = new Sentence();
-                _elem123.read(iprot);
-                _val120.add(_elem123);
+                Sentence _elem134; // required
+                _elem134 = new Sentence();
+                _elem134.read(iprot);
+                _val131.add(_elem134);
               }
             }
-            struct.sentences.put(_key119, _val120);
+            struct.sentences.put(_key130, _val131);
           }
         }
         struct.setSentencesIsSet(true);
       }
       if (incoming.get(9)) {
         {
-          org.apache.thrift.protocol.TMap _map124 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-          struct.sentence_blobs = new HashMap<String,ByteBuffer>(2*_map124.size);
-          for (int _i125 = 0; _i125 < _map124.size; ++_i125)
+          org.apache.thrift.protocol.TMap _map135 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+          struct.sentence_blobs = new HashMap<String,ByteBuffer>(2*_map135.size);
+          for (int _i136 = 0; _i136 < _map135.size; ++_i136)
           {
-            String _key126; // required
-            ByteBuffer _val127; // required
-            _key126 = iprot.readString();
-            _val127 = iprot.readBinary();
-            struct.sentence_blobs.put(_key126, _val127);
+            String _key137; // required
+            ByteBuffer _val138; // required
+            _key137 = iprot.readString();
+            _val138 = iprot.readBinary();
+            struct.sentence_blobs.put(_key137, _val138);
           }
         }
         struct.setSentence_blobsIsSet(true);
@@ -2038,6 +2231,31 @@ public class ContentItem implements org.apache.thrift.TBase<ContentItem, Content
         struct.language = new Language();
         struct.language.read(iprot);
         struct.setLanguageIsSet(true);
+      }
+      if (incoming.get(11)) {
+        {
+          org.apache.thrift.protocol.TMap _map139 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.LIST, iprot.readI32());
+          struct.relations = new HashMap<String,List<Relation>>(2*_map139.size);
+          for (int _i140 = 0; _i140 < _map139.size; ++_i140)
+          {
+            String _key141; // required
+            List<Relation> _val142; // required
+            _key141 = iprot.readString();
+            {
+              org.apache.thrift.protocol.TList _list143 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+              _val142 = new ArrayList<Relation>(_list143.size);
+              for (int _i144 = 0; _i144 < _list143.size; ++_i144)
+              {
+                Relation _elem145; // required
+                _elem145 = new Relation();
+                _elem145.read(iprot);
+                _val142.add(_elem145);
+              }
+            }
+            struct.relations.put(_key141, _val142);
+          }
+        }
+        struct.setRelationsIsSet(true);
       }
     }
   }

@@ -9,7 +9,7 @@ import streamcorpus.StreamItem
 
 object Test {
   def main(args: Array[String]) {
-    val transport: TFileTransport = new TFileTransport("/tmp/john-smith-tagged-by-lingpipe-0.sc", true)
+    val transport: TFileTransport = new TFileTransport("test-data/john-smith-tagged-by-lingpipe-0.sc", true)
     val binProto: TBinaryProtocol = new TBinaryProtocol(transport)
     transport.open()
     println(binProto)
