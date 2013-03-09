@@ -232,7 +232,20 @@ enum EntityType {
    * uncategorized named entities, e.g. Civil War for Stanford CoreNLP
    */
   MISC = 9, 
+
+  GPE = 10,
+  FAC = 11,
+  VEH = 12,
+  WEA = 13,
+  phone = 14,
+  email = 15,
+  URL = 16,
 }
+
+/**
+ * mention_id are i16 and unique only within a sentence
+ */
+typedef i16 MentionID
 
 /**
  * Textual tokens identified by an NLP pipeline and marked up with
@@ -280,14 +293,19 @@ struct Token {
   7: optional EntityType entity_type,
 
   /**
-   * Identifier for a multi-token mention starts at zero for each
-   * sentence, because we assume mentions cannot cross sentence
-   * boundaries.  Really only needed when the entity_type and equiv_id
-   * do not change between tokens that are part of separate mentions,
-   * e.g. "The senator is known to his friends as David, Davy, Zeus,
-   * and Mr. Elephant."
+   * Identifier for a each mention in a sentence.  Must be zero-based
+   * within each sentence, so is not unique at the document level.
+   * Serves two purposes:
+   *
+   *   1) Distinguishing multi-token mention.  Needed when the
+   *   entity_type and equiv_id do not change between tokens that are
+   *   part of separate mentions, e.g. "The senator is known to his
+   *   friends as David, Davy, Zeus, and Mr. Elephant."
+   *
+   *   2) Refering to mentions used in Relation objects.  Used in
+   *   conjunction with sentence_id
    */
-  8: optional i16 mention_id = -1,
+  8: optional MentionID mention_id = -1,
 
   /**
    * Within-doc coref chain ID.  That is, identifier of equivalence
@@ -356,6 +374,105 @@ struct Tagging {
    * time that tagging was generated
    */
   5: optional StreamTime generation_time,
+}
+
+/**
+ * Description of a relation between two entities that a tagger
+ * discovered in the text.
+ */
+struct Relation {
+  /**
+   * A string describing the relation.  We may convert these to an
+   * enumeration, which would then be called relation_type
+   *
+   * Here is a list of ACE relation (and event) types that might
+   * appear in relation_name
+   * http://projects.ldc.upenn.edu/ace/docs/English-Events-Guidelines_v5.4.3.pdf
+
+PHYS.Located
+PHYS.Near
+PART-WHOLE.Geographical
+PART-WHOLE.Subsidiary
+PART-WHOLE.Artifact
+PER-SOC.Business
+PER-SOC.Family
+PER-SOC.Lasting-Personal
+ORG-AFF.Employment
+ORG-AFF.Ownership
+ORG-AFF.Founder
+ORG-AFF.Student-Alum
+ORG-AFF.Sports-Affiliation
+ORG-AFF.Investor-Shareholder
+ORG-AFF.Membership
+ART.User-Owner-Inventor-Manufacturer
+GEN-AFF.Citizen-Resident-Religion-Ethnicity
+GEN-AFF.Org-Location
+
+
+Business.Declare-Bankruptcy
+Business.End-Org
+Business.Merge-Org
+Business.Start-Org
+Conflict.Attack
+Conflict.Demonstrate
+Contact.Phone-Write
+Contact.Meet
+Justice.Acquit
+Justice.Appeal
+Justice.Arrest-Jail
+Justice.Charge-Indict
+Justice.Convict
+Justice.Execute
+Justice.Extradite
+Justice.Fine
+Justice.Pardon
+Justice.Release-Parole
+Justice.Sentence
+Justice.Sue
+Justice.Trial-Hearing
+Life.Be-Born
+Life.Die
+Life.Divorce
+Life.Injure
+Life.Marry
+Movement.Transport
+Personnel.Elect
+Personnel.End-Position
+Personnel.Nominate
+Personnel.Start-Position
+Transaction.Transfer-Money
+Transaction.Transfer-Ownership
+
+   */
+  1: optional string relation_name,
+
+  /**
+   * Zero-based index into the sentences array for this TaggerID
+   */
+  2: optional i32 sentence_id_1,
+
+  /**
+   * Zero-based index into the mentions in that sentence.  This
+   * identifies the origin of the relation.  For example, the relation
+   *    (Bob, PHYS.Located, Chicago)
+   * would have mention_id_1 point to Bob.
+   */
+  3: optional MentionID mention_id_1,
+
+  /**
+   * Zero-based index into the sentences array for this TaggerID
+   */
+  4: optional i32 sentence_id_2,
+
+  /**
+   * Zero-based index into the mentions in that sentence. This
+   * identifies the origin of the relation.  For example, the relation
+   *    (Bob, PHYS.Located, Chicago)
+   * would have mention_id_2 point to Chicago.
+   */
+  5: optional MentionID mention_id_2,
+
+  // could add equiv_id_1 and equiv_id_2
 }
 
 /**
@@ -451,6 +568,11 @@ struct ContentItem {
    * indication of which natural language is used in the text
    */
   11: optional Language language,
+
+  /**
+   * List of relations discovered in clean_visible
+   */
+  12: optional map<TaggerID, list<Relation>> relations = {},
 }
 
 /**

@@ -1,5 +1,8 @@
+import os
 import uuid
 from . import make_stream_item, ContentItem, Chunk, serialize, deserialize
+
+TEST_XZ_PATH = os.path.join(os.path.dirname(__file__), '../../../test-data/john-smith-tagged-by-lingpipe-0.sc.xz')
 
 def make_si():
     si = make_stream_item( None, 'http://example.com' )
@@ -13,6 +16,13 @@ def test_chunk():
     si = make_si()
     ch.add( si )
     assert len(ch) == 1
+
+def test_xz():
+    count = 0
+    for si in Chunk(TEST_XZ_PATH):
+        count += 1
+        assert si.body.clean_visible
+    assert count == 197
 
 path = '/tmp/test_chunk-%s.sc' % str(uuid.uuid1())
 

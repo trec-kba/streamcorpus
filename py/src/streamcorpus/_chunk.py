@@ -93,7 +93,10 @@ class Chunk(object):
         mode is only used if you specify a path to an existing file to
         open.
 
-        :param path: path to a file in the local file system
+        :param path: path to a file in the local file system.  If path
+        ends in .xz then mode must be 'rb' and the entire file is
+        loaded into memory and decompressed before the Chunk is ready
+        for reading.
 
         :param mode: read/write mode for opening the file; if
         mode='wb', then a file will be created.
@@ -136,7 +139,17 @@ class Chunk(object):
                 ## if the file is there, then use mode 
                 assert mode in ['rb', 'ab'], \
                     'mode=%r would overwrite existing %s' % (mode, path)
-                file_obj = open(path, mode)
+                if path.endswith('.xz'):
+                    assert mode == 'rb', 'mode=%r for .xz' % mode
+                    ## launch xz child
+                    xz_child = subprocess.Popen(
+                        ['xzcat', path],
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE)
+                    file_obj = xz_child.stdout
+                    ## what to do with stderr
+                else:
+                    file_obj = open(path, mode)
             else:
                 ## otherwise make one for writing
                 assert mode in ['wb', 'ab'], \
