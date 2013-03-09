@@ -64,6 +64,38 @@ def _dump(fpath, args):
     if args.count:
         print '%d\t%d\t%s' % (num_stream_items, len(num_labeled_stream_items), fpath)
 
+
+def _dump_ratings(fpaths, annotator_ids=[], include_header=False):
+    '''
+    Read in a streamcorpus.Chunk files and print all Rating objects as
+    tab-separated values
+
+    :param fpaths: iterator over file paths to Chunks
+
+    :paramm annotator_ids: if present, only print Rating objects from
+    from one of these annotators
+    '''
+    print '\t'.join(['annotator_id', 'target_id', 'stream_id', 'num_mentions', 'mentions'])
+    for fpath in fpaths:
+        for si in Chunk(path=fpath, mode='rb'):
+            for annotator_id, ratings in si.ratings.items():
+                if annotator_ids and annotator_id not in annotator_ids:
+                    ## skip ratings not created by one of
+                    ## annotator_ids
+                    continue
+                for rating in ratings:
+                    assert rating.annotator.annotator_id == annotator_id, \
+                        (rating.annotator.annotator_id, annotator_id)
+                    print '\t'.join([
+                            annotator_id,
+                            rating.target.target_id,
+                            si.stream_id,
+                            str(len(rating.mentions)),
+                            json.dumps(rating.mentions),                            
+                            ])
+
+
+
 token_attrs = [
     'token_num',
     'sentence_pos',
@@ -339,6 +371,8 @@ if __name__ == '__main__':
         help='print out the .body.<component>')
     parser.add_argument('--tokens', action='store_true', 
                         default=False, dest='tokens')
+    parser.add_argument('--ratings', action='store_true', default=False)
+    parser.add_argument('--include-header', action='store_true', default=False, dest='include_header')
     parser.add_argument('--annotator_id', action='append', default=[],
                         dest='annotator_ids', help='only show tokens that have this annotator_id')
     parser.add_argument('--show-all', action='store_true', 
@@ -361,7 +395,7 @@ if __name__ == '__main__':
         args.input_path = itertools.imap(lambda line: line.strip(), sys.stdin)
 
     elif os.path.isdir(args.input_path):
-        args.input_path = itertools.imap(lambda fname: os.path.join(args.input_path, fname),
+        args.input_path = map(lambda fname: os.path.join(args.input_path, fname),
                                          os.listdir(args.input_path))
 
     else:
@@ -382,6 +416,11 @@ if __name__ == '__main__':
 
     elif args.verify_offsets:
         verify_offsets(args.input_path)
+
+    elif args.ratings:
+        _dump_ratings(args.input_path, 
+                      annotator_ids=args.annotator_ids,
+                      include_header=args.include_header)
 
     else:
         for fpath in args.input_path:
