@@ -6,12 +6,12 @@
  */
 #include "streamcorpus_constants.h"
 
-
+namespace streamcorpus {
 
 const streamcorpusConstants g_streamcorpus_constants;
 
 streamcorpusConstants::streamcorpusConstants() {
 }
 
-
+} // namespace
 
