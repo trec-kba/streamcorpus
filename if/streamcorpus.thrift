@@ -125,10 +125,13 @@ struct Offset {
    * identified by first+length is also included.
    *
    * In set notation, 
-   *     [first:first+length]
+   *     [first:first+length-1]
    *
    * or equivalently
-   *     [first:first+length+1)
+   *     [first:first+length)
+   *
+   * or in list slicing, like python's:
+   *     [first:first+length]
    *
    * While thrift treats these as signed integers, negative values are
    * meaningless in this context, i.e. we do not end wrap.
