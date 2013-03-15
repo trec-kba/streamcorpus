@@ -426,8 +426,6 @@ def compress_and_encrypt_path(path, gpg_public=None, gpg_recipient='trec-kba'):
 
     command += ' 1> ' + o_path + ' 2> ' + e_path
 
-    print command
-
     ## launch xz child
     child = os.system(command)
 
