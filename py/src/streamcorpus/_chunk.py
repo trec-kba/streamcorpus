@@ -384,3 +384,60 @@ def compress_and_encrypt(data, gpg_public=None, gpg_recipient='trec-kba'):
         shutil.rmtree(gpg_dir, ignore_errors=True)
 
     return _errors, data
+
+def compress_and_encrypt_path(path, gpg_public=None, gpg_recipient='trec-kba'):
+    '''
+    Given a path in the local file system, compress it using xz, if gpg_public
+    is provided, encrypt data using gnupg.
+
+    :returns: path to file of encrypted, compressed data
+    :rtype: str
+    '''
+    _errors = []
+    assert os.path.exists(path), path
+    command = 'xz --compress < ' + path
+
+    if gpg_public is not None:
+        ### setup gpg for encryption.  
+        gpg_dir = '/tmp/%s' % uuid.uuid1()
+        os.makedirs(gpg_dir)
+
+        ## Load public key.  Could do this just once, but performance
+        ## hit is minor and code simpler to do it everytime
+        gpg_child = subprocess.Popen(
+            ['gpg', '--no-permission-warning', '--homedir', gpg_dir,
+             '--import', gpg_public],
+            stderr=subprocess.PIPE)
+        s_out, errors = gpg_child.communicate()
+        if errors:
+            _errors.append('gpg logs to stderr, read carefully:\n\n%s' % errors)
+
+        ## setup gpg to decrypt with provided private key (i.e. make
+        ## it the recipient), with zero compression, ascii armoring is
+        ## off by default, and --output - must come before --encrypt -
+        command += '| gpg  --no-permission-warning --homedir ' + gpg_dir \
+                 + ' -r ' + gpg_recipient \
+                 + ' -z 0 --trust-model always --output - --encrypt - '
+
+    ## we want to capture any errors, so do all the work before
+    ## returning.  Store the intermediate result in this temp file:
+    o_path = '/tmp/%s' % uuid.uuid1()
+    e_path = '/tmp/%s' % uuid.uuid1()
+
+    command += ' 1> ' + o_path + ' 2> ' + e_path
+
+    print command
+
+    ## launch xz child
+    child = os.system(command)
+
+    errors = open(e_path).read()
+    ## clean up temp path
+    os.remove(e_path)
+    if errors:
+        _errors.append(errors)
+
+    if gpg_public is not None:
+        shutil.rmtree(gpg_dir, ignore_errors=True)
+
+    return _errors, o_path

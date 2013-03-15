@@ -23,9 +23,11 @@ from .ttypes import StreamItem, ContentItem, Label, StreamTime, \
 from .ttypes_v0_1_0 import StreamItem as StreamItem_v0_1_0
 
 from ._chunk import Chunk, decrypt_and_uncompress, compress_and_encrypt, \
+    compress_and_encrypt_path, \
     serialize, deserialize
 
 __all__ = ['Chunk', 'decrypt_and_uncompress', 'compress_and_encrypt', 
+           'compress_and_encrypt_path', 
            'make_stream_time', 'make_stream_item',
            'get_date_hour',
            'StreamItem', 'ContentItem', 'Label', 'StreamTime', 
