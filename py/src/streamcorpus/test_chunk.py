@@ -31,8 +31,10 @@ def test_chunk_path_write():
     ch = Chunk(path=path, mode='wb')
     si = make_si()
     ch.add( si )
+    ch.close()
     assert len(ch) == 1
     print repr(ch)
+    assert len(list( Chunk(path=path, mode='rb') )) == 1
 
 def test_chunk_path_append():
     ## append to path
@@ -43,6 +45,7 @@ def test_chunk_path_append():
     ## count is only for those added
     assert len(ch) == 1
     print repr(ch)
+    assert len(list( Chunk(path=path, mode='rb') )) == 2
 
 def test_chunk_path_read():
     ## read from path
@@ -82,4 +85,4 @@ def test_compress_and_encrypt_path():
     if errors:
         print '\n'.join(errors)
         raise Exception(errors)
-    assert len(open(o_path).read()) == 232
+    assert len(open(o_path).read()) == 240
