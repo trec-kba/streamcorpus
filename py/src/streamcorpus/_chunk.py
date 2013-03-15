@@ -229,12 +229,6 @@ class Chunk(object):
             ## maybe return raise?
             return None
 
-    def __del__(self):
-        '''
-        If garbage collected, try to close.
-        '''        
-        self.close()
-
     def __str__(self):
         raise exceptions.NotImplementedError
 
