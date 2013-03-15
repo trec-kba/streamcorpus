@@ -424,15 +424,23 @@ def compress_and_encrypt_path(path, gpg_public=None, gpg_recipient='trec-kba'):
     o_path = '/tmp/%s' % uuid.uuid1()
     e_path = '/tmp/%s' % uuid.uuid1()
 
-    command += ' 1> ' + o_path + ' 2> ' + e_path
+    command += ' 1> ' + o_path 
+
+    ## wrap entire command in parentheses and pipe stderr to a file
+    command = '( ' + command + ') 2> ' + e_path
 
     ## launch xz child
     child = os.system(command)
 
-    errors = open(e_path).read()
-    ## clean up temp path
-    os.remove(e_path)
+    if os.path.exists(e_path):
+        errors = open(e_path).read()
+        ## clean up temp path
+        os.remove(e_path)
+    else:
+        errors = None
+
     if errors:
+        ## will send back errors in list
         _errors.append(errors)
 
     if gpg_public is not None:
