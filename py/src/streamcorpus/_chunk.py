@@ -18,6 +18,7 @@ from thrift.protocol import TBinaryProtocol
 
 import os
 import uuid
+import errno
 import shutil
 import hashlib
 import subprocess
@@ -137,8 +138,10 @@ class Chunk(object):
                 'Must specify only path or data or file_obj'
             if os.path.exists(path):
                 ## if the file is there, then use mode 
-                assert mode in ['rb', 'ab'], \
-                    'mode=%r would overwrite existing %s' % (mode, path)
+                if mode not in ['rb', 'ab']:
+                    exc = IOError('mode=%r would overwrite existing %s' % (mode, path))
+                    exc.errno = errno.EEXIST
+                    raise exc
                 if path.endswith('.xz'):
                     assert mode == 'rb', 'mode=%r for .xz' % mode
                     ## launch xz child
@@ -152,8 +155,10 @@ class Chunk(object):
                     file_obj = open(path, mode)
             else:
                 ## otherwise make one for writing
-                assert mode in ['wb', 'ab'], \
-                    '%s does not exist but mode=%r' % (path, mode)
+                if mode not in ['wb', 'ab']:
+                    exc = IOError('%s does not exist but mode=%r' % (path, mode))
+                    exc.errno = errno.ENOENT
+                    raise exc
                 dirname = os.path.dirname(path)
                 if dirname and not os.path.exists(dirname):
                     os.makedirs(dirname)

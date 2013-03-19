@@ -1,5 +1,7 @@
 import os
 import uuid
+import errno
+import pytest
 from . import make_stream_item, ContentItem, Chunk, serialize, deserialize, compress_and_encrypt_path
 
 TEST_XZ_PATH = os.path.join(os.path.dirname(__file__), '../../../test-data/john-smith-tagged-by-lingpipe-0.sc.xz')
@@ -79,10 +81,22 @@ def test_serialize():
     si2 = deserialize(blob)
     assert si.stream_id == si2.stream_id
 
-def test_compress_and_encrypt_path():
-    
+def test_noexists_exception():
+    with pytest.raises(IOError) as excinfo:
+        Chunk('path-that-does-not-exist', mode='rb')
+    assert excinfo.value.errno == errno.ENOENT
+
+def test_exists_exception():
+    with pytest.raises(IOError) as excinfo:
+        Chunk(path, mode='wb')
+    assert excinfo.value.errno == errno.EEXIST
+
+def test_compress_and_encrypt_path():    
     errors, o_path = compress_and_encrypt_path(path)
     if errors:
         print '\n'.join(errors)
         raise Exception(errors)
     assert len(open(o_path).read()) == 240
+
+    ## this should go in a "cleanup" method...
+    os.remove(path)
