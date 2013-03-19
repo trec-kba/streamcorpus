@@ -382,74 +382,76 @@ struct Tagging {
 }
 
 /**
+ * RelationType is used in Relation to map relation "name" to type.
+ * This list borrows from ACE with these string replacements: s/-//
+ * and s/./_/
+ *
+ * http://projects.ldc.upenn.edu/ace/docs/English-Events-Guidelines_v5.4.3.pdf
+ */
+enum RelationType {
+  PHYS_Located = 0,
+  PHYS_Near = 1,
+  PARTWHOLE_Geographical = 2,
+  PARTWHOLE_Subsidiary = 3,
+  PARTWHOLE_Artifact = 4,
+  PERSOC_Business = 5,
+  PERSOC_Family = 6,
+  PERSOC_LastingPersonal = 7,
+  ORGAFF_Employment = 8,
+  ORGAFF_Ownership = 9,
+  ORGAFF_Founder = 10,
+  ORGAFF_StudentAlum = 11,
+  ORGAFF_SportsAffiliation = 12,
+  ORGAFF_InvestorShareholder = 13,
+  ORGAFF_Membership = 14,
+  ART_UserOwnerInventorManufacturer = 15,
+  GENAFF_CitizenResidentReligionEthnicity = 16,
+  GENAFF_OrgLocation = 17,
+  Business_DeclareBankruptcy = 18,
+  Business_EndOrg = 19,
+  Business_MergeOrg = 20,
+  Business_StartOrg = 21,
+  Conflict_Attack = 22,
+  Conflict_Demonstrate = 23,
+  Contact_PhoneWrite = 24,
+  Contact_Meet = 25,
+  Justice_Acquit = 26,
+  Justice_Appeal = 27,
+  Justice_ArrestJail = 28,
+  Justice_ChargeIndict = 29,
+  Justice_Convict = 30,
+  Justice_Execute = 31,
+  Justice_Extradite = 32,
+  Justice_Fine = 33,
+  Justice_Pardon = 34,
+  Justice_ReleaseParole = 35,
+  Justice_Sentence = 36,
+  Justice_Sue = 37,
+  Justice_TrialHearing = 38,
+  Life_BeBorn = 39,
+  Life_Die = 40,
+  Life_Divorce = 41,
+  Life_Injure = 42,
+  Life_Marry = 43,
+  Movement_Transport = 44,
+  Personnel_Elect = 45,
+  Personnel_EndPosition = 46,
+  Personnel_Nominate = 47,
+  Personnel_StartPosition = 48,
+  Transaction_TransferMoney = 49,
+  Transaction_TransferOwnership = 50
+}
+
+/**
  * Description of a relation between two entities that a tagger
  * discovered in the text.
  */
 struct Relation {
   /**
-   * A string describing the relation.  We may convert these to an
-   * enumeration, which would then be called relation_type
+   * The type of the relation, see documentation for RelationType
    *
-   * Here is a list of ACE relation (and event) types that might
-   * appear in relation_name
-   * http://projects.ldc.upenn.edu/ace/docs/English-Events-Guidelines_v5.4.3.pdf
-
-PHYS.Located
-PHYS.Near
-PART-WHOLE.Geographical
-PART-WHOLE.Subsidiary
-PART-WHOLE.Artifact
-PER-SOC.Business
-PER-SOC.Family
-PER-SOC.Lasting-Personal
-ORG-AFF.Employment
-ORG-AFF.Ownership
-ORG-AFF.Founder
-ORG-AFF.Student-Alum
-ORG-AFF.Sports-Affiliation
-ORG-AFF.Investor-Shareholder
-ORG-AFF.Membership
-ART.User-Owner-Inventor-Manufacturer
-GEN-AFF.Citizen-Resident-Religion-Ethnicity
-GEN-AFF.Org-Location
-
-
-Business.Declare-Bankruptcy
-Business.End-Org
-Business.Merge-Org
-Business.Start-Org
-Conflict.Attack
-Conflict.Demonstrate
-Contact.Phone-Write
-Contact.Meet
-Justice.Acquit
-Justice.Appeal
-Justice.Arrest-Jail
-Justice.Charge-Indict
-Justice.Convict
-Justice.Execute
-Justice.Extradite
-Justice.Fine
-Justice.Pardon
-Justice.Release-Parole
-Justice.Sentence
-Justice.Sue
-Justice.Trial-Hearing
-Life.Be-Born
-Life.Die
-Life.Divorce
-Life.Injure
-Life.Marry
-Movement.Transport
-Personnel.Elect
-Personnel.End-Position
-Personnel.Nominate
-Personnel.Start-Position
-Transaction.Transfer-Money
-Transaction.Transfer-Ownership
-
    */
-  1: optional string relation_name,
+  1: optional RelationType relation_type,
 
   /**
    * Zero-based index into the sentences array for this TaggerID
@@ -459,7 +461,7 @@ Transaction.Transfer-Ownership
   /**
    * Index into the mentions in the document.  This identifies the
    * origin of the relation.  For example, the relation
-   *    (Bob, PHYS.Located, Chicago)
+   *    (Bob, PHYS_Located, Chicago)
    * would have mention_id_1 point to Bob.
    */
   3: optional MentionID mention_id_1,
@@ -472,7 +474,7 @@ Transaction.Transfer-Ownership
   /**
    * Index into the mentions in the document. This identifies the
    * origin of the relation.  For example, the relation
-   *    (Bob, PHYS.Located, Chicago)
+   *    (Bob, PHYS_Located, Chicago)
    * would have mention_id_2 point to Chicago.
    */
   5: optional MentionID mention_id_2,
