@@ -202,6 +202,12 @@ class Chunk(object):
             self._i_transport = TTransport.TBufferedTransport(self._o_chunk_fh)
             self._i_protocol = TBinaryProtocol.TBinaryProtocol(self._o_transport)
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.close()
+
     def add(self, msg):
         'add message instance to chunk'
         assert self._o_protocol, 'cannot add to a Chunk instantiated with data'

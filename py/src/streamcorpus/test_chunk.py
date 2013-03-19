@@ -100,3 +100,11 @@ def test_compress_and_encrypt_path():
 
     ## this should go in a "cleanup" method...
     os.remove(path)
+
+def test_with():
+    with Chunk(path, mode='wb') as ch:
+        ch.add(make_si())
+        ch.add(make_si())
+        ch.add(make_si())
+    assert len(list(Chunk(path))) == 3
+    os.remove(path)
