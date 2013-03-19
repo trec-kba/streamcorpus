@@ -246,9 +246,12 @@ enum EntityType {
 }
 
 /**
- * mention_id are i16 and unique only within a sentence
+ * mention_id are i32 and are unique across a document.  -1 is the
+ * "null" value.  Making this i32 causes v0_3_0 to not be backward
+ * compatible with v0_2_0, because thrift does not (yet) have type
+ * promotion.
  */
-typedef i16 MentionID
+typedef i32 MentionID
 
 /**
  * Textual tokens identified by an NLP pipeline and marked up with
@@ -296,17 +299,16 @@ struct Token {
   7: optional EntityType entity_type,
 
   /**
-   * Identifier for a each mention in a sentence.  Must be zero-based
-   * within each sentence, so is not unique at the document level.
-   * Serves two purposes:
+   * Identifier for a each mention in this TaggerID's description of
+   * the document.  Is unique at the document level.  Serves two
+   * purposes:
    *
    *   1) Distinguishing multi-token mention.  Needed when the
    *   entity_type and equiv_id do not change between tokens that are
    *   part of separate mentions, e.g. "The senator is known to his
    *   friends as David, Davy, Zeus, and Mr. Elephant."
    *
-   *   2) Refering to mentions used in Relation objects.  Used in
-   *   conjunction with sentence_id
+   *   2) Refering to mentions used in Relation objects.
    */
   8: optional MentionID mention_id = -1,
 
@@ -455,8 +457,8 @@ Transaction.Transfer-Ownership
   2: optional i32 sentence_id_1,
 
   /**
-   * Zero-based index into the mentions in that sentence.  This
-   * identifies the origin of the relation.  For example, the relation
+   * Index into the mentions in the document.  This identifies the
+   * origin of the relation.  For example, the relation
    *    (Bob, PHYS.Located, Chicago)
    * would have mention_id_1 point to Bob.
    */
@@ -468,8 +470,8 @@ Transaction.Transfer-Ownership
   4: optional i32 sentence_id_2,
 
   /**
-   * Zero-based index into the mentions in that sentence. This
-   * identifies the origin of the relation.  For example, the relation
+   * Index into the mentions in the document. This identifies the
+   * origin of the relation.  For example, the relation
    *    (Bob, PHYS.Located, Chicago)
    * would have mention_id_2 point to Chicago.
    */
@@ -649,6 +651,7 @@ typedef binary SourceMetadata
  */
 enum Versions {
   v0_2_0 = 0,
+  v0_3_0 = 1,
 }
 
 /**
