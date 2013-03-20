@@ -116,7 +116,7 @@ token_attrs = [
     'dependency_path',
     ]
 
-def _dump_tokens(fpaths, annotator_ids=[]):
+def _dump_tokens(fpaths, annotator_ids=[], filter_tagger_ids=[]):
     '''
     Read in a streamcorpus.Chunk files and print all tokens in a fixed
     order that enables diffing.
@@ -139,6 +139,8 @@ def _dump_tokens(fpaths, annotator_ids=[]):
             tagger_ids = si.body.sentences.keys()
             tagger_ids.sort()
             for tagger_id in tagger_ids:
+                if filter_tagger_ids and tagger_id not in filter_tagger_ids:
+                    continue
                 for sent in si.body.sentences[tagger_id]:
                     for tok in sent.tokens:
                         vals = []
@@ -387,6 +389,8 @@ if __name__ == '__main__':
     parser.add_argument('--include-header', action='store_true', default=False, dest='include_header')
     parser.add_argument('--annotator_id', action='append', default=[],
                         dest='annotator_ids', help='only show tokens that have this annotator_id')
+    parser.add_argument('--tagger_id', action='append', default=[],
+                        dest='tagger_ids', help='only show tokens that have this tagger_id')
     parser.add_argument('--show-all', action='store_true', 
                         default=False, dest='show_all')
     parser.add_argument('--show-content-field', 
@@ -427,7 +431,7 @@ if __name__ == '__main__':
         _find(args.input_path, args.find)
 
     elif args.tokens:
-        _dump_tokens(args.input_path, args.annotator_ids)
+        _dump_tokens(args.input_path, args.annotator_ids, args.tagger_ids)
 
     elif args.find_missing:
         _find_missing_labels(args.input_path, args.annotator_ids, args.component)
