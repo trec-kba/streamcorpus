@@ -225,8 +225,8 @@ enum EntityType {
    * physical location
    */
   LOC = 2,
-  MALE_PRONOUN = 3, // necessary but crufty
-  FEMALE_PRONOUN = 4, // necessary but crufty
+  //MALE_PRONOUN = 3, // necessary but crufty
+  //FEMALE_PRONOUN = 4, // necessary but crufty
   TIME = 5,
   DATE = 6,
   MONEY = 7,
@@ -243,6 +243,35 @@ enum EntityType {
   phone = 14,
   email = 15,
   URL = 16,
+}
+
+enum MentionType {
+  NAME = 0,
+  PRO = 1,
+  NOM = 2,
+}
+
+enum AttributeType {
+  PER_AGE = 0,
+  PER_GENDER = 1,
+/*
+  PER_ALTNAME = 2,
+  PER Origin Name List  
+  PER Other Family Name List  
+  PER Age Value Single  
+  PER Date of Birth Value Single  
+  PER Date of Death Value Single  
+  PER Cause of Death String Single  
+  PER Charges String List  
+  PER Religion String Single
+  PER Title String List  
+  ORG Alternate Names Name List  
+  ORG Political/Religious Affiliation Name List 8  
+  ORG Dissolved Value Single  
+  ORG Founded Value Single  
+  ORG_NumEmploy
+  ORG_Website
+*/
 }
 
 /**
@@ -334,6 +363,11 @@ struct Token {
    * Labels attached to this token, defaults to an empty map
    */
   12: optional map<AnnotatorID, list<Label>> labels = {},
+
+  /** 
+   * Identify the type of mention, e.g. pronoun, description, proper name
+   */
+  13: optional MentionType mention_type,
 }
 
 struct Sentence {
