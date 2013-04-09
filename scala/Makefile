@@ -2,7 +2,7 @@
 ## simple test in src/test/scala/streamcorpus/Test.scala
 
 TMP=/tmp/scala-streamcorpus-build
-VER=0_2_0
+VER=$(shell cat ../if/VERSION)
 
 OUTPUT_JAR=streamcorpus-scala-v$(VER).jar
 
