@@ -273,6 +273,23 @@ def _find(fpaths, stream_id):
                 else:
                     sys.exit('Found %s without si.body' % stream_id)
 
+def _show_fields(fpaths, fields):
+    '''
+    streamcorpus.Chunk files and display each field specified in 'fields'
+    '''
+    global message_class
+    for fpath in fpaths:
+        for si in Chunk(path=fpath, mode='rb', message=message_class):
+            for field in fields:
+                prop = si
+                for prop_name in field.split('.'):
+                    prop = getattr(prop, prop_name, None)
+                    if not prop: break
+                if prop:
+                    print field, prop
+
+
+
 def _find_missing_labels(fpaths, annotator_ids, component):
     '''
     Read in a streamcorpus.Chunk file and if any of its stream_ids
@@ -395,6 +412,9 @@ if __name__ == '__main__':
                         default=False, dest='show_all')
     parser.add_argument('--show-content-field', 
                         default=None, dest='show_content_field')
+    parser.add_argument('--field', default=[], 
+                        action='append', dest='fields',
+                        help='".foo.bar" will yield StreamItem.foo.bar, if it exists.  Can request multiple --field .foo.bar1 --field .foo.bar2 ')
     parser.add_argument('--count', action='store_true', 
                         default=False, help='print number of StreamItems')
     parser.add_argument('--limit', type=int,
@@ -424,7 +444,10 @@ if __name__ == '__main__':
         args.input_path = [args.input_path]
 
     ## now actually do whatever was requested
-    if args.stats:
+    if args.fields:
+        _show_fields(args.input_path, args.fields)
+
+    elif args.stats:
         _stats(args.input_path)
 
     elif args.find:

@@ -92,21 +92,18 @@ struct Annotator {
 /**
  * Offset and OffsetType are used by Annotation to identify the
  * portion of a ContentItem that a human labeled with a tag.
+ *
+ * annotation applies to a range of line numbers
+ *
+ * annotation applies to a range of bytes
+ *
+ * annotation applies to a range of chars, typically unicode chars
  */
 enum OffsetType {
-  /**
-   * annotation applies to a range of line numbers
-   */
   LINES = 0,
 
-  /**
-   * annotation applies to a range of bytes
-   */
   BYTES = 1,
 
-  /**
-   * annotation applies to a range of chars, typically unicode chars
-   */
   CHARS = 2,
 }
 
@@ -217,13 +214,14 @@ struct Label {
  * various common entity types.  To avoid ambiguity, we define a
  * canonical list here, which we will surely have to expand over time
  * as new taggers recognize new types of entities.
+ *
+ * LOC: physical location
+ *
+ * MISC: uncategorized named entities, e.g. Civil War for Stanford CoreNLP
  */
 enum EntityType {
   PER = 0,
   ORG = 1,
-  /**
-   * physical location
-   */
   LOC = 2,
   //MALE_PRONOUN = 3, // necessary but crufty
   //FEMALE_PRONOUN = 4, // necessary but crufty
@@ -231,9 +229,7 @@ enum EntityType {
   DATE = 6,
   MONEY = 7,
   PERCENT = 8,
-  /**
-   * uncategorized named entities, e.g. Civil War for Stanford CoreNLP
-   */
+
   MISC = 9, 
 
   GPE = 10,
