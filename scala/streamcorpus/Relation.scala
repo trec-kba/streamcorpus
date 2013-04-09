@@ -15,11 +15,11 @@ import scala.collection.{Map, Set}
  */
 object Relation extends ThriftStructCodec[Relation] {
   val Struct = new TStruct("Relation")
-  val RelationNameField = new TField("relationName", TType.STRING, 1)
+  val RelationTypeField = new TField("relationType", TType.I32, 1)
   val SentenceId1Field = new TField("sentenceId1", TType.I32, 2)
-  val MentionId1Field = new TField("mentionId1", TType.I16, 3)
+  val MentionId1Field = new TField("mentionId1", TType.I32, 3)
   val SentenceId2Field = new TField("sentenceId2", TType.I32, 4)
-  val MentionId2Field = new TField("mentionId2", TType.I16, 5)
+  val MentionId2Field = new TField("mentionId2", TType.I32, 5)
 
   /**
    * Checks that all required fields are non-null.
@@ -33,33 +33,33 @@ object Relation extends ThriftStructCodec[Relation] {
   def apply(_iprot: TProtocol): Relation = decode(_iprot)
 
   def apply(
-    relationName: Option[String] = None,
+    relationType: Option[RelationType] = None,
     sentenceId1: Option[Int] = None,
-    mentionId1: Option[Short] = None,
+    mentionId1: Option[Int] = None,
     sentenceId2: Option[Int] = None,
-    mentionId2: Option[Short] = None
+    mentionId2: Option[Int] = None
   ): Relation = new Immutable(
-    relationName,
+    relationType,
     sentenceId1,
     mentionId1,
     sentenceId2,
     mentionId2
   )
 
-  def unapply(_item: Relation): Option[Product5[Option[String], Option[Int], Option[Short], Option[Int], Option[Short]]] = Some(_item)
+  def unapply(_item: Relation): Option[Product5[Option[RelationType], Option[Int], Option[Int], Option[Int], Option[Int]]] = Some(_item)
 
   object Immutable extends ThriftStructCodec[Relation] {
     def encode(_item: Relation, _oproto: TProtocol) { _item.write(_oproto) }
     def decode(_iprot: TProtocol) = {
-      var relationName: String = null
-      var _got_relationName = false
+      var relationType: RelationType = null
+      var _got_relationType = false
       var sentenceId1: Int = 0
       var _got_sentenceId1 = false
-      var mentionId1: Short = 0
+      var mentionId1: Int = 0
       var _got_mentionId1 = false
       var sentenceId2: Int = 0
       var _got_sentenceId2 = false
-      var mentionId2: Short = 0
+      var mentionId2: Int = 0
       var _got_mentionId2 = false
       var _done = false
       _iprot.readStructBegin()
@@ -69,13 +69,13 @@ object Relation extends ThriftStructCodec[Relation] {
           _done = true
         } else {
           _field.id match {
-            case 1 => { /* relationName */
+            case 1 => { /* relationType */
               _field.`type` match {
-                case TType.STRING => {
-                  relationName = {
-                    _iprot.readString()
+                case TType.I32 => {
+                  relationType = {
+                    streamcorpus.RelationType(_iprot.readI32())
                   }
-                  _got_relationName = true
+                  _got_relationType = true
                 }
                 case _ => TProtocolUtil.skip(_iprot, _field.`type`)
               }
@@ -93,9 +93,9 @@ object Relation extends ThriftStructCodec[Relation] {
             }
             case 3 => { /* mentionId1 */
               _field.`type` match {
-                case TType.I16 => {
+                case TType.I32 => {
                   mentionId1 = {
-                    _iprot.readI16()
+                    _iprot.readI32()
                   }
                   _got_mentionId1 = true
                 }
@@ -115,9 +115,9 @@ object Relation extends ThriftStructCodec[Relation] {
             }
             case 5 => { /* mentionId2 */
               _field.`type` match {
-                case TType.I16 => {
+                case TType.I32 => {
                   mentionId2 = {
-                    _iprot.readI16()
+                    _iprot.readI32()
                   }
                   _got_mentionId2 = true
                 }
@@ -131,7 +131,7 @@ object Relation extends ThriftStructCodec[Relation] {
       }
       _iprot.readStructEnd()
       new Immutable(
-        if (_got_relationName) Some(relationName) else None,
+        if (_got_relationType) Some(relationType) else None,
         if (_got_sentenceId1) Some(sentenceId1) else None,
         if (_got_mentionId1) Some(mentionId1) else None,
         if (_got_sentenceId2) Some(sentenceId2) else None,
@@ -146,11 +146,11 @@ object Relation extends ThriftStructCodec[Relation] {
    * new instances.
    */
   class Immutable(
-    val relationName: Option[String] = None,
+    val relationType: Option[RelationType] = None,
     val sentenceId1: Option[Int] = None,
-    val mentionId1: Option[Short] = None,
+    val mentionId1: Option[Int] = None,
     val sentenceId2: Option[Int] = None,
-    val mentionId2: Option[Short] = None
+    val mentionId2: Option[Int] = None
   ) extends Relation
 
   /**
@@ -160,27 +160,27 @@ object Relation extends ThriftStructCodec[Relation] {
    */
   trait Proxy extends Relation {
     protected def _underlying_Relation: Relation
-    def relationName: Option[String] = _underlying_Relation.relationName
+    def relationType: Option[RelationType] = _underlying_Relation.relationType
     def sentenceId1: Option[Int] = _underlying_Relation.sentenceId1
-    def mentionId1: Option[Short] = _underlying_Relation.mentionId1
+    def mentionId1: Option[Int] = _underlying_Relation.mentionId1
     def sentenceId2: Option[Int] = _underlying_Relation.sentenceId2
-    def mentionId2: Option[Short] = _underlying_Relation.mentionId2
+    def mentionId2: Option[Int] = _underlying_Relation.mentionId2
   }
 }
 
 trait Relation extends ThriftStruct
-  with Product5[Option[String], Option[Int], Option[Short], Option[Int], Option[Short]]
+  with Product5[Option[RelationType], Option[Int], Option[Int], Option[Int], Option[Int]]
   with java.io.Serializable
 {
   import Relation._
 
-  def relationName: Option[String]
+  def relationType: Option[RelationType]
   def sentenceId1: Option[Int]
-  def mentionId1: Option[Short]
+  def mentionId1: Option[Int]
   def sentenceId2: Option[Int]
-  def mentionId2: Option[Short]
+  def mentionId2: Option[Int]
 
-  def _1 = relationName
+  def _1 = relationType
   def _2 = sentenceId1
   def _3 = mentionId1
   def _4 = sentenceId2
@@ -189,10 +189,10 @@ trait Relation extends ThriftStruct
   override def write(_oprot: TProtocol) {
     Relation.validate(this)
     _oprot.writeStructBegin(Struct)
-    if (relationName.isDefined) {
-      val relationName_item = relationName.get
-      _oprot.writeFieldBegin(RelationNameField)
-      _oprot.writeString(relationName_item)
+    if (relationType.isDefined) {
+      val relationType_item = relationType.get
+      _oprot.writeFieldBegin(RelationTypeField)
+      _oprot.writeI32(relationType_item.value)
       _oprot.writeFieldEnd()
     }
     if (sentenceId1.isDefined) {
@@ -204,7 +204,7 @@ trait Relation extends ThriftStruct
     if (mentionId1.isDefined) {
       val mentionId1_item = mentionId1.get
       _oprot.writeFieldBegin(MentionId1Field)
-      _oprot.writeI16(mentionId1_item)
+      _oprot.writeI32(mentionId1_item)
       _oprot.writeFieldEnd()
     }
     if (sentenceId2.isDefined) {
@@ -216,7 +216,7 @@ trait Relation extends ThriftStruct
     if (mentionId2.isDefined) {
       val mentionId2_item = mentionId2.get
       _oprot.writeFieldBegin(MentionId2Field)
-      _oprot.writeI16(mentionId2_item)
+      _oprot.writeI32(mentionId2_item)
       _oprot.writeFieldEnd()
     }
     _oprot.writeFieldStop()
@@ -224,13 +224,13 @@ trait Relation extends ThriftStruct
   }
 
   def copy(
-    relationName: Option[String] = this.relationName, 
+    relationType: Option[RelationType] = this.relationType, 
     sentenceId1: Option[Int] = this.sentenceId1, 
-    mentionId1: Option[Short] = this.mentionId1, 
+    mentionId1: Option[Int] = this.mentionId1, 
     sentenceId2: Option[Int] = this.sentenceId2, 
-    mentionId2: Option[Short] = this.mentionId2
+    mentionId2: Option[Int] = this.mentionId2
   ): Relation = new Immutable(
-    relationName, 
+    relationType, 
     sentenceId1, 
     mentionId1, 
     sentenceId2, 
@@ -249,7 +249,7 @@ trait Relation extends ThriftStruct
   override def productArity: Int = 5
 
   override def productElement(n: Int): Any = n match {
-    case 0 => relationName
+    case 0 => relationType
     case 1 => sentenceId1
     case 2 => mentionId1
     case 3 => sentenceId2

@@ -23,11 +23,12 @@ object Token extends ThriftStructCodec[Token] {
   val LemmaField = new TField("lemma", TType.STRING, 5)
   val PosField = new TField("pos", TType.STRING, 6)
   val EntityTypeField = new TField("entityType", TType.I32, 7)
-  val MentionIdField = new TField("mentionId", TType.I16, 8)
+  val MentionIdField = new TField("mentionId", TType.I32, 8)
   val EquivIdField = new TField("equivId", TType.I32, 9)
   val ParentIdField = new TField("parentId", TType.I32, 10)
   val DependencyPathField = new TField("dependencyPath", TType.STRING, 11)
   val LabelsField = new TField("labels", TType.MAP, 12)
+  val MentionTypeField = new TField("mentionType", TType.I32, 13)
 
   /**
    * Checks that all required fields are non-null.
@@ -48,11 +49,12 @@ object Token extends ThriftStructCodec[Token] {
     lemma: Option[String] = None,
     pos: Option[String] = None,
     entityType: Option[EntityType] = None,
-    mentionId: Short = -1,
+    mentionId: Int = -1,
     equivId: Int = -1,
     parentId: Int = -1,
     dependencyPath: Option[String] = None,
-    labels: Map[String, Seq[Label]] = Map()
+    labels: Map[String, Seq[Label]] = Map(),
+    mentionType: Option[MentionType] = None
   ): Token = new Immutable(
     tokenNum,
     token,
@@ -65,10 +67,11 @@ object Token extends ThriftStructCodec[Token] {
     equivId,
     parentId,
     dependencyPath,
-    labels
+    labels,
+    mentionType
   )
 
-  def unapply(_item: Token): Option[Product12[Int, String, Map[OffsetType, Offset], Int, Option[String], Option[String], Option[EntityType], Short, Int, Int, Option[String], Map[String, Seq[Label]]]] = Some(_item)
+  def unapply(_item: Token): Option[Product13[Int, String, Map[OffsetType, Offset], Int, Option[String], Option[String], Option[EntityType], Int, Int, Int, Option[String], Map[String, Seq[Label]], Option[MentionType]]] = Some(_item)
 
   object Immutable extends ThriftStructCodec[Token] {
     def encode(_item: Token, _oproto: TProtocol) { _item.write(_oproto) }
@@ -87,7 +90,7 @@ object Token extends ThriftStructCodec[Token] {
       var _got_pos = false
       var entityType: EntityType = null
       var _got_entityType = false
-      var mentionId: Short = -1
+      var mentionId: Int = -1
       var _got_mentionId = false
       var equivId: Int = -1
       var _got_equivId = false
@@ -97,6 +100,8 @@ object Token extends ThriftStructCodec[Token] {
       var _got_dependencyPath = false
       var labels: Map[String, Seq[Label]] = Map()
       var _got_labels = false
+      var mentionType: MentionType = null
+      var _got_mentionType = false
       var _done = false
       _iprot.readStructBegin()
       while (!_done) {
@@ -198,9 +203,9 @@ object Token extends ThriftStructCodec[Token] {
             }
             case 8 => { /* mentionId */
               _field.`type` match {
-                case TType.I16 => {
+                case TType.I32 => {
                   mentionId = {
-                    _iprot.readI16()
+                    _iprot.readI32()
                   }
                   _got_mentionId = true
                 }
@@ -275,6 +280,17 @@ object Token extends ThriftStructCodec[Token] {
                 case _ => TProtocolUtil.skip(_iprot, _field.`type`)
               }
             }
+            case 13 => { /* mentionType */
+              _field.`type` match {
+                case TType.I32 => {
+                  mentionType = {
+                    streamcorpus.MentionType(_iprot.readI32())
+                  }
+                  _got_mentionType = true
+                }
+                case _ => TProtocolUtil.skip(_iprot, _field.`type`)
+              }
+            }
             case _ => TProtocolUtil.skip(_iprot, _field.`type`)
           }
           _iprot.readFieldEnd()
@@ -293,7 +309,8 @@ object Token extends ThriftStructCodec[Token] {
         equivId,
         parentId,
         if (_got_dependencyPath) Some(dependencyPath) else None,
-        labels
+        labels,
+        if (_got_mentionType) Some(mentionType) else None
       )
     }
   }
@@ -311,11 +328,12 @@ object Token extends ThriftStructCodec[Token] {
     val lemma: Option[String] = None,
     val pos: Option[String] = None,
     val entityType: Option[EntityType] = None,
-    val mentionId: Short = -1,
+    val mentionId: Int = -1,
     val equivId: Int = -1,
     val parentId: Int = -1,
     val dependencyPath: Option[String] = None,
-    val labels: Map[String, Seq[Label]] = Map()
+    val labels: Map[String, Seq[Label]] = Map(),
+    val mentionType: Option[MentionType] = None
   ) extends Token
 
   /**
@@ -332,16 +350,17 @@ object Token extends ThriftStructCodec[Token] {
     def lemma: Option[String] = _underlying_Token.lemma
     def pos: Option[String] = _underlying_Token.pos
     def entityType: Option[EntityType] = _underlying_Token.entityType
-    def mentionId: Short = _underlying_Token.mentionId
+    def mentionId: Int = _underlying_Token.mentionId
     def equivId: Int = _underlying_Token.equivId
     def parentId: Int = _underlying_Token.parentId
     def dependencyPath: Option[String] = _underlying_Token.dependencyPath
     def labels: Map[String, Seq[Label]] = _underlying_Token.labels
+    def mentionType: Option[MentionType] = _underlying_Token.mentionType
   }
 }
 
 trait Token extends ThriftStruct
-  with Product12[Int, String, Map[OffsetType, Offset], Int, Option[String], Option[String], Option[EntityType], Short, Int, Int, Option[String], Map[String, Seq[Label]]]
+  with Product13[Int, String, Map[OffsetType, Offset], Int, Option[String], Option[String], Option[EntityType], Int, Int, Int, Option[String], Map[String, Seq[Label]], Option[MentionType]]
   with java.io.Serializable
 {
   import Token._
@@ -353,11 +372,12 @@ trait Token extends ThriftStruct
   def lemma: Option[String]
   def pos: Option[String]
   def entityType: Option[EntityType]
-  def mentionId: Short
+  def mentionId: Int
   def equivId: Int
   def parentId: Int
   def dependencyPath: Option[String]
   def labels: Map[String, Seq[Label]]
+  def mentionType: Option[MentionType]
 
   def _1 = tokenNum
   def _2 = token
@@ -371,6 +391,7 @@ trait Token extends ThriftStruct
   def _10 = parentId
   def _11 = dependencyPath
   def _12 = labels
+  def _13 = mentionType
 
   override def write(_oprot: TProtocol) {
     Token.validate(this)
@@ -427,7 +448,7 @@ trait Token extends ThriftStruct
     if (true) {
       val mentionId_item = mentionId
       _oprot.writeFieldBegin(MentionIdField)
-      _oprot.writeI16(mentionId_item)
+      _oprot.writeI32(mentionId_item)
       _oprot.writeFieldEnd()
     }
     if (true) {
@@ -465,6 +486,12 @@ trait Token extends ThriftStruct
       _oprot.writeMapEnd()
       _oprot.writeFieldEnd()
     }
+    if (mentionType.isDefined) {
+      val mentionType_item = mentionType.get
+      _oprot.writeFieldBegin(MentionTypeField)
+      _oprot.writeI32(mentionType_item.value)
+      _oprot.writeFieldEnd()
+    }
     _oprot.writeFieldStop()
     _oprot.writeStructEnd()
   }
@@ -477,11 +504,12 @@ trait Token extends ThriftStruct
     lemma: Option[String] = this.lemma, 
     pos: Option[String] = this.pos, 
     entityType: Option[EntityType] = this.entityType, 
-    mentionId: Short = this.mentionId, 
+    mentionId: Int = this.mentionId, 
     equivId: Int = this.equivId, 
     parentId: Int = this.parentId, 
     dependencyPath: Option[String] = this.dependencyPath, 
-    labels: Map[String, Seq[Label]] = this.labels
+    labels: Map[String, Seq[Label]] = this.labels, 
+    mentionType: Option[MentionType] = this.mentionType
   ): Token = new Immutable(
     tokenNum, 
     token, 
@@ -494,7 +522,8 @@ trait Token extends ThriftStruct
     equivId, 
     parentId, 
     dependencyPath, 
-    labels
+    labels, 
+    mentionType
   )
 
   override def canEqual(other: Any): Boolean = other.isInstanceOf[Token]
@@ -506,7 +535,7 @@ trait Token extends ThriftStruct
   override def toString: String = runtime.ScalaRunTime._toString(this)
 
 
-  override def productArity: Int = 12
+  override def productArity: Int = 13
 
   override def productElement(n: Int): Any = n match {
     case 0 => tokenNum
@@ -521,6 +550,7 @@ trait Token extends ThriftStruct
     case 9 => parentId
     case 10 => dependencyPath
     case 11 => labels
+    case 12 => mentionType
     case _ => throw new IndexOutOfBoundsException(n.toString)
   }
 

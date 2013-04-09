@@ -17,6 +17,10 @@ case object Versions {
     val value = 0
     val name = "V020"
   }
+  case object V030 extends Versions {
+    val value = 1
+    val name = "V030"
+  }
 
   /**
    * Find the enum by its integer value, as defined in the Thrift IDL.
@@ -25,6 +29,7 @@ case object Versions {
   def apply(value: Int): Versions = {
     value match {
       case 0 => V020
+      case 1 => V030
       case _ => throw new NoSuchElementException(value.toString)
     }
   }
@@ -36,6 +41,7 @@ case object Versions {
   def get(value: Int): Option[Versions] = {
     value match {
       case 0 => scala.Some(V020)
+      case 1 => scala.Some(V030)
       case _ => scala.None
     }
   }
@@ -43,6 +49,7 @@ case object Versions {
   def valueOf(name: String): Option[Versions] = {
     name.toLowerCase match {
       case "v020" => scala.Some(Versions.V020)
+      case "v030" => scala.Some(Versions.V030)
       case _ => scala.None
     }
   }

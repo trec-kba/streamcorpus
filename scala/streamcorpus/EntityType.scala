@@ -28,14 +28,6 @@ case object EntityType {
     val value = 2
     val name = "Loc"
   }
-  case object MalePronoun extends EntityType {
-    val value = 3
-    val name = "MalePronoun"
-  }
-  case object FemalePronoun extends EntityType {
-    val value = 4
-    val name = "FemalePronoun"
-  }
   case object Time extends EntityType {
     val value = 5
     val name = "Time"
@@ -94,8 +86,6 @@ case object EntityType {
       case 0 => Per
       case 1 => Org
       case 2 => Loc
-      case 3 => MalePronoun
-      case 4 => FemalePronoun
       case 5 => Time
       case 6 => Date
       case 7 => Money
@@ -121,8 +111,6 @@ case object EntityType {
       case 0 => scala.Some(Per)
       case 1 => scala.Some(Org)
       case 2 => scala.Some(Loc)
-      case 3 => scala.Some(MalePronoun)
-      case 4 => scala.Some(FemalePronoun)
       case 5 => scala.Some(Time)
       case 6 => scala.Some(Date)
       case 7 => scala.Some(Money)
@@ -144,8 +132,6 @@ case object EntityType {
       case "per" => scala.Some(EntityType.Per)
       case "org" => scala.Some(EntityType.Org)
       case "loc" => scala.Some(EntityType.Loc)
-      case "malepronoun" => scala.Some(EntityType.MalePronoun)
-      case "femalepronoun" => scala.Some(EntityType.FemalePronoun)
       case "time" => scala.Some(EntityType.Time)
       case "date" => scala.Some(EntityType.Date)
       case "money" => scala.Some(EntityType.Money)
