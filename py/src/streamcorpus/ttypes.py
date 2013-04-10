@@ -123,6 +123,20 @@ class MentionType(object):
     "NOM": 2,
   }
 
+class Gender(object):
+  FEMALE = 0
+  MALE = 1
+
+  _VALUES_TO_NAMES = {
+    0: "FEMALE",
+    1: "MALE",
+  }
+
+  _NAMES_TO_VALUES = {
+    "FEMALE": 0,
+    "MALE": 1,
+  }
+
 class AttributeType(object):
   PER_AGE = 0
   PER_GENDER = 1
@@ -873,6 +887,143 @@ class Label(object):
         oprot.writeI32(kiter7)
         viter8.write(oprot)
       oprot.writeMapEnd()
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, getattr(self, key))
+      for key in self.__slots__]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    if not isinstance(other, self.__class__):
+      return False
+    for attr in self.__slots__:
+      my_val = getattr(self, attr)
+      other_val = getattr(other, attr)
+      if my_val != other_val:
+        return False
+    return True
+
+  def __ne__(self, other):
+    return not (self == other)
+
+
+class Attribute(object):
+  """
+  Description of an attribute of an entity discovered by a tagger in
+  the text.
+
+  Attributes:
+   - attribute_type: The type of the attribute, see documentation for AttributeType
+   - evidence: UTF-8 string that tagger asserts as evidence of an attribute
+   - value: A normalized, strongly typed value derived from the evidence.
+  The actual type must be determined by programmatically
+  interpretint the attribute_type.  For example,
+  attribute_type==AttributeType.PER_AGE implies that this value
+  will be an integer index into the Gender enum.
+
+  For attribute_type that imply a value of type date-time, the
+  value is a zulu_timestamp string from a StreamTime instance.
+   - sentence_id: Zero-based index into the sentences array for this TaggerID
+   - mention_id: Index into the mentions in the document.  This identifies the
+  origin of the relation.  For example, the relation
+     (Bob, PHYS_Located, Chicago)
+  would have mention_id_1 point to Bob.
+  """
+
+  __slots__ = [ 
+    'attribute_type',
+    'evidence',
+    'value',
+    'sentence_id',
+    'mention_id',
+   ]
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.I32, 'attribute_type', None, None, ), # 1
+    (2, TType.STRING, 'evidence', None, None, ), # 2
+    (3, TType.STRING, 'value', None, None, ), # 3
+    (4, TType.I32, 'sentence_id', None, None, ), # 4
+    (5, TType.I32, 'mention_id', None, None, ), # 5
+  )
+
+  def __init__(self, attribute_type=None, evidence=None, value=None, sentence_id=None, mention_id=None,):
+    self.attribute_type = attribute_type
+    self.evidence = evidence
+    self.value = value
+    self.sentence_id = sentence_id
+    self.mention_id = mention_id
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.I32:
+          self.attribute_type = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.STRING:
+          self.evidence = iprot.readString();
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.STRING:
+          self.value = iprot.readString();
+        else:
+          iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.I32:
+          self.sentence_id = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 5:
+        if ftype == TType.I32:
+          self.mention_id = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('Attribute')
+    if self.attribute_type is not None:
+      oprot.writeFieldBegin('attribute_type', TType.I32, 1)
+      oprot.writeI32(self.attribute_type)
+      oprot.writeFieldEnd()
+    if self.evidence is not None:
+      oprot.writeFieldBegin('evidence', TType.STRING, 2)
+      oprot.writeString(self.evidence)
+      oprot.writeFieldEnd()
+    if self.value is not None:
+      oprot.writeFieldBegin('value', TType.STRING, 3)
+      oprot.writeString(self.value)
+      oprot.writeFieldEnd()
+    if self.sentence_id is not None:
+      oprot.writeFieldBegin('sentence_id', TType.I32, 4)
+      oprot.writeI32(self.sentence_id)
+      oprot.writeFieldEnd()
+    if self.mention_id is not None:
+      oprot.writeFieldBegin('mention_id', TType.I32, 5)
+      oprot.writeI32(self.mention_id)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
@@ -1697,6 +1848,7 @@ class ContentItem(object):
   py:dynamic,slots
    - language: indication of which natural language is used in the text
    - relations: List of relations discovered in clean_visible
+   - attributes: List of attributes discovered in clean_visible
   """
 
   __slots__ = [ 
@@ -1712,6 +1864,7 @@ class ContentItem(object):
     'sentence_blobs',
     'language',
     'relations',
+    'attributes',
    ]
 
   thrift_spec = (
@@ -1734,9 +1887,11 @@ class ContentItem(object):
     (11, TType.STRUCT, 'language', (Language, Language.thrift_spec), None, ), # 11
     (12, TType.MAP, 'relations', (TType.STRING,None,TType.LIST,(TType.STRUCT,(Relation, Relation.thrift_spec))), {
     }, ), # 12
+    (13, TType.MAP, 'attributes', (TType.STRING,None,TType.LIST,(TType.STRUCT,(Attribute, Attribute.thrift_spec))), {
+    }, ), # 13
   )
 
-  def __init__(self, raw=None, encoding=None, media_type=None, clean_html=None, clean_visible=None, logs=thrift_spec[6][4], taggings=thrift_spec[7][4], labels=thrift_spec[8][4], sentences=thrift_spec[9][4], sentence_blobs=thrift_spec[10][4], language=None, relations=thrift_spec[12][4],):
+  def __init__(self, raw=None, encoding=None, media_type=None, clean_html=None, clean_visible=None, logs=thrift_spec[6][4], taggings=thrift_spec[7][4], labels=thrift_spec[8][4], sentences=thrift_spec[9][4], sentence_blobs=thrift_spec[10][4], language=None, relations=thrift_spec[12][4], attributes=thrift_spec[13][4],):
     self.raw = raw
     self.encoding = encoding
     self.media_type = media_type
@@ -1767,6 +1922,10 @@ class ContentItem(object):
       relations = {
     }
     self.relations = relations
+    if attributes is self.thrift_spec[13][4]:
+      attributes = {
+    }
+    self.attributes = attributes
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -1892,6 +2051,23 @@ class ContentItem(object):
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
+      elif fid == 13:
+        if ftype == TType.MAP:
+          self.attributes = {}
+          (_ktype117, _vtype118, _size116 ) = iprot.readMapBegin() 
+          for _i120 in xrange(_size116):
+            _key121 = iprot.readString();
+            _val122 = []
+            (_etype126, _size123) = iprot.readListBegin()
+            for _i127 in xrange(_size123):
+              _elem128 = Attribute()
+              _elem128.read(iprot)
+              _val122.append(_elem128)
+            iprot.readListEnd()
+            self.attributes[_key121] = _val122
+          iprot.readMapEnd()
+        else:
+          iprot.skip(ftype)
       else:
         iprot.skip(ftype)
       iprot.readFieldEnd()
@@ -1925,46 +2101,46 @@ class ContentItem(object):
     if self.logs is not None:
       oprot.writeFieldBegin('logs', TType.LIST, 6)
       oprot.writeListBegin(TType.STRING, len(self.logs))
-      for iter116 in self.logs:
-        oprot.writeString(iter116)
+      for iter129 in self.logs:
+        oprot.writeString(iter129)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.taggings is not None:
       oprot.writeFieldBegin('taggings', TType.MAP, 7)
       oprot.writeMapBegin(TType.STRING, TType.STRUCT, len(self.taggings))
-      for kiter117,viter118 in self.taggings.items():
-        oprot.writeString(kiter117)
-        viter118.write(oprot)
+      for kiter130,viter131 in self.taggings.items():
+        oprot.writeString(kiter130)
+        viter131.write(oprot)
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.labels is not None:
       oprot.writeFieldBegin('labels', TType.MAP, 8)
       oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.labels))
-      for kiter119,viter120 in self.labels.items():
-        oprot.writeString(kiter119)
-        oprot.writeListBegin(TType.STRUCT, len(viter120))
-        for iter121 in viter120:
-          iter121.write(oprot)
+      for kiter132,viter133 in self.labels.items():
+        oprot.writeString(kiter132)
+        oprot.writeListBegin(TType.STRUCT, len(viter133))
+        for iter134 in viter133:
+          iter134.write(oprot)
         oprot.writeListEnd()
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.sentences is not None:
       oprot.writeFieldBegin('sentences', TType.MAP, 9)
       oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.sentences))
-      for kiter122,viter123 in self.sentences.items():
-        oprot.writeString(kiter122)
-        oprot.writeListBegin(TType.STRUCT, len(viter123))
-        for iter124 in viter123:
-          iter124.write(oprot)
+      for kiter135,viter136 in self.sentences.items():
+        oprot.writeString(kiter135)
+        oprot.writeListBegin(TType.STRUCT, len(viter136))
+        for iter137 in viter136:
+          iter137.write(oprot)
         oprot.writeListEnd()
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.sentence_blobs is not None:
       oprot.writeFieldBegin('sentence_blobs', TType.MAP, 10)
       oprot.writeMapBegin(TType.STRING, TType.STRING, len(self.sentence_blobs))
-      for kiter125,viter126 in self.sentence_blobs.items():
-        oprot.writeString(kiter125)
-        oprot.writeString(viter126)
+      for kiter138,viter139 in self.sentence_blobs.items():
+        oprot.writeString(kiter138)
+        oprot.writeString(viter139)
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.language is not None:
@@ -1974,11 +2150,22 @@ class ContentItem(object):
     if self.relations is not None:
       oprot.writeFieldBegin('relations', TType.MAP, 12)
       oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.relations))
-      for kiter127,viter128 in self.relations.items():
-        oprot.writeString(kiter127)
-        oprot.writeListBegin(TType.STRUCT, len(viter128))
-        for iter129 in viter128:
-          iter129.write(oprot)
+      for kiter140,viter141 in self.relations.items():
+        oprot.writeString(kiter140)
+        oprot.writeListBegin(TType.STRUCT, len(viter141))
+        for iter142 in viter141:
+          iter142.write(oprot)
+        oprot.writeListEnd()
+      oprot.writeMapEnd()
+      oprot.writeFieldEnd()
+    if self.attributes is not None:
+      oprot.writeFieldBegin('attributes', TType.MAP, 13)
+      oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.attributes))
+      for kiter143,viter144 in self.attributes.items():
+        oprot.writeString(kiter143)
+        oprot.writeListBegin(TType.STRUCT, len(viter144))
+        for iter145 in viter144:
+          iter145.write(oprot)
         oprot.writeListEnd()
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
@@ -2095,10 +2282,10 @@ class Rating(object):
       elif fid == 6:
         if ftype == TType.LIST:
           self.mentions = []
-          (_etype133, _size130) = iprot.readListBegin()
-          for _i134 in xrange(_size130):
-            _elem135 = iprot.readString();
-            self.mentions.append(_elem135)
+          (_etype149, _size146) = iprot.readListBegin()
+          for _i150 in xrange(_size146):
+            _elem151 = iprot.readString();
+            self.mentions.append(_elem151)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -2135,8 +2322,8 @@ class Rating(object):
     if self.mentions is not None:
       oprot.writeFieldBegin('mentions', TType.LIST, 6)
       oprot.writeListBegin(TType.STRING, len(self.mentions))
-      for iter136 in self.mentions:
-        oprot.writeString(iter136)
+      for iter152 in self.mentions:
+        oprot.writeString(iter152)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
@@ -2313,11 +2500,11 @@ class StreamItem(object):
       elif fid == 8:
         if ftype == TType.MAP:
           self.source_metadata = {}
-          (_ktype138, _vtype139, _size137 ) = iprot.readMapBegin() 
-          for _i141 in xrange(_size137):
-            _key142 = iprot.readString();
-            _val143 = iprot.readString();
-            self.source_metadata[_key142] = _val143
+          (_ktype154, _vtype155, _size153 ) = iprot.readMapBegin() 
+          for _i157 in xrange(_size153):
+            _key158 = iprot.readString();
+            _val159 = iprot.readString();
+            self.source_metadata[_key158] = _val159
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
@@ -2335,29 +2522,29 @@ class StreamItem(object):
       elif fid == 11:
         if ftype == TType.MAP:
           self.other_content = {}
-          (_ktype145, _vtype146, _size144 ) = iprot.readMapBegin() 
-          for _i148 in xrange(_size144):
-            _key149 = iprot.readString();
-            _val150 = ContentItem()
-            _val150.read(iprot)
-            self.other_content[_key149] = _val150
+          (_ktype161, _vtype162, _size160 ) = iprot.readMapBegin() 
+          for _i164 in xrange(_size160):
+            _key165 = iprot.readString();
+            _val166 = ContentItem()
+            _val166.read(iprot)
+            self.other_content[_key165] = _val166
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
       elif fid == 12:
         if ftype == TType.MAP:
           self.ratings = {}
-          (_ktype152, _vtype153, _size151 ) = iprot.readMapBegin() 
-          for _i155 in xrange(_size151):
-            _key156 = iprot.readString();
-            _val157 = []
-            (_etype161, _size158) = iprot.readListBegin()
-            for _i162 in xrange(_size158):
-              _elem163 = Rating()
-              _elem163.read(iprot)
-              _val157.append(_elem163)
+          (_ktype168, _vtype169, _size167 ) = iprot.readMapBegin() 
+          for _i171 in xrange(_size167):
+            _key172 = iprot.readString();
+            _val173 = []
+            (_etype177, _size174) = iprot.readListBegin()
+            for _i178 in xrange(_size174):
+              _elem179 = Rating()
+              _elem179.read(iprot)
+              _val173.append(_elem179)
             iprot.readListEnd()
-            self.ratings[_key156] = _val157
+            self.ratings[_key172] = _val173
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
@@ -2402,9 +2589,9 @@ class StreamItem(object):
     if self.source_metadata is not None:
       oprot.writeFieldBegin('source_metadata', TType.MAP, 8)
       oprot.writeMapBegin(TType.STRING, TType.STRING, len(self.source_metadata))
-      for kiter164,viter165 in self.source_metadata.items():
-        oprot.writeString(kiter164)
-        oprot.writeString(viter165)
+      for kiter180,viter181 in self.source_metadata.items():
+        oprot.writeString(kiter180)
+        oprot.writeString(viter181)
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.stream_id is not None:
@@ -2418,19 +2605,19 @@ class StreamItem(object):
     if self.other_content is not None:
       oprot.writeFieldBegin('other_content', TType.MAP, 11)
       oprot.writeMapBegin(TType.STRING, TType.STRUCT, len(self.other_content))
-      for kiter166,viter167 in self.other_content.items():
-        oprot.writeString(kiter166)
-        viter167.write(oprot)
+      for kiter182,viter183 in self.other_content.items():
+        oprot.writeString(kiter182)
+        viter183.write(oprot)
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.ratings is not None:
       oprot.writeFieldBegin('ratings', TType.MAP, 12)
       oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.ratings))
-      for kiter168,viter169 in self.ratings.items():
-        oprot.writeString(kiter168)
-        oprot.writeListBegin(TType.STRUCT, len(viter169))
-        for iter170 in viter169:
-          iter170.write(oprot)
+      for kiter184,viter185 in self.ratings.items():
+        oprot.writeString(kiter184)
+        oprot.writeListBegin(TType.STRUCT, len(viter185))
+        for iter186 in viter185:
+          iter186.write(oprot)
         oprot.writeListEnd()
       oprot.writeMapEnd()
       oprot.writeFieldEnd()

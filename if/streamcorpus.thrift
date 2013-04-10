@@ -210,6 +210,14 @@ struct Label {
 }
 
 /**
+ * mention_id are i32 and are unique across a document.  -1 is the
+ * "null" value.  Making this i32 causes v0_3_0 to not be backward
+ * compatible with v0_2_0, because thrift does not (yet) have type
+ * promotion.
+ */
+typedef i32 MentionID
+
+/**
  * Different tagging tools have different strings for labeling the
  * various common entity types.  To avoid ambiguity, we define a
  * canonical list here, which we will surely have to expand over time
@@ -247,6 +255,11 @@ enum MentionType {
   NOM = 2,
 }
 
+enum Gender {
+  FEMALE = 0,
+  MALE = 1,
+}
+
 enum AttributeType {
   PER_AGE = 0,
   PER_GENDER = 1,
@@ -271,12 +284,45 @@ enum AttributeType {
 }
 
 /**
- * mention_id are i32 and are unique across a document.  -1 is the
- * "null" value.  Making this i32 causes v0_3_0 to not be backward
- * compatible with v0_2_0, because thrift does not (yet) have type
- * promotion.
+ * Description of an attribute of an entity discovered by a tagger in
+ * the text.
  */
-typedef i32 MentionID
+struct Attribute {
+  /**
+   * The type of the attribute, see documentation for AttributeType
+   */
+  1: optional AttributeType attribute_type,
+
+  /**
+   * UTF-8 string that tagger asserts as evidence of an attribute
+   */
+  2: optional string evidence,
+
+  /**
+   * A normalized, strongly typed value derived from the evidence.
+   * The actual type must be determined by programmatically
+   * interpretint the attribute_type.  For example,
+   * attribute_type==AttributeType.PER_AGE implies that this value
+   * will be an integer index into the Gender enum.  
+   *
+   * For attribute_type that imply a value of type date-time, the
+   * value is a zulu_timestamp string from a StreamTime instance.
+   */
+  3: optional binary value,
+
+  /**
+   * Zero-based index into the sentences array for this TaggerID
+   */
+  4: optional i32 sentence_id,
+
+  /**
+   * Index into the mentions in the document.  This identifies the
+   * origin of the relation.  For example, the relation
+   *    (Bob, PHYS_Located, Chicago)
+   * would have mention_id_1 point to Bob.
+   */
+  5: optional MentionID mention_id,
+}
 
 /**
  * Textual tokens identified by an NLP pipeline and marked up with
@@ -610,6 +656,11 @@ struct ContentItem {
    * List of relations discovered in clean_visible
    */
   12: optional map<TaggerID, list<Relation>> relations = {},
+
+  /**
+   * List of attributes discovered in clean_visible
+   */
+  13: optional map<TaggerID, list<Attribute>> attributes = {},
 }
 
 /**

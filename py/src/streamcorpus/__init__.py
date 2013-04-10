@@ -18,10 +18,13 @@ from cStringIO import StringIO
 from .ttypes import StreamItem, ContentItem, Label, StreamTime, \
     Offset, Rating, Annotator, Versions, Token, Sentence, EntityType, \
     Tagging, OffsetType, Target, \
-    Language
+    Language, \
+    MentionType, AttributeType, Attribute, Gender
 
 from .ttypes_v0_1_0 import StreamItem as StreamItem_v0_1_0
 from .ttypes_v0_2_0 import StreamItem as StreamItem_v0_2_0
+import ttypes_v0_1_0
+import ttypes_v0_2_0
 
 from ._chunk import Chunk, decrypt_and_uncompress, compress_and_encrypt, \
     compress_and_encrypt_path, \
@@ -36,8 +39,14 @@ __all__ = ['Chunk', 'decrypt_and_uncompress', 'compress_and_encrypt',
            'Target',
            'Tagging', 'OffsetType', 
            'Language',
+           'MentionType',
+           'Attribute',
+           'AttributeType',
+           'Gender',
            'StreamItem_v0_1_0',
            'StreamItem_v0_2_0',
+           'ttypes_v0_1_0',
+           'ttypes_v0_2_0',
            ]
 
 def get_date_hour(stream_thing):
