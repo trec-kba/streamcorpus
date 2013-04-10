@@ -40,18 +40,15 @@ build: clean
 	cp gen-py/kba/ttypes.py    src/streamcorpus/ttypes_v0_1_0.py
 	rm -rf gen-py
 
-test: clean
-	## clean does not always get called!?  Must remove "build" so
-	## it does not confuse py.test
-	rm -rf build
-	py.test --genscript=runtests.py
-	python runtests.py -s
-
-install: build test
+install: build
 	## I think this `clean --all` step removes existing versions
 	## from site-packages that would conflict when we install
 	python setup.py clean --all
 	python setup.py install
+
+test: clean
+	py.test --genscript=runtests.py
+	python runtests.py -s
 
 build_eggs: build
 	python setup.py bdist_egg
