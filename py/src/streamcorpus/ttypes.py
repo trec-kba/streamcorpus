@@ -926,7 +926,8 @@ class Attribute(object):
   The actual type must be determined by programmatically
   interpretint the attribute_type.  For example,
   attribute_type==AttributeType.PER_AGE implies that this value
-  will be an integer index into the Gender enum.
+  will be a string containing an integer index into the Gender
+  enum.
 
   For attribute_type that imply a value of type date-time, the
   value is a zulu_timestamp string from a StreamTime instance.
