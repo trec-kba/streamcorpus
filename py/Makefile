@@ -3,6 +3,8 @@ clean:
 	rm -rf gen-py
 	rm -f src/streamcorpus/ttypes.py
 	rm -f src/streamcorpus/constants.py
+	rm -f src/streamcorpus/ttypes_v0_2_0.py
+	rm -f src/streamcorpus/constants_v0_2_0.py
 	rm -f src/streamcorpus/ttypes_v0_1_0.py
 	rm -f src/streamcorpus/constants_v0_1_0.py
 	rm -rf build dist
@@ -28,8 +30,8 @@ build: clean
 
 	## build the older thrift objects, so we can read them
 	thrift --gen py:new_style,slots ../if/streamcorpus-v0_2_0.thrift
-	cp gen-py/kba/constants.py src/streamcorpus/constants_v0_2_0.py
-	cp gen-py/kba/ttypes.py    src/streamcorpus/ttypes_v0_2_0.py
+	cp gen-py/streamcorpus/constants.py src/streamcorpus/constants_v0_2_0.py
+	cp gen-py/streamcorpus/ttypes.py    src/streamcorpus/ttypes_v0_2_0.py
 	rm -rf gen-py
 
 	## build the older thrift objects, so we can read them

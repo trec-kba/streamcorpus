@@ -3,13 +3,24 @@ import uuid
 import errno
 import pytest
 from . import make_stream_item, ContentItem, Chunk, serialize, deserialize, compress_and_encrypt_path
+from . import Versions
+from . import StreamItem_v0_2_0
 
-TEST_XZ_PATH = os.path.join(os.path.dirname(__file__), '../../../test-data/john-smith-tagged-by-lingpipe-0.sc.xz')
+TEST_XZ_PATH = os.path.join(os.path.dirname(__file__), '../../../test-data/john-smith-tagged-by-lingpipe-0-v0_2_0.sc.xz')
+TEST_SC_PATH = os.path.join(os.path.dirname(__file__), '../../../test-data/john-smith-tagged-by-lingpipe-0-v0_2_0.sc')
 
 def make_si():
     si = make_stream_item( None, 'http://example.com' )
     si.body = ContentItem(raw='hello!')
     return si
+
+def test_version():
+    si = make_si()
+    assert si.version == Versions.v0_3_0
+
+def test_v0_2_0():
+    for si in Chunk(TEST_SC_PATH, message=StreamItem_v0_2_0):
+        assert si.version == Versions.v0_2_0
 
 def test_chunk():
     ## write in-memory
@@ -96,7 +107,7 @@ def test_compress_and_encrypt_path():
     if errors:
         print '\n'.join(errors)
         raise Exception(errors)
-    assert len(open(o_path).read()) == 240
+    assert len(open(o_path).read()) in [240, 244]
 
     ## this should go in a "cleanup" method...
     os.remove(path)
