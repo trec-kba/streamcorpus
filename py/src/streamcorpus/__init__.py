@@ -21,6 +21,7 @@ from .ttypes import StreamItem, ContentItem, Label, StreamTime, \
     Language
 
 from .ttypes_v0_1_0 import StreamItem as StreamItem_v0_1_0
+from .ttypes_v0_2_0 import StreamItem as StreamItem_v0_2_0
 
 from ._chunk import Chunk, decrypt_and_uncompress, compress_and_encrypt, \
     compress_and_encrypt_path, \
@@ -36,6 +37,7 @@ __all__ = ['Chunk', 'decrypt_and_uncompress', 'compress_and_encrypt',
            'Tagging', 'OffsetType', 
            'Language',
            'StreamItem_v0_1_0',
+           'StreamItem_v0_2_0',
            ]
 
 def get_date_hour(stream_thing):
@@ -81,7 +83,7 @@ def make_stream_item(zulu_timestamp, abs_url):
     '''
     st = make_stream_time(zulu_timestamp)
     si = StreamItem()
-    si.version = Versions.v0_2_0
+    si.version = Versions.v0_3_0
     si.stream_time = st
     ## Always start with an abs_url and only move it to original_url
     ## if some fetching process decides that the URL needs repair.
