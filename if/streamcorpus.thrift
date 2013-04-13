@@ -481,8 +481,8 @@ struct Language {
   /**
    * two letter code for the language
    */
-  1: string code,
-  2: optional string name, 
+  1: string code = "",
+  2: optional string name = "", 
 }
 
 /**
