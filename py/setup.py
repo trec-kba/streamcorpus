@@ -68,6 +68,7 @@ setup(
     ],
     install_requires=[
         'thrift',
+        'pytest',
     ],
     # include_package_data = True,
     package_data = {
