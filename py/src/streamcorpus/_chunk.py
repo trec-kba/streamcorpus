@@ -199,8 +199,7 @@ class Chunk(object):
         else:
             assert mode == 'rb', mode
             self._i_chunk_fh = md5_file( file_obj )
-            self._i_transport = TTransport.TBufferedTransport(self._o_chunk_fh)
-            self._i_protocol = TBinaryProtocol.TBinaryProtocol(self._o_transport)
+            #_i_transport and _i_protocol are set below in __iter__
 
     def __enter__(self):
         return self
