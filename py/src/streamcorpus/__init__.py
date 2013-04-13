@@ -88,6 +88,8 @@ def make_stream_item(zulu_timestamp, abs_url):
     si.abs_url = abs_url
     si.doc_id = hashlib.md5(abs_url).hexdigest()
     si.stream_id = '%d-%s' % (st.epoch_ticks, si.doc_id)
+    ## create an empty .body attribute and .body.language
+    si.body = ContentItem(language=Language(code='', name=''))
     return si
 
 def add_annotation(data_item, *annotations):
