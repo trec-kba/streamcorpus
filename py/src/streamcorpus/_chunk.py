@@ -255,13 +255,15 @@ class Chunk(object):
         '''
         assert self._i_chunk_fh, 'cannot iterate over a Chunk open for writing'
 
-        ## seek to the start, so can iterate multiple times over the chunk
-        try:
-            self._i_chunk_fh.seek(0)
-        except IOError:
-            pass
-            ## just assume that it is a pipe like stdin that need not
-            ## be seeked to start
+        ## attempt to seek to the start, so can iterate multiple times
+        ## over the chunk
+        if hasattr(self._i_chunk_fh, 'seek'):
+            try:
+                self._i_chunk_fh.seek(0)
+            except IOError:
+                pass
+                ## just assume that it is a pipe like stdin that need
+                ## not be seeked to start
 
         ## wrap the file handle in buffered transport
         i_transport = TTransport.TBufferedTransport(self._i_chunk_fh)
