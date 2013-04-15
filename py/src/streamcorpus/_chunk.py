@@ -151,6 +151,15 @@ class Chunk(object):
                         stderr=subprocess.PIPE)
                     file_obj = xz_child.stdout
                     ## what to do with stderr
+                elif path.endswith('.xz.gpg'):
+                    assert mode == 'rb', 'mode=%r for .xz' % mode
+                    ## launch xz child
+                    xz_child = subprocess.Popen(
+                        ['gpg -d %s | xz --decompress' % path],
+                        stdout=subprocess.PIPE, shell=True)
+                        #stderr=subprocess.PIPE)
+                    file_obj = xz_child.stdout
+                    ## what to do with stderr?
                 else:
                     file_obj = open(path, mode)
             else:
