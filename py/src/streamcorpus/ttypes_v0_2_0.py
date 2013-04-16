@@ -1436,11 +1436,11 @@ class Language(object):
 
   thrift_spec = (
     None, # 0
-    (1, TType.STRING, 'code', None, None, ), # 1
-    (2, TType.STRING, 'name', None, None, ), # 2
+    (1, TType.STRING, 'code', None, "", ), # 1
+    (2, TType.STRING, 'name', None, "", ), # 2
   )
 
-  def __init__(self, code=None, name=None,):
+  def __init__(self, code=thrift_spec[1][4], name=thrift_spec[2][4],):
     self.code = code
     self.name = name
 
