@@ -18,7 +18,14 @@ wget http://nytimes.com
 python example-streamcorpus-creator.py
 
 '''
-from streamcorpus import make_stream_item, make_stream_time, Chunk, Tagging, Versions
+## get convenience functions
+from streamcorpus import make_stream_item, make_stream_time, get_date_hour
+
+## get useful file wrapper class
+from streamcorpus import Chunk
+
+## get a couple of the classes compiled from the thrift interface definitions
+from streamcorpus import Tagging, Versions
 
 ## somehow get a list of input text files
 # fake example with just one input, downloaded via wget (see __doc__
@@ -54,7 +61,9 @@ for file_path in input_files:
     ## corpus.  Typically, when naming chunk files, we use
     ## "<date-hour>/<source>-<md5>.sc.xz"
     si.source = 'news'
-
+    ## all of the StreamItems in a chunk file **must** have the same
+    ## source string
+    
     ## if the text is raw from the web and might contain control
     ## characters or have any encoding other than utf8, then put it in
     ## StreamItem.body.raw
@@ -94,8 +103,23 @@ for file_path in input_files:
     ## chunk file, and go to the next StreamItem
     ch.add(si)
 
+    print 'added StreamItem.stream_id = %s from date_hour = %s' % (
+        si.stream_id, get_date_hour(si))
 
 ## after adding all the StreamItems, close the chunk:
 ch.close()
+
+## Typically, chunk files should be limited to about 500 documents or
+## smaller.  There are several nice pythonic techniques for making
+## many chunk files, ask us for examples to suit your circumstances.
+
+## Typically, all of the StreamItems in a chunk file have stream_times
+## from the same hour in history.  That is, if you call
+## get_date_hour(si) you should get the same string for every
+## StreamItem in the chunk file.
+
+## Organizing a large number of documents to meet these requirements
+## can take some work.  Post an issue ticket if you want to discuss
+## your needs.
 
 print 'saved a file to %s with md5 sum: %s' % (output_path, ch.md5_hexdigest)
