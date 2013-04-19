@@ -2,6 +2,11 @@
 Example of using the python streamcorpus library to iterate over
 documents and then iterate over tokens.  The output of this example is
 a sequence of labels for tokens.
+
+For example, you can run this like this:
+
+python  iterating-over-tokens.py  ../../test-data/john-smith-tagged-by-lingpipe-0.sc
+
 '''
 ## import that python module that wraps the streamcorpus.thrift
 ## interfaces.  We will only use the Chunk convenience interface,
