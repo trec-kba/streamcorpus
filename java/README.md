@@ -1,4 +1,4 @@
-# streamcorpus C++ example
+# streamcorpus Java example
 
 This is the beginnings of Java classes built from
 ../if/streamcorpus.thrift
