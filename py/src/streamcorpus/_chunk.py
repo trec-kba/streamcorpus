@@ -18,6 +18,7 @@ from thrift.protocol import TBinaryProtocol
 
 import os
 import uuid
+import errno
 import shutil
 import hashlib
 import subprocess
@@ -137,8 +138,10 @@ class Chunk(object):
                 'Must specify only path or data or file_obj'
             if os.path.exists(path):
                 ## if the file is there, then use mode 
-                assert mode in ['rb', 'ab'], \
-                    'mode=%r would overwrite existing %s' % (mode, path)
+                if mode not in ['rb', 'ab']:
+                    exc = IOError('mode=%r would overwrite existing %s' % (mode, path))
+                    exc.errno = errno.EEXIST
+                    raise exc
                 if path.endswith('.xz'):
                     assert mode == 'rb', 'mode=%r for .xz' % mode
                     ## launch xz child
@@ -148,12 +151,23 @@ class Chunk(object):
                         stderr=subprocess.PIPE)
                     file_obj = xz_child.stdout
                     ## what to do with stderr
+                elif path.endswith('.xz.gpg'):
+                    assert mode == 'rb', 'mode=%r for .xz' % mode
+                    ## launch xz child
+                    xz_child = subprocess.Popen(
+                        ['gpg -d %s | xz --decompress' % path],
+                        stdout=subprocess.PIPE, shell=True)
+                        #stderr=subprocess.PIPE)
+                    file_obj = xz_child.stdout
+                    ## what to do with stderr?
                 else:
                     file_obj = open(path, mode)
             else:
                 ## otherwise make one for writing
-                assert mode in ['wb', 'ab'], \
-                    '%s does not exist but mode=%r' % (path, mode)
+                if mode not in ['wb', 'ab']:
+                    exc = IOError('%s does not exist but mode=%r' % (path, mode))
+                    exc.errno = errno.ENOENT
+                    raise exc
                 dirname = os.path.dirname(path)
                 if dirname and not os.path.exists(dirname):
                     os.makedirs(dirname)
@@ -194,8 +208,13 @@ class Chunk(object):
         else:
             assert mode == 'rb', mode
             self._i_chunk_fh = md5_file( file_obj )
-            self._i_transport = TTransport.TBufferedTransport(self._o_chunk_fh)
-            self._i_protocol = TBinaryProtocol.TBinaryProtocol(self._o_transport)
+            #_i_transport and _i_protocol are set below in __iter__
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.close()
 
     def add(self, msg):
         'add message instance to chunk'
@@ -229,12 +248,6 @@ class Chunk(object):
             ## maybe return raise?
             return None
 
-    def __del__(self):
-        '''
-        If garbage collected, try to close.
-        '''        
-        self.close()
-
     def __str__(self):
         raise exceptions.NotImplementedError
 
@@ -251,13 +264,15 @@ class Chunk(object):
         '''
         assert self._i_chunk_fh, 'cannot iterate over a Chunk open for writing'
 
-        ## seek to the start, so can iterate multiple times over the chunk
-        try:
-            self._i_chunk_fh.seek(0)
-        except IOError:
-            pass
-            ## just assume that it is a pipe like stdin that need not
-            ## be seeked to start
+        ## attempt to seek to the start, so can iterate multiple times
+        ## over the chunk
+        if hasattr(self._i_chunk_fh, 'seek'):
+            try:
+                self._i_chunk_fh.seek(0)
+            except IOError:
+                pass
+                ## just assume that it is a pipe like stdin that need
+                ## not be seeked to start
 
         ## wrap the file handle in buffered transport
         i_transport = TTransport.TBufferedTransport(self._i_chunk_fh)
@@ -390,3 +405,66 @@ def compress_and_encrypt(data, gpg_public=None, gpg_recipient='trec-kba'):
         shutil.rmtree(gpg_dir, ignore_errors=True)
 
     return _errors, data
+
+def compress_and_encrypt_path(path, gpg_public=None, gpg_recipient='trec-kba'):
+    '''
+    Given a path in the local file system, compress it using xz, if gpg_public
+    is provided, encrypt data using gnupg.
+
+    :returns: path to file of encrypted, compressed data
+    :rtype: str
+    '''
+    _errors = []
+    assert os.path.exists(path), path
+    command = 'xz --compress < ' + path
+
+    if gpg_public is not None:
+        ### setup gpg for encryption.  
+        gpg_dir = '/tmp/%s' % uuid.uuid1()
+        os.makedirs(gpg_dir)
+
+        ## Load public key.  Could do this just once, but performance
+        ## hit is minor and code simpler to do it everytime
+        gpg_child = subprocess.Popen(
+            ['gpg', '--no-permission-warning', '--homedir', gpg_dir,
+             '--import', gpg_public],
+            stderr=subprocess.PIPE)
+        s_out, errors = gpg_child.communicate()
+        if errors:
+            _errors.append('gpg logs to stderr, read carefully:\n\n%s' % errors)
+
+        ## setup gpg to decrypt with provided private key (i.e. make
+        ## it the recipient), with zero compression, ascii armoring is
+        ## off by default, and --output - must come before --encrypt -
+        command += '| gpg  --no-permission-warning --homedir ' + gpg_dir \
+                 + ' -r ' + gpg_recipient \
+                 + ' -z 0 --trust-model always --output - --encrypt - '
+
+    ## we want to capture any errors, so do all the work before
+    ## returning.  Store the intermediate result in this temp file:
+    o_path = '/tmp/%s' % uuid.uuid1()
+    e_path = '/tmp/%s' % uuid.uuid1()
+
+    command += ' 1> ' + o_path 
+
+    ## wrap entire command in parentheses and pipe stderr to a file
+    command = '( ' + command + ') 2> ' + e_path
+
+    ## launch xz child
+    child = os.system(command)
+
+    if os.path.exists(e_path):
+        errors = open(e_path).read()
+        ## clean up temp path
+        os.remove(e_path)
+    else:
+        errors = None
+
+    if errors:
+        ## will send back errors in list
+        _errors.append(errors)
+
+    if gpg_public is not None:
+        shutil.rmtree(gpg_dir, ignore_errors=True)
+
+    return _errors, o_path

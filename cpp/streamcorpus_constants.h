@@ -9,7 +9,7 @@
 
 #include "streamcorpus_types.h"
 
-
+namespace streamcorpus {
 
 class streamcorpusConstants {
  public:
@@ -19,6 +19,6 @@ class streamcorpusConstants {
 
 extern const streamcorpusConstants g_streamcorpus_constants;
 
-
+} // namespace
 
 #endif

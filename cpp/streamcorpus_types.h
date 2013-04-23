@@ -14,7 +14,7 @@
 
 
 
-
+namespace streamcorpus {
 
 struct OffsetType {
   enum type {
@@ -37,7 +37,14 @@ struct EntityType {
     DATE = 6,
     MONEY = 7,
     PERCENT = 8,
-    MISC = 9
+    MISC = 9,
+    GPE = 10,
+    FAC = 11,
+    VEH = 12,
+    WEA = 13,
+    phone = 14,
+    email = 15,
+    URL = 16
   };
 };
 
@@ -51,9 +58,13 @@ struct Versions {
 
 extern const std::map<int, const char*> _Versions_VALUES_TO_NAMES;
 
-typedef std::string SourceMetadata;
+typedef std::string AnnotatorID;
+
+typedef int16_t MentionID;
 
 typedef std::string TaggerID;
+
+typedef std::string SourceMetadata;
 
 typedef struct _StreamTime__isset {
   _StreamTime__isset() : epoch_ticks(false), zulu_timestamp(false) {}
@@ -107,48 +118,34 @@ class StreamTime {
 void swap(StreamTime &a, StreamTime &b);
 
 typedef struct _Annotator__isset {
-  _Annotator__isset() : annotator_id(false), annotation_time(false), reference_kb(false), kb_snapshot_time(false) {}
+  _Annotator__isset() : annotator_id(false), annotation_time(false) {}
   bool annotator_id;
   bool annotation_time;
-  bool reference_kb;
-  bool kb_snapshot_time;
 } _Annotator__isset;
 
 class Annotator {
  public:
 
-  static const char* ascii_fingerprint; // = "CE8AC238634F80029949962E65E1F48C";
-  static const uint8_t binary_fingerprint[16]; // = {0xCE,0x8A,0xC2,0x38,0x63,0x4F,0x80,0x02,0x99,0x49,0x96,0x2E,0x65,0xE1,0xF4,0x8C};
+  static const char* ascii_fingerprint; // = "8D64F3DD69187433CDFC330482190EEE";
+  static const uint8_t binary_fingerprint[16]; // = {0x8D,0x64,0xF3,0xDD,0x69,0x18,0x74,0x33,0xCD,0xFC,0x33,0x04,0x82,0x19,0x0E,0xEE};
 
-  Annotator() : annotator_id(), reference_kb() {
+  Annotator() : annotator_id() {
   }
 
   virtual ~Annotator() throw() {}
 
-  std::string annotator_id;
+  AnnotatorID annotator_id;
   StreamTime annotation_time;
-  std::string reference_kb;
-  StreamTime kb_snapshot_time;
 
   _Annotator__isset __isset;
 
-  void __set_annotator_id(const std::string& val) {
+  void __set_annotator_id(const AnnotatorID& val) {
     annotator_id = val;
   }
 
   void __set_annotation_time(const StreamTime& val) {
     annotation_time = val;
     __isset.annotation_time = true;
-  }
-
-  void __set_reference_kb(const std::string& val) {
-    reference_kb = val;
-    __isset.reference_kb = true;
-  }
-
-  void __set_kb_snapshot_time(const StreamTime& val) {
-    kb_snapshot_time = val;
-    __isset.kb_snapshot_time = true;
   }
 
   bool operator == (const Annotator & rhs) const
@@ -158,14 +155,6 @@ class Annotator {
     if (__isset.annotation_time != rhs.__isset.annotation_time)
       return false;
     else if (__isset.annotation_time && !(annotation_time == rhs.annotation_time))
-      return false;
-    if (__isset.reference_kb != rhs.__isset.reference_kb)
-      return false;
-    else if (__isset.reference_kb && !(reference_kb == rhs.reference_kb))
-      return false;
-    if (__isset.kb_snapshot_time != rhs.__isset.kb_snapshot_time)
-      return false;
-    else if (__isset.kb_snapshot_time && !(kb_snapshot_time == rhs.kb_snapshot_time))
       return false;
     return true;
   }
@@ -274,33 +263,102 @@ class Offset {
 
 void swap(Offset &a, Offset &b);
 
-typedef struct _Label__isset {
-  _Label__isset() : target_id(false), offsets(true), annotator(false) {}
+typedef struct _Target__isset {
+  _Target__isset() : target_id(false), kb_id(false), kb_snapshot_time(false) {}
   bool target_id;
-  bool offsets;
+  bool kb_id;
+  bool kb_snapshot_time;
+} _Target__isset;
+
+class Target {
+ public:
+
+  static const char* ascii_fingerprint; // = "8F380763C4E93CCC138A5250BA588978";
+  static const uint8_t binary_fingerprint[16]; // = {0x8F,0x38,0x07,0x63,0xC4,0xE9,0x3C,0xCC,0x13,0x8A,0x52,0x50,0xBA,0x58,0x89,0x78};
+
+  Target() : target_id(), kb_id() {
+  }
+
+  virtual ~Target() throw() {}
+
+  std::string target_id;
+  std::string kb_id;
+  StreamTime kb_snapshot_time;
+
+  _Target__isset __isset;
+
+  void __set_target_id(const std::string& val) {
+    target_id = val;
+  }
+
+  void __set_kb_id(const std::string& val) {
+    kb_id = val;
+    __isset.kb_id = true;
+  }
+
+  void __set_kb_snapshot_time(const StreamTime& val) {
+    kb_snapshot_time = val;
+    __isset.kb_snapshot_time = true;
+  }
+
+  bool operator == (const Target & rhs) const
+  {
+    if (!(target_id == rhs.target_id))
+      return false;
+    if (__isset.kb_id != rhs.__isset.kb_id)
+      return false;
+    else if (__isset.kb_id && !(kb_id == rhs.kb_id))
+      return false;
+    if (__isset.kb_snapshot_time != rhs.__isset.kb_snapshot_time)
+      return false;
+    else if (__isset.kb_snapshot_time && !(kb_snapshot_time == rhs.kb_snapshot_time))
+      return false;
+    return true;
+  }
+  bool operator != (const Target &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Target & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+void swap(Target &a, Target &b);
+
+typedef struct _Label__isset {
+  _Label__isset() : annotator(false), target(false), offsets(true) {}
   bool annotator;
+  bool target;
+  bool offsets;
 } _Label__isset;
 
 class Label {
  public:
 
-  static const char* ascii_fingerprint; // = "DF310CE3B6053884BBD366864CB42756";
-  static const uint8_t binary_fingerprint[16]; // = {0xDF,0x31,0x0C,0xE3,0xB6,0x05,0x38,0x84,0xBB,0xD3,0x66,0x86,0x4C,0xB4,0x27,0x56};
+  static const char* ascii_fingerprint; // = "E98A9E5328B74B3E093000EBAED29699";
+  static const uint8_t binary_fingerprint[16]; // = {0xE9,0x8A,0x9E,0x53,0x28,0xB7,0x4B,0x3E,0x09,0x30,0x00,0xEB,0xAE,0xD2,0x96,0x99};
 
-  Label() : target_id() {
+  Label() {
 
   }
 
   virtual ~Label() throw() {}
 
-  std::string target_id;
-  std::map<OffsetType::type, Offset>  offsets;
   Annotator annotator;
+  Target target;
+  std::map<OffsetType::type, Offset>  offsets;
 
   _Label__isset __isset;
 
-  void __set_target_id(const std::string& val) {
-    target_id = val;
+  void __set_annotator(const Annotator& val) {
+    annotator = val;
+  }
+
+  void __set_target(const Target& val) {
+    target = val;
   }
 
   void __set_offsets(const std::map<OffsetType::type, Offset> & val) {
@@ -308,22 +366,15 @@ class Label {
     __isset.offsets = true;
   }
 
-  void __set_annotator(const Annotator& val) {
-    annotator = val;
-    __isset.annotator = true;
-  }
-
   bool operator == (const Label & rhs) const
   {
-    if (!(target_id == rhs.target_id))
+    if (!(annotator == rhs.annotator))
+      return false;
+    if (!(target == rhs.target))
       return false;
     if (__isset.offsets != rhs.__isset.offsets)
       return false;
     else if (__isset.offsets && !(offsets == rhs.offsets))
-      return false;
-    if (__isset.annotator != rhs.__isset.annotator)
-      return false;
-    else if (__isset.annotator && !(annotator == rhs.annotator))
       return false;
     return true;
   }
@@ -339,58 +390,6 @@ class Label {
 };
 
 void swap(Label &a, Label &b);
-
-typedef struct _LabelSet__isset {
-  _LabelSet__isset() : annotator(false), labels(true) {}
-  bool annotator;
-  bool labels;
-} _LabelSet__isset;
-
-class LabelSet {
- public:
-
-  static const char* ascii_fingerprint; // = "60E41E569004427F116F1A6D648F6599";
-  static const uint8_t binary_fingerprint[16]; // = {0x60,0xE4,0x1E,0x56,0x90,0x04,0x42,0x7F,0x11,0x6F,0x1A,0x6D,0x64,0x8F,0x65,0x99};
-
-  LabelSet() {
-
-  }
-
-  virtual ~LabelSet() throw() {}
-
-  Annotator annotator;
-  std::vector<Label>  labels;
-
-  _LabelSet__isset __isset;
-
-  void __set_annotator(const Annotator& val) {
-    annotator = val;
-  }
-
-  void __set_labels(const std::vector<Label> & val) {
-    labels = val;
-  }
-
-  bool operator == (const LabelSet & rhs) const
-  {
-    if (!(annotator == rhs.annotator))
-      return false;
-    if (!(labels == rhs.labels))
-      return false;
-    return true;
-  }
-  bool operator != (const LabelSet &rhs) const {
-    return !(*this == rhs);
-  }
-
-  bool operator < (const LabelSet & ) const;
-
-  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
-  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
-
-};
-
-void swap(LabelSet &a, LabelSet &b);
 
 typedef struct _Token__isset {
   _Token__isset() : token_num(false), token(false), offsets(true), sentence_pos(true), lemma(false), pos(false), entity_type(false), mention_id(true), equiv_id(true), parent_id(true), dependency_path(false), labels(true) {}
@@ -411,8 +410,8 @@ typedef struct _Token__isset {
 class Token {
  public:
 
-  static const char* ascii_fingerprint; // = "83487AC4BBC8507EC47723871C36A102";
-  static const uint8_t binary_fingerprint[16]; // = {0x83,0x48,0x7A,0xC4,0xBB,0xC8,0x50,0x7E,0xC4,0x77,0x23,0x87,0x1C,0x36,0xA1,0x02};
+  static const char* ascii_fingerprint; // = "BB9C1635CA9117F93E597FC9C8870305";
+  static const uint8_t binary_fingerprint[16]; // = {0xBB,0x9C,0x16,0x35,0xCA,0x91,0x17,0xF9,0x3E,0x59,0x7F,0xC9,0xC8,0x87,0x03,0x05};
 
   Token() : token_num(0), token(), sentence_pos(-1), lemma(), pos(), entity_type((EntityType::type)0), mention_id(-1), equiv_id(-1), parent_id(-1), dependency_path() {
 
@@ -428,11 +427,11 @@ class Token {
   std::string lemma;
   std::string pos;
   EntityType::type entity_type;
-  int16_t mention_id;
+  MentionID mention_id;
   int32_t equiv_id;
   int32_t parent_id;
   std::string dependency_path;
-  std::vector<Label>  labels;
+  std::map<AnnotatorID, std::vector<Label> >  labels;
 
   _Token__isset __isset;
 
@@ -469,7 +468,7 @@ class Token {
     __isset.entity_type = true;
   }
 
-  void __set_mention_id(const int16_t val) {
+  void __set_mention_id(const MentionID val) {
     mention_id = val;
     __isset.mention_id = true;
   }
@@ -489,7 +488,7 @@ class Token {
     __isset.dependency_path = true;
   }
 
-  void __set_labels(const std::vector<Label> & val) {
+  void __set_labels(const std::map<AnnotatorID, std::vector<Label> > & val) {
     labels = val;
     __isset.labels = true;
   }
@@ -564,8 +563,8 @@ typedef struct _Sentence__isset {
 class Sentence {
  public:
 
-  static const char* ascii_fingerprint; // = "A3B157B62D5B3B57E03EF5FC71EC7759";
-  static const uint8_t binary_fingerprint[16]; // = {0xA3,0xB1,0x57,0xB6,0x2D,0x5B,0x3B,0x57,0xE0,0x3E,0xF5,0xFC,0x71,0xEC,0x77,0x59};
+  static const char* ascii_fingerprint; // = "A437A51F43E711F534E8D04AE12A3D99";
+  static const uint8_t binary_fingerprint[16]; // = {0xA4,0x37,0xA5,0x1F,0x43,0xE7,0x11,0xF5,0x34,0xE8,0xD0,0x4A,0xE1,0x2A,0x3D,0x99};
 
   Sentence() {
 
@@ -575,7 +574,7 @@ class Sentence {
   virtual ~Sentence() throw() {}
 
   std::vector<Token>  tokens;
-  std::vector<Label>  labels;
+  std::map<AnnotatorID, std::vector<Label> >  labels;
 
   _Sentence__isset __isset;
 
@@ -583,7 +582,7 @@ class Sentence {
     tokens = val;
   }
 
-  void __set_labels(const std::vector<Label> & val) {
+  void __set_labels(const std::map<AnnotatorID, std::vector<Label> > & val) {
     labels = val;
     __isset.labels = true;
   }
@@ -631,7 +630,7 @@ class Tagging {
 
   virtual ~Tagging() throw() {}
 
-  std::string tagger_id;
+  TaggerID tagger_id;
   std::string raw_tagging;
   std::string tagger_config;
   std::string tagger_version;
@@ -639,7 +638,7 @@ class Tagging {
 
   _Tagging__isset __isset;
 
-  void __set_tagger_id(const std::string& val) {
+  void __set_tagger_id(const TaggerID& val) {
     tagger_id = val;
   }
 
@@ -695,8 +694,152 @@ class Tagging {
 
 void swap(Tagging &a, Tagging &b);
 
+typedef struct _Relation__isset {
+  _Relation__isset() : relation_name(false), sentence_id_1(false), mention_id_1(false), sentence_id_2(false), mention_id_2(false) {}
+  bool relation_name;
+  bool sentence_id_1;
+  bool mention_id_1;
+  bool sentence_id_2;
+  bool mention_id_2;
+} _Relation__isset;
+
+class Relation {
+ public:
+
+  static const char* ascii_fingerprint; // = "C24703B9B3816866FC8468D3B0A7EA99";
+  static const uint8_t binary_fingerprint[16]; // = {0xC2,0x47,0x03,0xB9,0xB3,0x81,0x68,0x66,0xFC,0x84,0x68,0xD3,0xB0,0xA7,0xEA,0x99};
+
+  Relation() : relation_name(), sentence_id_1(0), mention_id_1(0), sentence_id_2(0), mention_id_2(0) {
+  }
+
+  virtual ~Relation() throw() {}
+
+  std::string relation_name;
+  int32_t sentence_id_1;
+  MentionID mention_id_1;
+  int32_t sentence_id_2;
+  MentionID mention_id_2;
+
+  _Relation__isset __isset;
+
+  void __set_relation_name(const std::string& val) {
+    relation_name = val;
+    __isset.relation_name = true;
+  }
+
+  void __set_sentence_id_1(const int32_t val) {
+    sentence_id_1 = val;
+    __isset.sentence_id_1 = true;
+  }
+
+  void __set_mention_id_1(const MentionID val) {
+    mention_id_1 = val;
+    __isset.mention_id_1 = true;
+  }
+
+  void __set_sentence_id_2(const int32_t val) {
+    sentence_id_2 = val;
+    __isset.sentence_id_2 = true;
+  }
+
+  void __set_mention_id_2(const MentionID val) {
+    mention_id_2 = val;
+    __isset.mention_id_2 = true;
+  }
+
+  bool operator == (const Relation & rhs) const
+  {
+    if (__isset.relation_name != rhs.__isset.relation_name)
+      return false;
+    else if (__isset.relation_name && !(relation_name == rhs.relation_name))
+      return false;
+    if (__isset.sentence_id_1 != rhs.__isset.sentence_id_1)
+      return false;
+    else if (__isset.sentence_id_1 && !(sentence_id_1 == rhs.sentence_id_1))
+      return false;
+    if (__isset.mention_id_1 != rhs.__isset.mention_id_1)
+      return false;
+    else if (__isset.mention_id_1 && !(mention_id_1 == rhs.mention_id_1))
+      return false;
+    if (__isset.sentence_id_2 != rhs.__isset.sentence_id_2)
+      return false;
+    else if (__isset.sentence_id_2 && !(sentence_id_2 == rhs.sentence_id_2))
+      return false;
+    if (__isset.mention_id_2 != rhs.__isset.mention_id_2)
+      return false;
+    else if (__isset.mention_id_2 && !(mention_id_2 == rhs.mention_id_2))
+      return false;
+    return true;
+  }
+  bool operator != (const Relation &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Relation & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+void swap(Relation &a, Relation &b);
+
+typedef struct _Language__isset {
+  _Language__isset() : code(false), name(false) {}
+  bool code;
+  bool name;
+} _Language__isset;
+
+class Language {
+ public:
+
+  static const char* ascii_fingerprint; // = "5B708A954C550ECA9C1A49D3C5CAFAB9";
+  static const uint8_t binary_fingerprint[16]; // = {0x5B,0x70,0x8A,0x95,0x4C,0x55,0x0E,0xCA,0x9C,0x1A,0x49,0xD3,0xC5,0xCA,0xFA,0xB9};
+
+  Language() : code(), name() {
+  }
+
+  virtual ~Language() throw() {}
+
+  std::string code;
+  std::string name;
+
+  _Language__isset __isset;
+
+  void __set_code(const std::string& val) {
+    code = val;
+  }
+
+  void __set_name(const std::string& val) {
+    name = val;
+    __isset.name = true;
+  }
+
+  bool operator == (const Language & rhs) const
+  {
+    if (!(code == rhs.code))
+      return false;
+    if (__isset.name != rhs.__isset.name)
+      return false;
+    else if (__isset.name && !(name == rhs.name))
+      return false;
+    return true;
+  }
+  bool operator != (const Language &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Language & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+void swap(Language &a, Language &b);
+
 typedef struct _ContentItem__isset {
-  _ContentItem__isset() : raw(false), encoding(false), media_type(false), clean_html(false), clean_visible(false), logs(true), taggings(true), labelsets(true), sentences(true), sentence_blobs(true) {}
+  _ContentItem__isset() : raw(false), encoding(false), media_type(false), clean_html(false), clean_visible(false), logs(true), taggings(true), labels(true), sentences(true), sentence_blobs(true), language(false), relations(true) {}
   bool raw;
   bool encoding;
   bool media_type;
@@ -704,18 +847,21 @@ typedef struct _ContentItem__isset {
   bool clean_visible;
   bool logs;
   bool taggings;
-  bool labelsets;
+  bool labels;
   bool sentences;
   bool sentence_blobs;
+  bool language;
+  bool relations;
 } _ContentItem__isset;
 
 class ContentItem {
  public:
 
-  static const char* ascii_fingerprint; // = "FE1846C5E0F6B1A7278757F54468FB36";
-  static const uint8_t binary_fingerprint[16]; // = {0xFE,0x18,0x46,0xC5,0xE0,0xF6,0xB1,0xA7,0x27,0x87,0x57,0xF5,0x44,0x68,0xFB,0x36};
+  static const char* ascii_fingerprint; // = "82B1987EDC26B4BA3F5B41D9BA6175D8";
+  static const uint8_t binary_fingerprint[16]; // = {0x82,0xB1,0x98,0x7E,0xDC,0x26,0xB4,0xBA,0x3F,0x5B,0x41,0xD9,0xBA,0x61,0x75,0xD8};
 
   ContentItem() : raw(), encoding(), media_type(), clean_html(), clean_visible() {
+
 
 
 
@@ -732,9 +878,11 @@ class ContentItem {
   std::string clean_visible;
   std::vector<std::string>  logs;
   std::map<TaggerID, Tagging>  taggings;
-  std::vector<LabelSet>  labelsets;
+  std::map<AnnotatorID, std::vector<Label> >  labels;
   std::map<TaggerID, std::vector<Sentence> >  sentences;
   std::map<TaggerID, std::string>  sentence_blobs;
+  Language language;
+  std::map<TaggerID, std::vector<Relation> >  relations;
 
   _ContentItem__isset __isset;
 
@@ -773,9 +921,9 @@ class ContentItem {
     __isset.taggings = true;
   }
 
-  void __set_labelsets(const std::vector<LabelSet> & val) {
-    labelsets = val;
-    __isset.labelsets = true;
+  void __set_labels(const std::map<AnnotatorID, std::vector<Label> > & val) {
+    labels = val;
+    __isset.labels = true;
   }
 
   void __set_sentences(const std::map<TaggerID, std::vector<Sentence> > & val) {
@@ -786,6 +934,16 @@ class ContentItem {
   void __set_sentence_blobs(const std::map<TaggerID, std::string> & val) {
     sentence_blobs = val;
     __isset.sentence_blobs = true;
+  }
+
+  void __set_language(const Language& val) {
+    language = val;
+    __isset.language = true;
+  }
+
+  void __set_relations(const std::map<TaggerID, std::vector<Relation> > & val) {
+    relations = val;
+    __isset.relations = true;
   }
 
   bool operator == (const ContentItem & rhs) const
@@ -818,9 +976,9 @@ class ContentItem {
       return false;
     else if (__isset.taggings && !(taggings == rhs.taggings))
       return false;
-    if (__isset.labelsets != rhs.__isset.labelsets)
+    if (__isset.labels != rhs.__isset.labels)
       return false;
-    else if (__isset.labelsets && !(labelsets == rhs.labelsets))
+    else if (__isset.labels && !(labels == rhs.labels))
       return false;
     if (__isset.sentences != rhs.__isset.sentences)
       return false;
@@ -829,6 +987,14 @@ class ContentItem {
     if (__isset.sentence_blobs != rhs.__isset.sentence_blobs)
       return false;
     else if (__isset.sentence_blobs && !(sentence_blobs == rhs.sentence_blobs))
+      return false;
+    if (__isset.language != rhs.__isset.language)
+      return false;
+    else if (__isset.language && !(language == rhs.language))
+      return false;
+    if (__isset.relations != rhs.__isset.relations)
+      return false;
+    else if (__isset.relations && !(relations == rhs.relations))
       return false;
     return true;
   }
@@ -846,28 +1012,32 @@ class ContentItem {
 void swap(ContentItem &a, ContentItem &b);
 
 typedef struct _Rating__isset {
-  _Rating__isset() : annotator(false), target_id(false), relevance(false), mentions(false) {}
+  _Rating__isset() : annotator(false), target(false), relevance(false), contains_mention(false), comments(false), mentions(false) {}
   bool annotator;
-  bool target_id;
+  bool target;
   bool relevance;
+  bool contains_mention;
+  bool comments;
   bool mentions;
 } _Rating__isset;
 
 class Rating {
  public:
 
-  static const char* ascii_fingerprint; // = "3B1E33B2963E1FB49F984B6D0B0C4B05";
-  static const uint8_t binary_fingerprint[16]; // = {0x3B,0x1E,0x33,0xB2,0x96,0x3E,0x1F,0xB4,0x9F,0x98,0x4B,0x6D,0x0B,0x0C,0x4B,0x05};
+  static const char* ascii_fingerprint; // = "DCBA8CB33AD8DD99F9FD43759B321154";
+  static const uint8_t binary_fingerprint[16]; // = {0xDC,0xBA,0x8C,0xB3,0x3A,0xD8,0xDD,0x99,0xF9,0xFD,0x43,0x75,0x9B,0x32,0x11,0x54};
 
-  Rating() : target_id(), relevance(0), mentions(0) {
+  Rating() : relevance(0), contains_mention(0), comments() {
   }
 
   virtual ~Rating() throw() {}
 
   Annotator annotator;
-  std::string target_id;
+  Target target;
   int16_t relevance;
-  bool mentions;
+  bool contains_mention;
+  std::string comments;
+  std::vector<std::string>  mentions;
 
   _Rating__isset __isset;
 
@@ -875,8 +1045,8 @@ class Rating {
     annotator = val;
   }
 
-  void __set_target_id(const std::string& val) {
-    target_id = val;
+  void __set_target(const Target& val) {
+    target = val;
   }
 
   void __set_relevance(const int16_t val) {
@@ -884,7 +1054,17 @@ class Rating {
     __isset.relevance = true;
   }
 
-  void __set_mentions(const bool val) {
+  void __set_contains_mention(const bool val) {
+    contains_mention = val;
+    __isset.contains_mention = true;
+  }
+
+  void __set_comments(const std::string& val) {
+    comments = val;
+    __isset.comments = true;
+  }
+
+  void __set_mentions(const std::vector<std::string> & val) {
     mentions = val;
     __isset.mentions = true;
   }
@@ -893,11 +1073,19 @@ class Rating {
   {
     if (!(annotator == rhs.annotator))
       return false;
-    if (!(target_id == rhs.target_id))
+    if (!(target == rhs.target))
       return false;
     if (__isset.relevance != rhs.__isset.relevance)
       return false;
     else if (__isset.relevance && !(relevance == rhs.relevance))
+      return false;
+    if (__isset.contains_mention != rhs.__isset.contains_mention)
+      return false;
+    else if (__isset.contains_mention && !(contains_mention == rhs.contains_mention))
+      return false;
+    if (__isset.comments != rhs.__isset.comments)
+      return false;
+    else if (__isset.comments && !(comments == rhs.comments))
       return false;
     if (__isset.mentions != rhs.__isset.mentions)
       return false;
@@ -937,8 +1125,8 @@ typedef struct _StreamItem__isset {
 class StreamItem {
  public:
 
-  static const char* ascii_fingerprint; // = "A5F62496DCC2C6CCD3EF9D1E25052AD1";
-  static const uint8_t binary_fingerprint[16]; // = {0xA5,0xF6,0x24,0x96,0xDC,0xC2,0xC6,0xCC,0xD3,0xEF,0x9D,0x1E,0x25,0x05,0x2A,0xD1};
+  static const char* ascii_fingerprint; // = "740E94D89D2EE2AC3E3B2D7DAEF683A9";
+  static const uint8_t binary_fingerprint[16]; // = {0x74,0x0E,0x94,0xD8,0x9D,0x2E,0xE2,0xAC,0x3E,0x3B,0x2D,0x7D,0xAE,0xF6,0x83,0xA9};
 
   StreamItem() : version((Versions::type)0), doc_id(), abs_url(), schost(), original_url(), source(), stream_id() {
 
@@ -959,7 +1147,7 @@ class StreamItem {
   std::string stream_id;
   StreamTime stream_time;
   std::map<std::string, ContentItem>  other_content;
-  std::vector<Rating>  ratings;
+  std::map<AnnotatorID, std::vector<Rating> >  ratings;
 
   _StreamItem__isset __isset;
 
@@ -1014,7 +1202,7 @@ class StreamItem {
     __isset.other_content = true;
   }
 
-  void __set_ratings(const std::vector<Rating> & val) {
+  void __set_ratings(const std::map<AnnotatorID, std::vector<Rating> > & val) {
     ratings = val;
     __isset.ratings = true;
   }
@@ -1076,6 +1264,6 @@ class StreamItem {
 
 void swap(StreamItem &a, StreamItem &b);
 
-
+} // namespace
 
 #endif

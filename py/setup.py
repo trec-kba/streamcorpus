@@ -14,7 +14,7 @@ from distutils.core import Command
 from setuptools import setup, find_packages
 
 PROJECT = 'streamcorpus'
-VERSION = '0.2.13'
+VERSION = '0.2.20'
 URL = 'http://github.com/trec-kba/kba-corpus'
 AUTHOR = 'Diffeo, Inc.'
 AUTHOR_EMAIL = 'support@diffeo.com'
@@ -68,6 +68,7 @@ setup(
     ],
     install_requires=[
         'thrift',
+        'pytest',
     ],
     # include_package_data = True,
     package_data = {

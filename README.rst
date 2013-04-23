@@ -1,6 +1,8 @@
 streamcorpus
 ============
 
+Discussion forum:  https://groups.google.com/forum/#!forum/streamcorpus
+
 streamcorpus provides a common data interchange format for document
 processing pipelines that apply natural language processing tools to
 large streams of text.  It offers these benefits:
@@ -28,16 +30,14 @@ large streams of text.  It offers these benefits:
   every corpus is inherently anchored in history.  Streaming data is
   increasingly important in many applications.
 
-* Has versioning and builds on Thrift's extensibility.
+* Has basic versioning and builds on Thrift's extensibility.
 
 
-See src/streamcorpus.thrift for details.
+See if/streamcorpus.thrift for details.
 
-See src/streamcorpus for a python module built around the results of
-running `thrift --gen py streamcorpus.thrift`, which is done for you
-in the Makefile.
+See py/ for a python module built around the results of running
+`thrift --gen py streamcorpus.thrift`, which is done py/Makefile
 
 If you are interested in building a streamcorpus package around the
-Thrift generated code for another language, please post an issue in
-github and we'll get you involved, see
-http://github.com/trec-kba/streamcorpus/
+Thrift generated code for another language, please post to the
+discussion forum: https://groups.google.com/forum/#!forum/streamcorpus

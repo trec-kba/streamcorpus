@@ -5,7 +5,7 @@ import streamcorpus.{StreamItem}
 
 object Test {
   def main(args: Array[String]) {
-    val transport: TTransport = new TIOStreamTransport(new FileInputStream("test-data/john-smith-tagged-by-lingpipe-0.sc"))
+    val transport: TTransport = new TIOStreamTransport(new FileInputStream("../test-data/john-smith-tagged-by-lingpipe-0.sc"))
     val binProto: TBinaryProtocol = new TBinaryProtocol(transport)
     transport.open()
     while (true) {

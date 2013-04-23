@@ -1,6 +1,8 @@
 import os
 import uuid
-from . import make_stream_item, ContentItem, Chunk, serialize, deserialize
+import errno
+import pytest
+from . import make_stream_item, ContentItem, Chunk, serialize, deserialize, compress_and_encrypt_path
 
 TEST_XZ_PATH = os.path.join(os.path.dirname(__file__), '../../../test-data/john-smith-tagged-by-lingpipe-0.sc.xz')
 
@@ -31,8 +33,10 @@ def test_chunk_path_write():
     ch = Chunk(path=path, mode='wb')
     si = make_si()
     ch.add( si )
+    ch.close()
     assert len(ch) == 1
     print repr(ch)
+    assert len(list( Chunk(path=path, mode='rb') )) == 1
 
 def test_chunk_path_append():
     ## append to path
@@ -43,6 +47,7 @@ def test_chunk_path_append():
     ## count is only for those added
     assert len(ch) == 1
     print repr(ch)
+    assert len(list( Chunk(path=path, mode='rb') )) == 2
 
 def test_chunk_path_read():
     ## read from path
@@ -76,4 +81,30 @@ def test_serialize():
     si2 = deserialize(blob)
     assert si.stream_id == si2.stream_id
 
-    
+def test_noexists_exception():
+    with pytest.raises(IOError) as excinfo:
+        Chunk('path-that-does-not-exist', mode='rb')
+    assert excinfo.value.errno == errno.ENOENT
+
+def test_exists_exception():
+    with pytest.raises(IOError) as excinfo:
+        Chunk(path, mode='wb')
+    assert excinfo.value.errno == errno.EEXIST
+
+def test_compress_and_encrypt_path():    
+    errors, o_path = compress_and_encrypt_path(path)
+    if errors:
+        print '\n'.join(errors)
+        raise Exception(errors)
+    assert len(open(o_path).read()) == 240
+
+    ## this should go in a "cleanup" method...
+    os.remove(path)
+
+def test_with():
+    with Chunk(path, mode='wb') as ch:
+        ch.add(make_si())
+        ch.add(make_si())
+        ch.add(make_si())
+    assert len(list(Chunk(path))) == 3
+    os.remove(path)

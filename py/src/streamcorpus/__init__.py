@@ -23,9 +23,11 @@ from .ttypes import StreamItem, ContentItem, Label, StreamTime, \
 from .ttypes_v0_1_0 import StreamItem as StreamItem_v0_1_0
 
 from ._chunk import Chunk, decrypt_and_uncompress, compress_and_encrypt, \
+    compress_and_encrypt_path, \
     serialize, deserialize
 
 __all__ = ['Chunk', 'decrypt_and_uncompress', 'compress_and_encrypt', 
+           'compress_and_encrypt_path', 
            'make_stream_time', 'make_stream_item',
            'get_date_hour',
            'StreamItem', 'ContentItem', 'Label', 'StreamTime', 
@@ -86,6 +88,8 @@ def make_stream_item(zulu_timestamp, abs_url):
     si.abs_url = abs_url
     si.doc_id = hashlib.md5(abs_url).hexdigest()
     si.stream_id = '%d-%s' % (st.epoch_ticks, si.doc_id)
+    ## create an empty .body attribute and .body.language
+    si.body = ContentItem(language=Language(code='', name=''))
     return si
 
 def add_annotation(data_item, *annotations):
