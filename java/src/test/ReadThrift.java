@@ -3,6 +3,7 @@ package test;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.transport.TIOStreamTransport;
 import org.apache.thrift.transport.TTransport;
+import org.apache.thrift.transport.TTransportException;
 import streamcorpus.StreamItem;
 
 import java.io.BufferedInputStream;
@@ -22,13 +23,21 @@ public final class ReadThrift {
             TBinaryProtocol protocol = new TBinaryProtocol(transport);
             transport.open();
             int counter = 0;
-            while (true) {
-                final StreamItem item = new StreamItem();
-                item.read(protocol);
-                System.out.println("counter = " + ++counter);
-                System.out.println("item = " + item);
-                if (item == null) {
-                    break;
+            try {
+                while (true) {
+                    final StreamItem item = new StreamItem();
+                    item.read(protocol);
+                    System.out.println("counter = " + ++counter);
+                    System.out.println("item = " + item);
+                    if (item == null) {
+                        break;
+                    }
+                }
+            } catch (TTransportException te) {
+                if (te.getType() == TTransportException.END_OF_FILE) {
+                    System.out.println("*** EOF ***");
+                } else {
+                    throw te;
                 }
             }
             transport.close();
