@@ -2076,7 +2076,7 @@ class StreamItem(object):
 
   thrift_spec = (
     None, # 0
-    (1, TType.I32, 'version', None, None, ), # 1
+    (1, TType.I32, 'version', None,     0, ), # 1
     (2, TType.STRING, 'doc_id', None, None, ), # 2
     (3, TType.STRING, 'abs_url', None, None, ), # 3
     (4, TType.STRING, 'schost', None, None, ), # 4
@@ -2093,7 +2093,7 @@ class StreamItem(object):
     }, ), # 12
   )
 
-  def __init__(self, version=None, doc_id=None, abs_url=None, schost=None, original_url=None, source=None, body=None, source_metadata=thrift_spec[8][4], stream_id=None, stream_time=None, other_content=thrift_spec[11][4], ratings=thrift_spec[12][4],):
+  def __init__(self, version=thrift_spec[1][4], doc_id=None, abs_url=None, schost=None, original_url=None, source=None, body=None, source_metadata=thrift_spec[8][4], stream_id=None, stream_time=None, other_content=thrift_spec[11][4], ratings=thrift_spec[12][4],):
     self.version = version
     self.doc_id = doc_id
     self.abs_url = abs_url
