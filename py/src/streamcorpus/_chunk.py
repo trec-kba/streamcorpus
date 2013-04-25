@@ -25,8 +25,12 @@ import subprocess
 import exceptions
 from cStringIO import StringIO
 
-from .ttypes import StreamItem
-from .ttypes_v0_1_0 import StreamItem as StreamItem_v0_1_0
+from ttypes import StreamItem  ## v0_3_0
+from ttypes_v0_1_0 import StreamItem as StreamItem_v0_1_0
+from ttypes_v0_2_0 import StreamItem as StreamItem_v0_2_0
+
+class VersionMismatchError(Exception):
+    pass
 
 def serialize(msg):
     '''
@@ -219,6 +223,9 @@ class Chunk(object):
     def add(self, msg):
         'add message instance to chunk'
         assert self._o_protocol, 'cannot add to a Chunk instantiated with data'
+        if not (type(msg) == self.message):
+            raise VersionMismatchError(
+                'mismatched type: %s != %s' % (type(msg), self.message))
         msg.write(self._o_protocol)
         self._count += 1
 
@@ -289,6 +296,14 @@ class Chunk(object):
                 ## read it from the thrift protocol instance
                 msg.read(i_protocol)
 
+                if hasattr(msg, 'version'):
+                    ## compare the read version to the default version
+                    ## value on the identified message
+                    if not (msg.version == self.message().version):
+                        raise VersionMismatchError(
+                            'read msg.version = %d != %d = message().version):' % \
+                                (msg.version, self.message().version))
+                
                 ## yield is python primitive for iteration
                 self._count += 1
                 yield msg

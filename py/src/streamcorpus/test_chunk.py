@@ -3,8 +3,9 @@ import uuid
 import errno
 import pytest
 from . import make_stream_item, ContentItem, Chunk, serialize, deserialize, compress_and_encrypt_path
+from . import VersionMismatchError
 from . import Versions
-from . import StreamItem_v0_2_0
+from . import StreamItem_v0_2_0, StreamItem
 
 TEST_XZ_PATH = os.path.join(os.path.dirname(__file__), '../../../test-data/john-smith-tagged-by-lingpipe-0-v0_2_0.sc.xz')
 TEST_SC_PATH = os.path.join(os.path.dirname(__file__), '../../../test-data/john-smith-tagged-by-lingpipe-0-v0_2_0.sc')
@@ -22,6 +23,10 @@ def test_v0_2_0():
     for si in Chunk(TEST_SC_PATH, message=StreamItem_v0_2_0):
         assert si.version == Versions.v0_2_0
 
+    with pytest.raises(VersionMismatchError):
+        for si in Chunk(TEST_SC_PATH, message=StreamItem):
+            pass
+
 def test_chunk():
     ## write in-memory
     ch = Chunk()
@@ -32,7 +37,7 @@ def test_chunk():
 
 def test_xz():
     count = 0
-    for si in Chunk(TEST_XZ_PATH):
+    for si in Chunk(TEST_XZ_PATH, message=StreamItem_v0_2_0):
         count += 1
         assert si.body.clean_visible
     assert count == 197
@@ -67,6 +72,12 @@ def test_chunk_path_read():
     ## updated by __iter__
     assert len(ch) == 2
     print repr(ch)
+
+def test_chunk_path_read_version_protection():
+    ## read from path
+    with pytest.raises(VersionMismatchError):
+        for si in Chunk(path=path, mode='rb', message=StreamItem_v0_2_0):
+            pass
 
 def test_chunk_data_read():
     ## load from data
