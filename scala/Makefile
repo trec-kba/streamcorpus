@@ -10,7 +10,7 @@ export CLASSPATH=lib/scrooge-generator-3.0.7-SNAPSHOT.jar:lib/scopt_2.9.1-2.0.1.
 
 compile:
 	## compile the "streamcorpus" scala package
-	scala com.twitter.scrooge.Main ../if/streamcorpus.thrift
+	scala com.twitter.scrooge.Main ../if/streamcorpus-v0_3_0.thrift
 
 build: compile
 	## compile classes and test programs
