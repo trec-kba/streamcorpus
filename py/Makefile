@@ -48,7 +48,7 @@ install: build
 
 test: clean
 	py.test --genscript=runtests.py
-	python runtests.py -s
+	python runtests.py -s src
 
 build_eggs: build
 	python setup.py bdist_egg
