@@ -37,6 +37,8 @@ import sys
 
 
 ## iterate over StreamItem messages in a flat file
+### In other languages, you may need to create a read loop like this:
+### https://github.com/trec-kba/streamcorpus/blob/master/java/src/test/ReadThrift.java
 for si in streamcorpus.Chunk(path=sys.argv[1]):
 
     ## iterate over the sentences map for each tagger.
