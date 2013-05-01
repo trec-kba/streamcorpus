@@ -22,6 +22,9 @@ from ttypes import StreamItem, ContentItem, Label, StreamTime, \
     MentionType, AttributeType, Attribute, Gender, \
     RelationType
 
+## unambiguous name for the current one
+StreamItem_v0_3_0 = StreamItem
+
 from ttypes_v0_1_0 import StreamItem as StreamItem_v0_1_0
 from ttypes_v0_2_0 import StreamItem as StreamItem_v0_2_0
 import ttypes_v0_1_0
@@ -49,6 +52,7 @@ __all__ = ['Chunk', 'decrypt_and_uncompress', 'compress_and_encrypt',
            'Gender',
            'StreamItem_v0_1_0',
            'StreamItem_v0_2_0',
+           'StreamItem_v0_3_0',
            'ttypes_v0_1_0',
            'ttypes_v0_2_0',
            'VersionMismatchError',
