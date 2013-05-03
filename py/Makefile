@@ -7,7 +7,7 @@ clean:
 	rm -f src/streamcorpus/constants_v0_2_0.py
 	rm -f src/streamcorpus/ttypes_v0_1_0.py
 	rm -f src/streamcorpus/constants_v0_1_0.py
-	rm -rf build dist
+	rm -rf build dist src/streamcorpus_dev.egg-info
 	rm -f runtests.py
 
 .PHONY : build
