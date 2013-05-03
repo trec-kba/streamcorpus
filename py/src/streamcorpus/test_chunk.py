@@ -1,9 +1,24 @@
 import os
 import uuid
+import time
 import errno
 import pytest
+
+## import from inside the local package, i.e. get these things through __init__.py
 from . import make_stream_item, ContentItem, Chunk, serialize, deserialize, compress_and_encrypt_path
 
+import logging
+## utility for tests that configures logging in roughly the same way
+## that a program calling bigtree should setup logging
+logger = logging.getLogger('streamcorpus')
+logger.setLevel( logging.DEBUG )
+ch = logging.StreamHandler()
+ch.setLevel( logging.DEBUG )
+formatter = logging.Formatter('%(asctime)s %(process)d %(levelname)s: %(message)s')
+ch.setFormatter(formatter)
+logger.addHandler(ch)
+
+TEST_SC_PATH = os.path.join(os.path.dirname(__file__), '../../../test-data/john-smith-tagged-by-lingpipe-0.sc')
 TEST_XZ_PATH = os.path.join(os.path.dirname(__file__), '../../../test-data/john-smith-tagged-by-lingpipe-0.sc.xz')
 
 def make_si():
@@ -18,6 +33,19 @@ def test_chunk():
     si = make_si()
     ch.add( si )
     assert len(ch) == 1
+
+
+def test_speed():
+    count = 0
+    start_time = time.time()
+    for si in Chunk(TEST_SC_PATH):
+        count += 1
+        assert si.body.clean_visible
+    elapsed = time.time() - start_time
+    rate = float(count) / elapsed
+    print '%d in %.3f sec --> %.3f per sec' % (count, elapsed, rate)
+    assert count == 197
+
 
 def test_xz():
     count = 0
@@ -96,7 +124,7 @@ def test_compress_and_encrypt_path():
     if errors:
         print '\n'.join(errors)
         raise Exception(errors)
-    assert len(open(o_path).read()) == 240
+    assert len(open(o_path).read()) in [240, 244, 248]
 
     ## this should go in a "cleanup" method...
     os.remove(path)
