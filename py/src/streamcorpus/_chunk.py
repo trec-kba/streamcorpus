@@ -11,10 +11,21 @@ This software is released under an MIT/X11 open source license.
 Copyright 2012 Diffeo, Inc.
 '''
 
+import logging
+logger = logging.getLogger('streamcorpus')
+
 ## import the thrift library
 from thrift import Thrift
 from thrift.transport import TTransport
-from thrift.protocol import TBinaryProtocol
+from thrift.protocol.TBinaryProtocol import TBinaryProtocol, TBinaryProtocolAccelerated
+try:
+    from thrift.protocol import fastbinary
+    protocol = TBinaryProtocolAccelerated
+    logger.debug('using fastbinary')
+
+except Exception, exc:
+    protocol = TBinaryProtocol
+    logger.warn('failed to import fastbinary, so falling back to 15x slower non-accelerated TBinaryProtocol: %r' % exc)
 
 import os
 import uuid
@@ -25,7 +36,7 @@ import subprocess
 import exceptions
 from cStringIO import StringIO
 
-from ttypes import StreamItem  ## v0_3_0
+from ttypes import StreamItem as StreamItem_v0_3_0
 from ttypes_v0_1_0 import StreamItem as StreamItem_v0_1_0
 from ttypes_v0_2_0 import StreamItem as StreamItem_v0_2_0
 
@@ -37,7 +48,7 @@ def serialize(msg):
     Generate a serialized binary blob for a single message
     '''
     o_transport = StringIO()
-    o_protocol = TBinaryProtocol.TBinaryProtocol(o_transport)
+    o_protocol = protocol(o_transport)
     msg.write(o_protocol)
     o_transport.seek(0)
     return o_transport.getvalue()
@@ -80,6 +91,27 @@ class md5_file(object):
         self._md5.update(data)
         self._fh.write(data, *args, **kwargs)
 
+
+    def readAll(self, sz):
+        '''
+        This method allows TBinaryProtocolAccelerated to actually function.
+
+        Copied from here
+        http://svn.apache.org/repos/asf/hive/trunk/service/lib/py/thrift/transport/TTransport.py
+        '''
+        buff = ''
+        have = 0
+        while (have < sz):
+            chunk = self.read(sz-have)
+            have += len(chunk)
+            buff += chunk
+
+            if len(chunk) == 0:
+                raise EOFError()
+
+        return buff
+
+
     @property
     def md5_hexdigest(self):
         return self._md5.hexdigest()
@@ -89,7 +121,7 @@ class Chunk(object):
     reader/writer for batches of Thrift messages stored in flat files.
     '''
     def __init__(self, path=None, data=None, file_obj=None, mode='rb',
-                 message=StreamItem):
+                 message=StreamItem_v0_3_0):
         '''
         Load a chunk from an existing file handle or buffer of data.
         If no data is passed in, then chunk starts as empty and
@@ -111,8 +143,8 @@ class Chunk(object):
 
         :param data: bytes of data from which to read messages
 
-        :param message: defaults to StreamItem; you can specify your
-        own Thrift-generated class here.
+        :param message: defaults to StreamItem_v0_3_0; you can specify
+        your own Thrift-generated class here.
         '''
         allowed_modes = ['wb', 'ab', 'rb']
         assert mode in allowed_modes, 'mode=%r not in %r' % (mode, allowed_modes)
@@ -207,7 +239,7 @@ class Chunk(object):
         if mode in ['ab', 'wb']:
             self._o_chunk_fh = md5_file( file_obj )
             self._o_transport = TTransport.TBufferedTransport(self._o_chunk_fh)
-            self._o_protocol = TBinaryProtocol.TBinaryProtocol(self._o_transport)
+            self._o_protocol = protocol(self._o_transport)
 
         else:
             assert mode == 'rb', mode
@@ -284,7 +316,7 @@ class Chunk(object):
         ## wrap the file handle in buffered transport
         i_transport = TTransport.TBufferedTransport(self._i_chunk_fh)
         ## use the Thrift Binary Protocol
-        i_protocol = TBinaryProtocol.TBinaryProtocol(i_transport)
+        i_protocol = protocol(i_transport)
 
         ## read message instances until input buffer is exhausted
         while 1:

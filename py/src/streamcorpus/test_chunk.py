@@ -1,11 +1,24 @@
 import os
 import uuid
+import time
 import errno
 import pytest
+import logging
+## utility for tests that configures logging in roughly the same way
+## that a program calling bigtree should setup logging
+logger = logging.getLogger('streamcorpus')
+logger.setLevel( logging.DEBUG )
+ch = logging.StreamHandler()
+ch.setLevel( logging.DEBUG )
+formatter = logging.Formatter('%(asctime)s %(process)d %(levelname)s: %(message)s')
+ch.setFormatter(formatter)
+logger.addHandler(ch)
+
+## import from inside the local package, i.e. get these things through __init__.py
 from . import make_stream_item, ContentItem, Chunk, serialize, deserialize, compress_and_encrypt_path
 from . import VersionMismatchError
 from . import Versions
-from . import StreamItem_v0_2_0, StreamItem
+from . import StreamItem_v0_2_0, StreamItem_v0_3_0
 
 TEST_XZ_PATH = os.path.join(os.path.dirname(__file__), '../../../test-data/john-smith-tagged-by-lingpipe-0-v0_2_0.sc.xz')
 TEST_SC_PATH = os.path.join(os.path.dirname(__file__), '../../../test-data/john-smith-tagged-by-lingpipe-0-v0_2_0.sc')
@@ -24,7 +37,7 @@ def test_v0_2_0():
         assert si.version == Versions.v0_2_0
 
     with pytest.raises(VersionMismatchError):
-        for si in Chunk(TEST_SC_PATH, message=StreamItem):
+        for si in Chunk(TEST_SC_PATH, message=StreamItem_v0_3_0):
             pass
 
 def test_chunk():
@@ -40,6 +53,17 @@ def test_xz():
     for si in Chunk(TEST_XZ_PATH, message=StreamItem_v0_2_0):
         count += 1
         assert si.body.clean_visible
+    assert count == 197
+
+def test_speed():
+    count = 0
+    start_time = time.time()
+    for si in Chunk(TEST_SC_PATH, message=StreamItem_v0_2_0):
+        count += 1
+        assert si.body.clean_visible
+    elapsed = time.time() - start_time
+    rate = float(count) / elapsed
+    print '%d in %.3f sec --> %.3f per sec' % (count, elapsed, rate)
     assert count == 197
 
 path = '/tmp/test_chunk-%s.sc' % str(uuid.uuid1())
@@ -118,7 +142,7 @@ def test_compress_and_encrypt_path():
     if errors:
         print '\n'.join(errors)
         raise Exception(errors)
-    assert len(open(o_path).read()) in [240, 244]
+    assert len(open(o_path).read()) in [240, 244, 248]
 
     ## this should go in a "cleanup" method...
     os.remove(path)
