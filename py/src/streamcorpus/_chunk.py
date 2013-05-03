@@ -18,14 +18,17 @@ logger = logging.getLogger('streamcorpus')
 from thrift import Thrift
 from thrift.transport import TTransport
 from thrift.protocol.TBinaryProtocol import TBinaryProtocol, TBinaryProtocolAccelerated
+fastbinary_import_failure = None
 try:
     from thrift.protocol import fastbinary
+    ## use faster C program to read/write
     protocol = TBinaryProtocolAccelerated
-    logger.debug('using fastbinary')
 
 except Exception, exc:
+    fastbinary_import_failure = exc
+    ## fall back to pure python
     protocol = TBinaryProtocol
-    logger.warn('failed to import fastbinary, so falling back to 15x slower non-accelerated TBinaryProtocol: %r' % exc)
+
 
 import os
 import uuid
@@ -146,6 +149,13 @@ class Chunk(object):
         :param message: defaults to StreamItem_v0_3_0; you can specify
         your own Thrift-generated class here.
         '''
+        if not fastbinary_import_failure:
+            logger.debug('using TBinaryProtocolAccelerated (fastbinary)')
+
+        else:
+            logger.warn('import fastbinary failed; falling back to 15x slower TBinaryProtocol: %r'\
+                            % fastbinary_import_failure)
+
         allowed_modes = ['wb', 'ab', 'rb']
         assert mode in allowed_modes, 'mode=%r not in %r' % (mode, allowed_modes)
         self.mode = mode
