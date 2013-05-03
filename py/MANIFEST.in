@@ -1,0 +1,3 @@
+include version.py
+include RELEASE-VERSION
+include README.rst
