@@ -13,12 +13,17 @@ import sys
 import json
 import itertools
 import collections
-from _chunk import Chunk, StreamItem, StreamItem_v0_1_0
+from _chunk import Chunk
 from . import OffsetType
 
+from ttypes import StreamItem as StreamItem_v0_3_0
+from ttypes_v0_1_0 import StreamItem as StreamItem_v0_1_0
+from ttypes_v0_2_0 import StreamItem as StreamItem_v0_2_0
+
 versioned_classes = {
-    "v0.2.0": StreamItem,
-    "v0.1.0": StreamItem_v0_1_0,
+    'v0_3_0': StreamItem_v0_3_0,
+    'v0_2_0': StreamItem_v0_2_0,
+    'v0_1_0': StreamItem_v0_1_0,
     }
 
 def _dump(fpath, args):
@@ -399,7 +404,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--component', dest='component', metavar='raw|clean_html|clean_visible', 
         help='print out the .body.<component>')
-    parser.add_argument('--version', default='v0.2.0')
+    parser.add_argument('--version', default='v0_3_0')
     parser.add_argument('--tokens', action='store_true', 
                         default=False, dest='tokens')
     parser.add_argument('--ratings', action='store_true', default=False)
