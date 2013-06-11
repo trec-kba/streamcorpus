@@ -260,7 +260,7 @@ num_valid_label_offsets: %d
 ''' % (num_valid_byte_offsets, num_valid_line_offsets, num_valid_label_offsets)
 
 
-def _find(fpaths, stream_id):
+def _find(fpaths, stream_id, dump_binary_stream_item=False):
     '''
     Read in a streamcorpus.Chunk file and if any of its stream_ids
     match stream_id, then print stream_item.body.raw to stdout
@@ -270,7 +270,12 @@ def _find(fpaths, stream_id):
     for fpath in fpaths:
         for si in Chunk(path=fpath, mode='rb', message=message_class):
             if si.stream_id == stream_id:
-                if si.body and si.body.raw:
+                if dump_binary_stream_item:
+                    o_chunk = Chunk(file_obj=sys.stdout, mode='wb')
+                    o_chunk.add(si)
+                    o_chunk.close()
+                    sys.exit()
+                elif si.body and si.body.raw:
                     print si.body.raw
                     sys.exit()
                 elif si.body:
@@ -398,6 +403,9 @@ if __name__ == '__main__':
     parser.add_argument('--stats', action='store_true', default=False,
                         help='print out the .body.raw of a specific stream_id')
     parser.add_argument('--find', dest='find', metavar='STREAM_ID', help='print out the .body.raw of a specific stream_id')
+    parser.add_argument('--binary', dest='dump_binary_stream_item', 
+                        action='store_true', default=False, 
+                        help='Use with --find to write full binary StreamItem of specific stream_id to stdout intead of .body.raw')
     parser.add_argument(
         '--find-missing', dest='find_missing', action='store_true', default=False,
         help='print out the .body.<content> of any stream_item that has no tokens with a label in annotator_ids')
@@ -456,7 +464,8 @@ if __name__ == '__main__':
         _stats(args.input_path)
 
     elif args.find:
-        _find(args.input_path, args.find)
+        _find(args.input_path, args.find, 
+              dump_binary_stream_item=args.dump_binary_stream_item)
 
     elif args.tokens:
         _dump_tokens(args.input_path, args.annotator_ids, args.tagger_ids)
