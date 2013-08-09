@@ -19,7 +19,8 @@ import org.apache.thrift.TEnum;
  * Versions was included in the spec.
  */
 public enum Versions implements org.apache.thrift.TEnum {
-  v0_2_0(0);
+  v0_2_0(0),
+  v0_3_0(1);
 
   private final int value;
 
@@ -42,6 +43,8 @@ public enum Versions implements org.apache.thrift.TEnum {
     switch (value) {
       case 0:
         return v0_2_0;
+      case 1:
+        return v0_3_0;
       default:
         return null;
     }

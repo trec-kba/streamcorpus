@@ -312,6 +312,8 @@ public class StreamItem implements org.apache.thrift.TBase<StreamItem, StreamIte
   }
 
   public StreamItem() {
+    this.version = streamcorpus.Versions.v0_3_0;
+
     this.source_metadata = new HashMap<String,ByteBuffer>();
 
     this.other_content = new HashMap<String,ContentItem>();
@@ -422,7 +424,8 @@ public class StreamItem implements org.apache.thrift.TBase<StreamItem, StreamIte
 
   @Override
   public void clear() {
-    this.version = null;
+    this.version = streamcorpus.Versions.v0_3_0;
+
     this.doc_id = null;
     this.abs_url = null;
     this.schost = null;
@@ -1555,15 +1558,15 @@ public class StreamItem implements org.apache.thrift.TBase<StreamItem, StreamIte
           case 8: // SOURCE_METADATA
             if (schemeField.type == org.apache.thrift.protocol.TType.MAP) {
               {
-                org.apache.thrift.protocol.TMap _map154 = iprot.readMapBegin();
-                struct.source_metadata = new HashMap<String,ByteBuffer>(2*_map154.size);
-                for (int _i155 = 0; _i155 < _map154.size; ++_i155)
+                org.apache.thrift.protocol.TMap _map192 = iprot.readMapBegin();
+                struct.source_metadata = new HashMap<String,ByteBuffer>(2*_map192.size);
+                for (int _i193 = 0; _i193 < _map192.size; ++_i193)
                 {
-                  String _key156; // required
-                  ByteBuffer _val157; // required
-                  _key156 = iprot.readString();
-                  _val157 = iprot.readBinary();
-                  struct.source_metadata.put(_key156, _val157);
+                  String _key194; // required
+                  ByteBuffer _val195; // required
+                  _key194 = iprot.readString();
+                  _val195 = iprot.readBinary();
+                  struct.source_metadata.put(_key194, _val195);
                 }
                 iprot.readMapEnd();
               }
@@ -1592,16 +1595,16 @@ public class StreamItem implements org.apache.thrift.TBase<StreamItem, StreamIte
           case 11: // OTHER_CONTENT
             if (schemeField.type == org.apache.thrift.protocol.TType.MAP) {
               {
-                org.apache.thrift.protocol.TMap _map158 = iprot.readMapBegin();
-                struct.other_content = new HashMap<String,ContentItem>(2*_map158.size);
-                for (int _i159 = 0; _i159 < _map158.size; ++_i159)
+                org.apache.thrift.protocol.TMap _map196 = iprot.readMapBegin();
+                struct.other_content = new HashMap<String,ContentItem>(2*_map196.size);
+                for (int _i197 = 0; _i197 < _map196.size; ++_i197)
                 {
-                  String _key160; // required
-                  ContentItem _val161; // required
-                  _key160 = iprot.readString();
-                  _val161 = new ContentItem();
-                  _val161.read(iprot);
-                  struct.other_content.put(_key160, _val161);
+                  String _key198; // required
+                  ContentItem _val199; // required
+                  _key198 = iprot.readString();
+                  _val199 = new ContentItem();
+                  _val199.read(iprot);
+                  struct.other_content.put(_key198, _val199);
                 }
                 iprot.readMapEnd();
               }
@@ -1613,26 +1616,26 @@ public class StreamItem implements org.apache.thrift.TBase<StreamItem, StreamIte
           case 12: // RATINGS
             if (schemeField.type == org.apache.thrift.protocol.TType.MAP) {
               {
-                org.apache.thrift.protocol.TMap _map162 = iprot.readMapBegin();
-                struct.ratings = new HashMap<String,List<Rating>>(2*_map162.size);
-                for (int _i163 = 0; _i163 < _map162.size; ++_i163)
+                org.apache.thrift.protocol.TMap _map200 = iprot.readMapBegin();
+                struct.ratings = new HashMap<String,List<Rating>>(2*_map200.size);
+                for (int _i201 = 0; _i201 < _map200.size; ++_i201)
                 {
-                  String _key164; // required
-                  List<Rating> _val165; // required
-                  _key164 = iprot.readString();
+                  String _key202; // required
+                  List<Rating> _val203; // required
+                  _key202 = iprot.readString();
                   {
-                    org.apache.thrift.protocol.TList _list166 = iprot.readListBegin();
-                    _val165 = new ArrayList<Rating>(_list166.size);
-                    for (int _i167 = 0; _i167 < _list166.size; ++_i167)
+                    org.apache.thrift.protocol.TList _list204 = iprot.readListBegin();
+                    _val203 = new ArrayList<Rating>(_list204.size);
+                    for (int _i205 = 0; _i205 < _list204.size; ++_i205)
                     {
-                      Rating _elem168; // required
-                      _elem168 = new Rating();
-                      _elem168.read(iprot);
-                      _val165.add(_elem168);
+                      Rating _elem206; // required
+                      _elem206 = new Rating();
+                      _elem206.read(iprot);
+                      _val203.add(_elem206);
                     }
                     iprot.readListEnd();
                   }
-                  struct.ratings.put(_key164, _val165);
+                  struct.ratings.put(_key202, _val203);
                 }
                 iprot.readMapEnd();
               }
@@ -1706,10 +1709,10 @@ public class StreamItem implements org.apache.thrift.TBase<StreamItem, StreamIte
           oprot.writeFieldBegin(SOURCE_METADATA_FIELD_DESC);
           {
             oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRING, struct.source_metadata.size()));
-            for (Map.Entry<String, ByteBuffer> _iter169 : struct.source_metadata.entrySet())
+            for (Map.Entry<String, ByteBuffer> _iter207 : struct.source_metadata.entrySet())
             {
-              oprot.writeString(_iter169.getKey());
-              oprot.writeBinary(_iter169.getValue());
+              oprot.writeString(_iter207.getKey());
+              oprot.writeBinary(_iter207.getValue());
             }
             oprot.writeMapEnd();
           }
@@ -1731,10 +1734,10 @@ public class StreamItem implements org.apache.thrift.TBase<StreamItem, StreamIte
           oprot.writeFieldBegin(OTHER_CONTENT_FIELD_DESC);
           {
             oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRUCT, struct.other_content.size()));
-            for (Map.Entry<String, ContentItem> _iter170 : struct.other_content.entrySet())
+            for (Map.Entry<String, ContentItem> _iter208 : struct.other_content.entrySet())
             {
-              oprot.writeString(_iter170.getKey());
-              _iter170.getValue().write(oprot);
+              oprot.writeString(_iter208.getKey());
+              _iter208.getValue().write(oprot);
             }
             oprot.writeMapEnd();
           }
@@ -1746,14 +1749,14 @@ public class StreamItem implements org.apache.thrift.TBase<StreamItem, StreamIte
           oprot.writeFieldBegin(RATINGS_FIELD_DESC);
           {
             oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.LIST, struct.ratings.size()));
-            for (Map.Entry<String, List<Rating>> _iter171 : struct.ratings.entrySet())
+            for (Map.Entry<String, List<Rating>> _iter209 : struct.ratings.entrySet())
             {
-              oprot.writeString(_iter171.getKey());
+              oprot.writeString(_iter209.getKey());
               {
-                oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, _iter171.getValue().size()));
-                for (Rating _iter172 : _iter171.getValue())
+                oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, _iter209.getValue().size()));
+                for (Rating _iter210 : _iter209.getValue())
                 {
-                  _iter172.write(oprot);
+                  _iter210.write(oprot);
                 }
                 oprot.writeListEnd();
               }
@@ -1842,10 +1845,10 @@ public class StreamItem implements org.apache.thrift.TBase<StreamItem, StreamIte
       if (struct.isSetSource_metadata()) {
         {
           oprot.writeI32(struct.source_metadata.size());
-          for (Map.Entry<String, ByteBuffer> _iter173 : struct.source_metadata.entrySet())
+          for (Map.Entry<String, ByteBuffer> _iter211 : struct.source_metadata.entrySet())
           {
-            oprot.writeString(_iter173.getKey());
-            oprot.writeBinary(_iter173.getValue());
+            oprot.writeString(_iter211.getKey());
+            oprot.writeBinary(_iter211.getValue());
           }
         }
       }
@@ -1858,24 +1861,24 @@ public class StreamItem implements org.apache.thrift.TBase<StreamItem, StreamIte
       if (struct.isSetOther_content()) {
         {
           oprot.writeI32(struct.other_content.size());
-          for (Map.Entry<String, ContentItem> _iter174 : struct.other_content.entrySet())
+          for (Map.Entry<String, ContentItem> _iter212 : struct.other_content.entrySet())
           {
-            oprot.writeString(_iter174.getKey());
-            _iter174.getValue().write(oprot);
+            oprot.writeString(_iter212.getKey());
+            _iter212.getValue().write(oprot);
           }
         }
       }
       if (struct.isSetRatings()) {
         {
           oprot.writeI32(struct.ratings.size());
-          for (Map.Entry<String, List<Rating>> _iter175 : struct.ratings.entrySet())
+          for (Map.Entry<String, List<Rating>> _iter213 : struct.ratings.entrySet())
           {
-            oprot.writeString(_iter175.getKey());
+            oprot.writeString(_iter213.getKey());
             {
-              oprot.writeI32(_iter175.getValue().size());
-              for (Rating _iter176 : _iter175.getValue())
+              oprot.writeI32(_iter213.getValue().size());
+              for (Rating _iter214 : _iter213.getValue())
               {
-                _iter176.write(oprot);
+                _iter214.write(oprot);
               }
             }
           }
@@ -1918,15 +1921,15 @@ public class StreamItem implements org.apache.thrift.TBase<StreamItem, StreamIte
       }
       if (incoming.get(7)) {
         {
-          org.apache.thrift.protocol.TMap _map177 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-          struct.source_metadata = new HashMap<String,ByteBuffer>(2*_map177.size);
-          for (int _i178 = 0; _i178 < _map177.size; ++_i178)
+          org.apache.thrift.protocol.TMap _map215 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+          struct.source_metadata = new HashMap<String,ByteBuffer>(2*_map215.size);
+          for (int _i216 = 0; _i216 < _map215.size; ++_i216)
           {
-            String _key179; // required
-            ByteBuffer _val180; // required
-            _key179 = iprot.readString();
-            _val180 = iprot.readBinary();
-            struct.source_metadata.put(_key179, _val180);
+            String _key217; // required
+            ByteBuffer _val218; // required
+            _key217 = iprot.readString();
+            _val218 = iprot.readBinary();
+            struct.source_metadata.put(_key217, _val218);
           }
         }
         struct.setSource_metadataIsSet(true);
@@ -1942,41 +1945,41 @@ public class StreamItem implements org.apache.thrift.TBase<StreamItem, StreamIte
       }
       if (incoming.get(10)) {
         {
-          org.apache.thrift.protocol.TMap _map181 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.other_content = new HashMap<String,ContentItem>(2*_map181.size);
-          for (int _i182 = 0; _i182 < _map181.size; ++_i182)
+          org.apache.thrift.protocol.TMap _map219 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.other_content = new HashMap<String,ContentItem>(2*_map219.size);
+          for (int _i220 = 0; _i220 < _map219.size; ++_i220)
           {
-            String _key183; // required
-            ContentItem _val184; // required
-            _key183 = iprot.readString();
-            _val184 = new ContentItem();
-            _val184.read(iprot);
-            struct.other_content.put(_key183, _val184);
+            String _key221; // required
+            ContentItem _val222; // required
+            _key221 = iprot.readString();
+            _val222 = new ContentItem();
+            _val222.read(iprot);
+            struct.other_content.put(_key221, _val222);
           }
         }
         struct.setOther_contentIsSet(true);
       }
       if (incoming.get(11)) {
         {
-          org.apache.thrift.protocol.TMap _map185 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.LIST, iprot.readI32());
-          struct.ratings = new HashMap<String,List<Rating>>(2*_map185.size);
-          for (int _i186 = 0; _i186 < _map185.size; ++_i186)
+          org.apache.thrift.protocol.TMap _map223 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.LIST, iprot.readI32());
+          struct.ratings = new HashMap<String,List<Rating>>(2*_map223.size);
+          for (int _i224 = 0; _i224 < _map223.size; ++_i224)
           {
-            String _key187; // required
-            List<Rating> _val188; // required
-            _key187 = iprot.readString();
+            String _key225; // required
+            List<Rating> _val226; // required
+            _key225 = iprot.readString();
             {
-              org.apache.thrift.protocol.TList _list189 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-              _val188 = new ArrayList<Rating>(_list189.size);
-              for (int _i190 = 0; _i190 < _list189.size; ++_i190)
+              org.apache.thrift.protocol.TList _list227 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+              _val226 = new ArrayList<Rating>(_list227.size);
+              for (int _i228 = 0; _i228 < _list227.size; ++_i228)
               {
-                Rating _elem191; // required
-                _elem191 = new Rating();
-                _elem191.read(iprot);
-                _val188.add(_elem191);
+                Rating _elem229; // required
+                _elem229 = new Rating();
+                _elem229.read(iprot);
+                _val226.add(_elem229);
               }
             }
-            struct.ratings.put(_key187, _val188);
+            struct.ratings.put(_key225, _val226);
           }
         }
         struct.setRatingsIsSet(true);

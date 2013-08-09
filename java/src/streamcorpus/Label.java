@@ -586,7 +586,7 @@ public class Label implements org.apache.thrift.TBase<Label, Label._Fields>, jav
                 for (int _i1 = 0; _i1 < _map0.size; ++_i1)
                 {
                   OffsetType _key2; // required
-                  Offset _val3; // required
+                  Offset _val3; // optional
                   _key2 = OffsetType.findByValue(iprot.readI32());
                   _val3 = new Offset();
                   _val3.read(iprot);
@@ -706,7 +706,7 @@ public class Label implements org.apache.thrift.TBase<Label, Label._Fields>, jav
           for (int _i7 = 0; _i7 < _map6.size; ++_i7)
           {
             OffsetType _key8; // required
-            Offset _val9; // required
+            Offset _val9; // optional
             _key8 = OffsetType.findByValue(iprot.readI32());
             _val9 = new Offset();
             _val9.read(iprot);

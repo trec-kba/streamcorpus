@@ -871,13 +871,13 @@ public class Rating implements org.apache.thrift.TBase<Rating, Rating._Fields>, 
           case 6: // MENTIONS
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list146 = iprot.readListBegin();
-                struct.mentions = new ArrayList<String>(_list146.size);
-                for (int _i147 = 0; _i147 < _list146.size; ++_i147)
+                org.apache.thrift.protocol.TList _list184 = iprot.readListBegin();
+                struct.mentions = new ArrayList<String>(_list184.size);
+                for (int _i185 = 0; _i185 < _list184.size; ++_i185)
                 {
-                  String _elem148; // required
-                  _elem148 = iprot.readString();
-                  struct.mentions.add(_elem148);
+                  String _elem186; // required
+                  _elem186 = iprot.readString();
+                  struct.mentions.add(_elem186);
                 }
                 iprot.readListEnd();
               }
@@ -933,9 +933,9 @@ public class Rating implements org.apache.thrift.TBase<Rating, Rating._Fields>, 
           oprot.writeFieldBegin(MENTIONS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.mentions.size()));
-            for (String _iter149 : struct.mentions)
+            for (String _iter187 : struct.mentions)
             {
-              oprot.writeString(_iter149);
+              oprot.writeString(_iter187);
             }
             oprot.writeListEnd();
           }
@@ -997,9 +997,9 @@ public class Rating implements org.apache.thrift.TBase<Rating, Rating._Fields>, 
       if (struct.isSetMentions()) {
         {
           oprot.writeI32(struct.mentions.size());
-          for (String _iter150 : struct.mentions)
+          for (String _iter188 : struct.mentions)
           {
-            oprot.writeString(_iter150);
+            oprot.writeString(_iter188);
           }
         }
       }
@@ -1033,13 +1033,13 @@ public class Rating implements org.apache.thrift.TBase<Rating, Rating._Fields>, 
       }
       if (incoming.get(5)) {
         {
-          org.apache.thrift.protocol.TList _list151 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-          struct.mentions = new ArrayList<String>(_list151.size);
-          for (int _i152 = 0; _i152 < _list151.size; ++_i152)
+          org.apache.thrift.protocol.TList _list189 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+          struct.mentions = new ArrayList<String>(_list189.size);
+          for (int _i190 = 0; _i190 < _list189.size; ++_i190)
           {
-            String _elem153; // required
-            _elem153 = iprot.readString();
-            struct.mentions.add(_elem153);
+            String _elem191; // required
+            _elem191 = iprot.readString();
+            struct.mentions.add(_elem191);
           }
         }
         struct.setMentionsIsSet(true);

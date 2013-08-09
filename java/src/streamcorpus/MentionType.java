@@ -11,24 +11,14 @@ import java.util.Map;
 import java.util.HashMap;
 import org.apache.thrift.TEnum;
 
-/**
- * Offset and OffsetType are used by Annotation to identify the
- * portion of a ContentItem that a human labeled with a tag.
- * 
- * annotation applies to a range of line numbers
- * 
- * annotation applies to a range of bytes
- * 
- * annotation applies to a range of chars, typically unicode chars
- */
-public enum OffsetType implements org.apache.thrift.TEnum {
-  LINES(0),
-  BYTES(1),
-  CHARS(2);
+public enum MentionType implements org.apache.thrift.TEnum {
+  NAME(0),
+  PRO(1),
+  NOM(2);
 
   private final int value;
 
-  private OffsetType(int value) {
+  private MentionType(int value) {
     this.value = value;
   }
 
@@ -43,14 +33,14 @@ public enum OffsetType implements org.apache.thrift.TEnum {
    * Find a the enum type by its integer value, as defined in the Thrift IDL.
    * @return null if the value is not found.
    */
-  public static OffsetType findByValue(int value) { 
+  public static MentionType findByValue(int value) { 
     switch (value) {
       case 0:
-        return LINES;
+        return NAME;
       case 1:
-        return BYTES;
+        return PRO;
       case 2:
-        return CHARS;
+        return NOM;
       default:
         return null;
     }

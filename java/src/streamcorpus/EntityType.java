@@ -16,23 +16,19 @@ import org.apache.thrift.TEnum;
  * various common entity types.  To avoid ambiguity, we define a
  * canonical list here, which we will surely have to expand over time
  * as new taggers recognize new types of entities.
+ * 
+ * LOC: physical location
+ * 
+ * MISC: uncategorized named entities, e.g. Civil War for Stanford CoreNLP
  */
 public enum EntityType implements org.apache.thrift.TEnum {
   PER(0),
   ORG(1),
-  /**
-   * physical location
-   */
   LOC(2),
-  MALE_PRONOUN(3),
-  FEMALE_PRONOUN(4),
   TIME(5),
   DATE(6),
   MONEY(7),
   PERCENT(8),
-  /**
-   * uncategorized named entities, e.g. Civil War for Stanford CoreNLP
-   */
   MISC(9),
   GPE(10),
   FAC(11),
@@ -67,10 +63,6 @@ public enum EntityType implements org.apache.thrift.TEnum {
         return ORG;
       case 2:
         return LOC;
-      case 3:
-        return MALE_PRONOUN;
-      case 4:
-        return FEMALE_PRONOUN;
       case 5:
         return TIME;
       case 6:

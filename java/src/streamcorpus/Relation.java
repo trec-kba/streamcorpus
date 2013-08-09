@@ -37,11 +37,11 @@ import org.slf4j.LoggerFactory;
 public class Relation implements org.apache.thrift.TBase<Relation, Relation._Fields>, java.io.Serializable, Cloneable {
   private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("Relation");
 
-  private static final org.apache.thrift.protocol.TField RELATION_NAME_FIELD_DESC = new org.apache.thrift.protocol.TField("relation_name", org.apache.thrift.protocol.TType.STRING, (short)1);
+  private static final org.apache.thrift.protocol.TField RELATION_TYPE_FIELD_DESC = new org.apache.thrift.protocol.TField("relation_type", org.apache.thrift.protocol.TType.I32, (short)1);
   private static final org.apache.thrift.protocol.TField SENTENCE_ID_1_FIELD_DESC = new org.apache.thrift.protocol.TField("sentence_id_1", org.apache.thrift.protocol.TType.I32, (short)2);
-  private static final org.apache.thrift.protocol.TField MENTION_ID_1_FIELD_DESC = new org.apache.thrift.protocol.TField("mention_id_1", org.apache.thrift.protocol.TType.I16, (short)3);
+  private static final org.apache.thrift.protocol.TField MENTION_ID_1_FIELD_DESC = new org.apache.thrift.protocol.TField("mention_id_1", org.apache.thrift.protocol.TType.I32, (short)3);
   private static final org.apache.thrift.protocol.TField SENTENCE_ID_2_FIELD_DESC = new org.apache.thrift.protocol.TField("sentence_id_2", org.apache.thrift.protocol.TType.I32, (short)4);
-  private static final org.apache.thrift.protocol.TField MENTION_ID_2_FIELD_DESC = new org.apache.thrift.protocol.TField("mention_id_2", org.apache.thrift.protocol.TType.I16, (short)5);
+  private static final org.apache.thrift.protocol.TField MENTION_ID_2_FIELD_DESC = new org.apache.thrift.protocol.TField("mention_id_2", org.apache.thrift.protocol.TType.I32, (short)5);
 
   private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
   static {
@@ -50,166 +50,52 @@ public class Relation implements org.apache.thrift.TBase<Relation, Relation._Fie
   }
 
   /**
-   *    * A string describing the relation.  We may convert these to an
-   *    * enumeration, which would then be called relation_type
-   *    *
-   *    * Here is a list of ACE relation (and event) types that might
-   *    * appear in relation_name
-   *    * http://projects.ldc.upenn.edu/ace/docs/English-Events-Guidelines_v5.4.3.pdf
-   * 
-   * PHYS.Located
-   * PHYS.Near
-   * PART-WHOLE.Geographical
-   * PART-WHOLE.Subsidiary
-   * PART-WHOLE.Artifact
-   * PER-SOC.Business
-   * PER-SOC.Family
-   * PER-SOC.Lasting-Personal
-   * ORG-AFF.Employment
-   * ORG-AFF.Ownership
-   * ORG-AFF.Founder
-   * ORG-AFF.Student-Alum
-   * ORG-AFF.Sports-Affiliation
-   * ORG-AFF.Investor-Shareholder
-   * ORG-AFF.Membership
-   * ART.User-Owner-Inventor-Manufacturer
-   * GEN-AFF.Citizen-Resident-Religion-Ethnicity
-   * GEN-AFF.Org-Location
+   * The type of the relation, see documentation for RelationType
    * 
    * 
-   * Business.Declare-Bankruptcy
-   * Business.End-Org
-   * Business.Merge-Org
-   * Business.Start-Org
-   * Conflict.Attack
-   * Conflict.Demonstrate
-   * Contact.Phone-Write
-   * Contact.Meet
-   * Justice.Acquit
-   * Justice.Appeal
-   * Justice.Arrest-Jail
-   * Justice.Charge-Indict
-   * Justice.Convict
-   * Justice.Execute
-   * Justice.Extradite
-   * Justice.Fine
-   * Justice.Pardon
-   * Justice.Release-Parole
-   * Justice.Sentence
-   * Justice.Sue
-   * Justice.Trial-Hearing
-   * Life.Be-Born
-   * Life.Die
-   * Life.Divorce
-   * Life.Injure
-   * Life.Marry
-   * Movement.Transport
-   * Personnel.Elect
-   * Personnel.End-Position
-   * Personnel.Nominate
-   * Personnel.Start-Position
-   * Transaction.Transfer-Money
-   * Transaction.Transfer-Ownership
-   * 
+   * @see RelationType
    */
-  public String relation_name; // optional
+  public RelationType relation_type; // optional
   /**
    * Zero-based index into the sentences array for this TaggerID
    */
   public int sentence_id_1; // optional
   /**
-   * Zero-based index into the mentions in that sentence.  This
-   * identifies the origin of the relation.  For example, the relation
-   *    (Bob, PHYS.Located, Chicago)
+   * Index into the mentions in the document.  This identifies the
+   * origin of the relation.  For example, the relation
+   *    (Bob, PHYS_Located, Chicago)
    * would have mention_id_1 point to Bob.
    */
-  public short mention_id_1; // optional
+  public int mention_id_1; // optional
   /**
    * Zero-based index into the sentences array for this TaggerID
    */
   public int sentence_id_2; // optional
   /**
-   * Zero-based index into the mentions in that sentence. This
-   * identifies the origin of the relation.  For example, the relation
-   *    (Bob, PHYS.Located, Chicago)
+   * Index into the mentions in the document. This identifies the
+   * origin of the relation.  For example, the relation
+   *    (Bob, PHYS_Located, Chicago)
    * would have mention_id_2 point to Chicago.
    */
-  public short mention_id_2; // optional
+  public int mention_id_2; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
     /**
-     *    * A string describing the relation.  We may convert these to an
-     *    * enumeration, which would then be called relation_type
-     *    *
-     *    * Here is a list of ACE relation (and event) types that might
-     *    * appear in relation_name
-     *    * http://projects.ldc.upenn.edu/ace/docs/English-Events-Guidelines_v5.4.3.pdf
-     * 
-     * PHYS.Located
-     * PHYS.Near
-     * PART-WHOLE.Geographical
-     * PART-WHOLE.Subsidiary
-     * PART-WHOLE.Artifact
-     * PER-SOC.Business
-     * PER-SOC.Family
-     * PER-SOC.Lasting-Personal
-     * ORG-AFF.Employment
-     * ORG-AFF.Ownership
-     * ORG-AFF.Founder
-     * ORG-AFF.Student-Alum
-     * ORG-AFF.Sports-Affiliation
-     * ORG-AFF.Investor-Shareholder
-     * ORG-AFF.Membership
-     * ART.User-Owner-Inventor-Manufacturer
-     * GEN-AFF.Citizen-Resident-Religion-Ethnicity
-     * GEN-AFF.Org-Location
+     * The type of the relation, see documentation for RelationType
      * 
      * 
-     * Business.Declare-Bankruptcy
-     * Business.End-Org
-     * Business.Merge-Org
-     * Business.Start-Org
-     * Conflict.Attack
-     * Conflict.Demonstrate
-     * Contact.Phone-Write
-     * Contact.Meet
-     * Justice.Acquit
-     * Justice.Appeal
-     * Justice.Arrest-Jail
-     * Justice.Charge-Indict
-     * Justice.Convict
-     * Justice.Execute
-     * Justice.Extradite
-     * Justice.Fine
-     * Justice.Pardon
-     * Justice.Release-Parole
-     * Justice.Sentence
-     * Justice.Sue
-     * Justice.Trial-Hearing
-     * Life.Be-Born
-     * Life.Die
-     * Life.Divorce
-     * Life.Injure
-     * Life.Marry
-     * Movement.Transport
-     * Personnel.Elect
-     * Personnel.End-Position
-     * Personnel.Nominate
-     * Personnel.Start-Position
-     * Transaction.Transfer-Money
-     * Transaction.Transfer-Ownership
-     * 
+     * @see RelationType
      */
-    RELATION_NAME((short)1, "relation_name"),
+    RELATION_TYPE((short)1, "relation_type"),
     /**
      * Zero-based index into the sentences array for this TaggerID
      */
     SENTENCE_ID_1((short)2, "sentence_id_1"),
     /**
-     * Zero-based index into the mentions in that sentence.  This
-     * identifies the origin of the relation.  For example, the relation
-     *    (Bob, PHYS.Located, Chicago)
+     * Index into the mentions in the document.  This identifies the
+     * origin of the relation.  For example, the relation
+     *    (Bob, PHYS_Located, Chicago)
      * would have mention_id_1 point to Bob.
      */
     MENTION_ID_1((short)3, "mention_id_1"),
@@ -218,9 +104,9 @@ public class Relation implements org.apache.thrift.TBase<Relation, Relation._Fie
      */
     SENTENCE_ID_2((short)4, "sentence_id_2"),
     /**
-     * Zero-based index into the mentions in that sentence. This
-     * identifies the origin of the relation.  For example, the relation
-     *    (Bob, PHYS.Located, Chicago)
+     * Index into the mentions in the document. This identifies the
+     * origin of the relation.  For example, the relation
+     *    (Bob, PHYS_Located, Chicago)
      * would have mention_id_2 point to Chicago.
      */
     MENTION_ID_2((short)5, "mention_id_2");
@@ -238,8 +124,8 @@ public class Relation implements org.apache.thrift.TBase<Relation, Relation._Fie
      */
     public static _Fields findByThriftId(int fieldId) {
       switch(fieldId) {
-        case 1: // RELATION_NAME
-          return RELATION_NAME;
+        case 1: // RELATION_TYPE
+          return RELATION_TYPE;
         case 2: // SENTENCE_ID_1
           return SENTENCE_ID_1;
         case 3: // MENTION_ID_1
@@ -293,20 +179,20 @@ public class Relation implements org.apache.thrift.TBase<Relation, Relation._Fie
   private static final int __SENTENCE_ID_2_ISSET_ID = 2;
   private static final int __MENTION_ID_2_ISSET_ID = 3;
   private byte __isset_bitfield = 0;
-  private _Fields optionals[] = {_Fields.RELATION_NAME,_Fields.SENTENCE_ID_1,_Fields.MENTION_ID_1,_Fields.SENTENCE_ID_2,_Fields.MENTION_ID_2};
+  private _Fields optionals[] = {_Fields.RELATION_TYPE,_Fields.SENTENCE_ID_1,_Fields.MENTION_ID_1,_Fields.SENTENCE_ID_2,_Fields.MENTION_ID_2};
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
-    tmpMap.put(_Fields.RELATION_NAME, new org.apache.thrift.meta_data.FieldMetaData("relation_name", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+    tmpMap.put(_Fields.RELATION_TYPE, new org.apache.thrift.meta_data.FieldMetaData("relation_type", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.EnumMetaData(org.apache.thrift.protocol.TType.ENUM, RelationType.class)));
     tmpMap.put(_Fields.SENTENCE_ID_1, new org.apache.thrift.meta_data.FieldMetaData("sentence_id_1", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
     tmpMap.put(_Fields.MENTION_ID_1, new org.apache.thrift.meta_data.FieldMetaData("mention_id_1", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I16        , "MentionID")));
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32        , "MentionID")));
     tmpMap.put(_Fields.SENTENCE_ID_2, new org.apache.thrift.meta_data.FieldMetaData("sentence_id_2", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
     tmpMap.put(_Fields.MENTION_ID_2, new org.apache.thrift.meta_data.FieldMetaData("mention_id_2", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I16        , "MentionID")));
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32        , "MentionID")));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(Relation.class, metaDataMap);
   }
@@ -319,8 +205,8 @@ public class Relation implements org.apache.thrift.TBase<Relation, Relation._Fie
    */
   public Relation(Relation other) {
     __isset_bitfield = other.__isset_bitfield;
-    if (other.isSetRelation_name()) {
-      this.relation_name = other.relation_name;
+    if (other.isSetRelation_type()) {
+      this.relation_type = other.relation_type;
     }
     this.sentence_id_1 = other.sentence_id_1;
     this.mention_id_1 = other.mention_id_1;
@@ -334,7 +220,7 @@ public class Relation implements org.apache.thrift.TBase<Relation, Relation._Fie
 
   @Override
   public void clear() {
-    this.relation_name = null;
+    this.relation_type = null;
     setSentence_id_1IsSet(false);
     this.sentence_id_1 = 0;
     setMention_id_1IsSet(false);
@@ -346,152 +232,38 @@ public class Relation implements org.apache.thrift.TBase<Relation, Relation._Fie
   }
 
   /**
-   *    * A string describing the relation.  We may convert these to an
-   *    * enumeration, which would then be called relation_type
-   *    *
-   *    * Here is a list of ACE relation (and event) types that might
-   *    * appear in relation_name
-   *    * http://projects.ldc.upenn.edu/ace/docs/English-Events-Guidelines_v5.4.3.pdf
-   * 
-   * PHYS.Located
-   * PHYS.Near
-   * PART-WHOLE.Geographical
-   * PART-WHOLE.Subsidiary
-   * PART-WHOLE.Artifact
-   * PER-SOC.Business
-   * PER-SOC.Family
-   * PER-SOC.Lasting-Personal
-   * ORG-AFF.Employment
-   * ORG-AFF.Ownership
-   * ORG-AFF.Founder
-   * ORG-AFF.Student-Alum
-   * ORG-AFF.Sports-Affiliation
-   * ORG-AFF.Investor-Shareholder
-   * ORG-AFF.Membership
-   * ART.User-Owner-Inventor-Manufacturer
-   * GEN-AFF.Citizen-Resident-Religion-Ethnicity
-   * GEN-AFF.Org-Location
+   * The type of the relation, see documentation for RelationType
    * 
    * 
-   * Business.Declare-Bankruptcy
-   * Business.End-Org
-   * Business.Merge-Org
-   * Business.Start-Org
-   * Conflict.Attack
-   * Conflict.Demonstrate
-   * Contact.Phone-Write
-   * Contact.Meet
-   * Justice.Acquit
-   * Justice.Appeal
-   * Justice.Arrest-Jail
-   * Justice.Charge-Indict
-   * Justice.Convict
-   * Justice.Execute
-   * Justice.Extradite
-   * Justice.Fine
-   * Justice.Pardon
-   * Justice.Release-Parole
-   * Justice.Sentence
-   * Justice.Sue
-   * Justice.Trial-Hearing
-   * Life.Be-Born
-   * Life.Die
-   * Life.Divorce
-   * Life.Injure
-   * Life.Marry
-   * Movement.Transport
-   * Personnel.Elect
-   * Personnel.End-Position
-   * Personnel.Nominate
-   * Personnel.Start-Position
-   * Transaction.Transfer-Money
-   * Transaction.Transfer-Ownership
-   * 
+   * @see RelationType
    */
-  public String getRelation_name() {
-    return this.relation_name;
+  public RelationType getRelation_type() {
+    return this.relation_type;
   }
 
   /**
-   *    * A string describing the relation.  We may convert these to an
-   *    * enumeration, which would then be called relation_type
-   *    *
-   *    * Here is a list of ACE relation (and event) types that might
-   *    * appear in relation_name
-   *    * http://projects.ldc.upenn.edu/ace/docs/English-Events-Guidelines_v5.4.3.pdf
-   * 
-   * PHYS.Located
-   * PHYS.Near
-   * PART-WHOLE.Geographical
-   * PART-WHOLE.Subsidiary
-   * PART-WHOLE.Artifact
-   * PER-SOC.Business
-   * PER-SOC.Family
-   * PER-SOC.Lasting-Personal
-   * ORG-AFF.Employment
-   * ORG-AFF.Ownership
-   * ORG-AFF.Founder
-   * ORG-AFF.Student-Alum
-   * ORG-AFF.Sports-Affiliation
-   * ORG-AFF.Investor-Shareholder
-   * ORG-AFF.Membership
-   * ART.User-Owner-Inventor-Manufacturer
-   * GEN-AFF.Citizen-Resident-Religion-Ethnicity
-   * GEN-AFF.Org-Location
+   * The type of the relation, see documentation for RelationType
    * 
    * 
-   * Business.Declare-Bankruptcy
-   * Business.End-Org
-   * Business.Merge-Org
-   * Business.Start-Org
-   * Conflict.Attack
-   * Conflict.Demonstrate
-   * Contact.Phone-Write
-   * Contact.Meet
-   * Justice.Acquit
-   * Justice.Appeal
-   * Justice.Arrest-Jail
-   * Justice.Charge-Indict
-   * Justice.Convict
-   * Justice.Execute
-   * Justice.Extradite
-   * Justice.Fine
-   * Justice.Pardon
-   * Justice.Release-Parole
-   * Justice.Sentence
-   * Justice.Sue
-   * Justice.Trial-Hearing
-   * Life.Be-Born
-   * Life.Die
-   * Life.Divorce
-   * Life.Injure
-   * Life.Marry
-   * Movement.Transport
-   * Personnel.Elect
-   * Personnel.End-Position
-   * Personnel.Nominate
-   * Personnel.Start-Position
-   * Transaction.Transfer-Money
-   * Transaction.Transfer-Ownership
-   * 
+   * @see RelationType
    */
-  public Relation setRelation_name(String relation_name) {
-    this.relation_name = relation_name;
+  public Relation setRelation_type(RelationType relation_type) {
+    this.relation_type = relation_type;
     return this;
   }
 
-  public void unsetRelation_name() {
-    this.relation_name = null;
+  public void unsetRelation_type() {
+    this.relation_type = null;
   }
 
-  /** Returns true if field relation_name is set (has been assigned a value) and false otherwise */
-  public boolean isSetRelation_name() {
-    return this.relation_name != null;
+  /** Returns true if field relation_type is set (has been assigned a value) and false otherwise */
+  public boolean isSetRelation_type() {
+    return this.relation_type != null;
   }
 
-  public void setRelation_nameIsSet(boolean value) {
+  public void setRelation_typeIsSet(boolean value) {
     if (!value) {
-      this.relation_name = null;
+      this.relation_type = null;
     }
   }
 
@@ -525,22 +297,22 @@ public class Relation implements org.apache.thrift.TBase<Relation, Relation._Fie
   }
 
   /**
-   * Zero-based index into the mentions in that sentence.  This
-   * identifies the origin of the relation.  For example, the relation
-   *    (Bob, PHYS.Located, Chicago)
+   * Index into the mentions in the document.  This identifies the
+   * origin of the relation.  For example, the relation
+   *    (Bob, PHYS_Located, Chicago)
    * would have mention_id_1 point to Bob.
    */
-  public short getMention_id_1() {
+  public int getMention_id_1() {
     return this.mention_id_1;
   }
 
   /**
-   * Zero-based index into the mentions in that sentence.  This
-   * identifies the origin of the relation.  For example, the relation
-   *    (Bob, PHYS.Located, Chicago)
+   * Index into the mentions in the document.  This identifies the
+   * origin of the relation.  For example, the relation
+   *    (Bob, PHYS_Located, Chicago)
    * would have mention_id_1 point to Bob.
    */
-  public Relation setMention_id_1(short mention_id_1) {
+  public Relation setMention_id_1(int mention_id_1) {
     this.mention_id_1 = mention_id_1;
     setMention_id_1IsSet(true);
     return this;
@@ -589,22 +361,22 @@ public class Relation implements org.apache.thrift.TBase<Relation, Relation._Fie
   }
 
   /**
-   * Zero-based index into the mentions in that sentence. This
-   * identifies the origin of the relation.  For example, the relation
-   *    (Bob, PHYS.Located, Chicago)
+   * Index into the mentions in the document. This identifies the
+   * origin of the relation.  For example, the relation
+   *    (Bob, PHYS_Located, Chicago)
    * would have mention_id_2 point to Chicago.
    */
-  public short getMention_id_2() {
+  public int getMention_id_2() {
     return this.mention_id_2;
   }
 
   /**
-   * Zero-based index into the mentions in that sentence. This
-   * identifies the origin of the relation.  For example, the relation
-   *    (Bob, PHYS.Located, Chicago)
+   * Index into the mentions in the document. This identifies the
+   * origin of the relation.  For example, the relation
+   *    (Bob, PHYS_Located, Chicago)
    * would have mention_id_2 point to Chicago.
    */
-  public Relation setMention_id_2(short mention_id_2) {
+  public Relation setMention_id_2(int mention_id_2) {
     this.mention_id_2 = mention_id_2;
     setMention_id_2IsSet(true);
     return this;
@@ -625,11 +397,11 @@ public class Relation implements org.apache.thrift.TBase<Relation, Relation._Fie
 
   public void setFieldValue(_Fields field, Object value) {
     switch (field) {
-    case RELATION_NAME:
+    case RELATION_TYPE:
       if (value == null) {
-        unsetRelation_name();
+        unsetRelation_type();
       } else {
-        setRelation_name((String)value);
+        setRelation_type((RelationType)value);
       }
       break;
 
@@ -645,7 +417,7 @@ public class Relation implements org.apache.thrift.TBase<Relation, Relation._Fie
       if (value == null) {
         unsetMention_id_1();
       } else {
-        setMention_id_1((Short)value);
+        setMention_id_1((Integer)value);
       }
       break;
 
@@ -661,7 +433,7 @@ public class Relation implements org.apache.thrift.TBase<Relation, Relation._Fie
       if (value == null) {
         unsetMention_id_2();
       } else {
-        setMention_id_2((Short)value);
+        setMention_id_2((Integer)value);
       }
       break;
 
@@ -670,20 +442,20 @@ public class Relation implements org.apache.thrift.TBase<Relation, Relation._Fie
 
   public Object getFieldValue(_Fields field) {
     switch (field) {
-    case RELATION_NAME:
-      return getRelation_name();
+    case RELATION_TYPE:
+      return getRelation_type();
 
     case SENTENCE_ID_1:
       return Integer.valueOf(getSentence_id_1());
 
     case MENTION_ID_1:
-      return Short.valueOf(getMention_id_1());
+      return Integer.valueOf(getMention_id_1());
 
     case SENTENCE_ID_2:
       return Integer.valueOf(getSentence_id_2());
 
     case MENTION_ID_2:
-      return Short.valueOf(getMention_id_2());
+      return Integer.valueOf(getMention_id_2());
 
     }
     throw new IllegalStateException();
@@ -696,8 +468,8 @@ public class Relation implements org.apache.thrift.TBase<Relation, Relation._Fie
     }
 
     switch (field) {
-    case RELATION_NAME:
-      return isSetRelation_name();
+    case RELATION_TYPE:
+      return isSetRelation_type();
     case SENTENCE_ID_1:
       return isSetSentence_id_1();
     case MENTION_ID_1:
@@ -723,12 +495,12 @@ public class Relation implements org.apache.thrift.TBase<Relation, Relation._Fie
     if (that == null)
       return false;
 
-    boolean this_present_relation_name = true && this.isSetRelation_name();
-    boolean that_present_relation_name = true && that.isSetRelation_name();
-    if (this_present_relation_name || that_present_relation_name) {
-      if (!(this_present_relation_name && that_present_relation_name))
+    boolean this_present_relation_type = true && this.isSetRelation_type();
+    boolean that_present_relation_type = true && that.isSetRelation_type();
+    if (this_present_relation_type || that_present_relation_type) {
+      if (!(this_present_relation_type && that_present_relation_type))
         return false;
-      if (!this.relation_name.equals(that.relation_name))
+      if (!this.relation_type.equals(that.relation_type))
         return false;
     }
 
@@ -784,12 +556,12 @@ public class Relation implements org.apache.thrift.TBase<Relation, Relation._Fie
     int lastComparison = 0;
     Relation typedOther = (Relation)other;
 
-    lastComparison = Boolean.valueOf(isSetRelation_name()).compareTo(typedOther.isSetRelation_name());
+    lastComparison = Boolean.valueOf(isSetRelation_type()).compareTo(typedOther.isSetRelation_type());
     if (lastComparison != 0) {
       return lastComparison;
     }
-    if (isSetRelation_name()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.relation_name, typedOther.relation_name);
+    if (isSetRelation_type()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.relation_type, typedOther.relation_type);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -854,12 +626,12 @@ public class Relation implements org.apache.thrift.TBase<Relation, Relation._Fie
     StringBuilder sb = new StringBuilder("Relation(");
     boolean first = true;
 
-    if (isSetRelation_name()) {
-      sb.append("relation_name:");
-      if (this.relation_name == null) {
+    if (isSetRelation_type()) {
+      sb.append("relation_type:");
+      if (this.relation_type == null) {
         sb.append("null");
       } else {
-        sb.append(this.relation_name);
+        sb.append(this.relation_type);
       }
       first = false;
     }
@@ -932,10 +704,10 @@ public class Relation implements org.apache.thrift.TBase<Relation, Relation._Fie
           break;
         }
         switch (schemeField.id) {
-          case 1: // RELATION_NAME
-            if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
-              struct.relation_name = iprot.readString();
-              struct.setRelation_nameIsSet(true);
+          case 1: // RELATION_TYPE
+            if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
+              struct.relation_type = RelationType.findByValue(iprot.readI32());
+              struct.setRelation_typeIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
@@ -949,8 +721,8 @@ public class Relation implements org.apache.thrift.TBase<Relation, Relation._Fie
             }
             break;
           case 3: // MENTION_ID_1
-            if (schemeField.type == org.apache.thrift.protocol.TType.I16) {
-              struct.mention_id_1 = iprot.readI16();
+            if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
+              struct.mention_id_1 = iprot.readI32();
               struct.setMention_id_1IsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
@@ -965,8 +737,8 @@ public class Relation implements org.apache.thrift.TBase<Relation, Relation._Fie
             }
             break;
           case 5: // MENTION_ID_2
-            if (schemeField.type == org.apache.thrift.protocol.TType.I16) {
-              struct.mention_id_2 = iprot.readI16();
+            if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
+              struct.mention_id_2 = iprot.readI32();
               struct.setMention_id_2IsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
@@ -987,10 +759,10 @@ public class Relation implements org.apache.thrift.TBase<Relation, Relation._Fie
       struct.validate();
 
       oprot.writeStructBegin(STRUCT_DESC);
-      if (struct.relation_name != null) {
-        if (struct.isSetRelation_name()) {
-          oprot.writeFieldBegin(RELATION_NAME_FIELD_DESC);
-          oprot.writeString(struct.relation_name);
+      if (struct.relation_type != null) {
+        if (struct.isSetRelation_type()) {
+          oprot.writeFieldBegin(RELATION_TYPE_FIELD_DESC);
+          oprot.writeI32(struct.relation_type.getValue());
           oprot.writeFieldEnd();
         }
       }
@@ -1001,7 +773,7 @@ public class Relation implements org.apache.thrift.TBase<Relation, Relation._Fie
       }
       if (struct.isSetMention_id_1()) {
         oprot.writeFieldBegin(MENTION_ID_1_FIELD_DESC);
-        oprot.writeI16(struct.mention_id_1);
+        oprot.writeI32(struct.mention_id_1);
         oprot.writeFieldEnd();
       }
       if (struct.isSetSentence_id_2()) {
@@ -1011,7 +783,7 @@ public class Relation implements org.apache.thrift.TBase<Relation, Relation._Fie
       }
       if (struct.isSetMention_id_2()) {
         oprot.writeFieldBegin(MENTION_ID_2_FIELD_DESC);
-        oprot.writeI16(struct.mention_id_2);
+        oprot.writeI32(struct.mention_id_2);
         oprot.writeFieldEnd();
       }
       oprot.writeFieldStop();
@@ -1032,7 +804,7 @@ public class Relation implements org.apache.thrift.TBase<Relation, Relation._Fie
     public void write(org.apache.thrift.protocol.TProtocol prot, Relation struct) throws org.apache.thrift.TException {
       TTupleProtocol oprot = (TTupleProtocol) prot;
       BitSet optionals = new BitSet();
-      if (struct.isSetRelation_name()) {
+      if (struct.isSetRelation_type()) {
         optionals.set(0);
       }
       if (struct.isSetSentence_id_1()) {
@@ -1048,20 +820,20 @@ public class Relation implements org.apache.thrift.TBase<Relation, Relation._Fie
         optionals.set(4);
       }
       oprot.writeBitSet(optionals, 5);
-      if (struct.isSetRelation_name()) {
-        oprot.writeString(struct.relation_name);
+      if (struct.isSetRelation_type()) {
+        oprot.writeI32(struct.relation_type.getValue());
       }
       if (struct.isSetSentence_id_1()) {
         oprot.writeI32(struct.sentence_id_1);
       }
       if (struct.isSetMention_id_1()) {
-        oprot.writeI16(struct.mention_id_1);
+        oprot.writeI32(struct.mention_id_1);
       }
       if (struct.isSetSentence_id_2()) {
         oprot.writeI32(struct.sentence_id_2);
       }
       if (struct.isSetMention_id_2()) {
-        oprot.writeI16(struct.mention_id_2);
+        oprot.writeI32(struct.mention_id_2);
       }
     }
 
@@ -1070,15 +842,15 @@ public class Relation implements org.apache.thrift.TBase<Relation, Relation._Fie
       TTupleProtocol iprot = (TTupleProtocol) prot;
       BitSet incoming = iprot.readBitSet(5);
       if (incoming.get(0)) {
-        struct.relation_name = iprot.readString();
-        struct.setRelation_nameIsSet(true);
+        struct.relation_type = RelationType.findByValue(iprot.readI32());
+        struct.setRelation_typeIsSet(true);
       }
       if (incoming.get(1)) {
         struct.sentence_id_1 = iprot.readI32();
         struct.setSentence_id_1IsSet(true);
       }
       if (incoming.get(2)) {
-        struct.mention_id_1 = iprot.readI16();
+        struct.mention_id_1 = iprot.readI32();
         struct.setMention_id_1IsSet(true);
       }
       if (incoming.get(3)) {
@@ -1086,7 +858,7 @@ public class Relation implements org.apache.thrift.TBase<Relation, Relation._Fie
         struct.setSentence_id_2IsSet(true);
       }
       if (incoming.get(4)) {
-        struct.mention_id_2 = iprot.readI16();
+        struct.mention_id_2 = iprot.readI32();
         struct.setMention_id_2IsSet(true);
       }
     }

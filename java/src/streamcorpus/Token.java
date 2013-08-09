@@ -45,11 +45,12 @@ public class Token implements org.apache.thrift.TBase<Token, Token._Fields>, jav
   private static final org.apache.thrift.protocol.TField LEMMA_FIELD_DESC = new org.apache.thrift.protocol.TField("lemma", org.apache.thrift.protocol.TType.STRING, (short)5);
   private static final org.apache.thrift.protocol.TField POS_FIELD_DESC = new org.apache.thrift.protocol.TField("pos", org.apache.thrift.protocol.TType.STRING, (short)6);
   private static final org.apache.thrift.protocol.TField ENTITY_TYPE_FIELD_DESC = new org.apache.thrift.protocol.TField("entity_type", org.apache.thrift.protocol.TType.I32, (short)7);
-  private static final org.apache.thrift.protocol.TField MENTION_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("mention_id", org.apache.thrift.protocol.TType.I16, (short)8);
+  private static final org.apache.thrift.protocol.TField MENTION_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("mention_id", org.apache.thrift.protocol.TType.I32, (short)8);
   private static final org.apache.thrift.protocol.TField EQUIV_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("equiv_id", org.apache.thrift.protocol.TType.I32, (short)9);
   private static final org.apache.thrift.protocol.TField PARENT_ID_FIELD_DESC = new org.apache.thrift.protocol.TField("parent_id", org.apache.thrift.protocol.TType.I32, (short)10);
   private static final org.apache.thrift.protocol.TField DEPENDENCY_PATH_FIELD_DESC = new org.apache.thrift.protocol.TField("dependency_path", org.apache.thrift.protocol.TType.STRING, (short)11);
   private static final org.apache.thrift.protocol.TField LABELS_FIELD_DESC = new org.apache.thrift.protocol.TField("labels", org.apache.thrift.protocol.TType.MAP, (short)12);
+  private static final org.apache.thrift.protocol.TField MENTION_TYPE_FIELD_DESC = new org.apache.thrift.protocol.TField("mention_type", org.apache.thrift.protocol.TType.I32, (short)13);
 
   private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
   static {
@@ -92,19 +93,18 @@ public class Token implements org.apache.thrift.TBase<Token, Token._Fields>, jav
    */
   public EntityType entity_type; // optional
   /**
-   * Identifier for a each mention in a sentence.  Must be zero-based
-   * within each sentence, so is not unique at the document level.
-   * Serves two purposes:
+   * Identifier for a each mention in this TaggerID's description of
+   * the document.  Is unique at the document level.  Serves two
+   * purposes:
    * 
    *   1) Distinguishing multi-token mention.  Needed when the
    *   entity_type and equiv_id do not change between tokens that are
    *   part of separate mentions, e.g. "The senator is known to his
    *   friends as David, Davy, Zeus, and Mr. Elephant."
    * 
-   *   2) Refering to mentions used in Relation objects.  Used in
-   *   conjunction with sentence_id
+   *   2) Refering to mentions used in Relation objects.
    */
-  public short mention_id; // optional
+  public int mention_id; // optional
   /**
    * Within-doc coref chain ID.  That is, identifier of equivalence
    * class of co-referent tokens.  Default is -1, meaning None.
@@ -124,6 +124,12 @@ public class Token implements org.apache.thrift.TBase<Token, Token._Fields>, jav
    * Labels attached to this token, defaults to an empty map
    */
   public Map<String,List<Label>> labels; // optional
+  /**
+   * Identify the type of mention, e.g. pronoun, description, proper name
+   * 
+   * @see MentionType
+   */
+  public MentionType mention_type; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -162,17 +168,16 @@ public class Token implements org.apache.thrift.TBase<Token, Token._Fields>, jav
      */
     ENTITY_TYPE((short)7, "entity_type"),
     /**
-     * Identifier for a each mention in a sentence.  Must be zero-based
-     * within each sentence, so is not unique at the document level.
-     * Serves two purposes:
+     * Identifier for a each mention in this TaggerID's description of
+     * the document.  Is unique at the document level.  Serves two
+     * purposes:
      * 
      *   1) Distinguishing multi-token mention.  Needed when the
      *   entity_type and equiv_id do not change between tokens that are
      *   part of separate mentions, e.g. "The senator is known to his
      *   friends as David, Davy, Zeus, and Mr. Elephant."
      * 
-     *   2) Refering to mentions used in Relation objects.  Used in
-     *   conjunction with sentence_id
+     *   2) Refering to mentions used in Relation objects.
      */
     MENTION_ID((short)8, "mention_id"),
     /**
@@ -193,7 +198,13 @@ public class Token implements org.apache.thrift.TBase<Token, Token._Fields>, jav
     /**
      * Labels attached to this token, defaults to an empty map
      */
-    LABELS((short)12, "labels");
+    LABELS((short)12, "labels"),
+    /**
+     * Identify the type of mention, e.g. pronoun, description, proper name
+     * 
+     * @see MentionType
+     */
+    MENTION_TYPE((short)13, "mention_type");
 
     private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -232,6 +243,8 @@ public class Token implements org.apache.thrift.TBase<Token, Token._Fields>, jav
           return DEPENDENCY_PATH;
         case 12: // LABELS
           return LABELS;
+        case 13: // MENTION_TYPE
+          return MENTION_TYPE;
         default:
           return null;
       }
@@ -278,7 +291,7 @@ public class Token implements org.apache.thrift.TBase<Token, Token._Fields>, jav
   private static final int __EQUIV_ID_ISSET_ID = 3;
   private static final int __PARENT_ID_ISSET_ID = 4;
   private byte __isset_bitfield = 0;
-  private _Fields optionals[] = {_Fields.OFFSETS,_Fields.SENTENCE_POS,_Fields.LEMMA,_Fields.POS,_Fields.ENTITY_TYPE,_Fields.MENTION_ID,_Fields.EQUIV_ID,_Fields.PARENT_ID,_Fields.DEPENDENCY_PATH,_Fields.LABELS};
+  private _Fields optionals[] = {_Fields.OFFSETS,_Fields.SENTENCE_POS,_Fields.LEMMA,_Fields.POS,_Fields.ENTITY_TYPE,_Fields.MENTION_ID,_Fields.EQUIV_ID,_Fields.PARENT_ID,_Fields.DEPENDENCY_PATH,_Fields.LABELS,_Fields.MENTION_TYPE};
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -299,7 +312,7 @@ public class Token implements org.apache.thrift.TBase<Token, Token._Fields>, jav
     tmpMap.put(_Fields.ENTITY_TYPE, new org.apache.thrift.meta_data.FieldMetaData("entity_type", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.EnumMetaData(org.apache.thrift.protocol.TType.ENUM, EntityType.class)));
     tmpMap.put(_Fields.MENTION_ID, new org.apache.thrift.meta_data.FieldMetaData("mention_id", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I16        , "MentionID")));
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32        , "MentionID")));
     tmpMap.put(_Fields.EQUIV_ID, new org.apache.thrift.meta_data.FieldMetaData("equiv_id", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
     tmpMap.put(_Fields.PARENT_ID, new org.apache.thrift.meta_data.FieldMetaData("parent_id", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
@@ -311,6 +324,8 @@ public class Token implements org.apache.thrift.TBase<Token, Token._Fields>, jav
             new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING            , "AnnotatorID"), 
             new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST, 
                 new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, Label.class)))));
+    tmpMap.put(_Fields.MENTION_TYPE, new org.apache.thrift.meta_data.FieldMetaData("mention_type", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.EnumMetaData(org.apache.thrift.protocol.TType.ENUM, MentionType.class)));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(Token.class, metaDataMap);
   }
@@ -320,7 +335,7 @@ public class Token implements org.apache.thrift.TBase<Token, Token._Fields>, jav
 
     this.sentence_pos = -1;
 
-    this.mention_id = (short)-1;
+    this.mention_id = -1;
 
     this.equiv_id = -1;
 
@@ -398,6 +413,9 @@ public class Token implements org.apache.thrift.TBase<Token, Token._Fields>, jav
       }
       this.labels = __this__labels;
     }
+    if (other.isSetMention_type()) {
+      this.mention_type = other.mention_type;
+    }
   }
 
   public Token deepCopy() {
@@ -416,7 +434,7 @@ public class Token implements org.apache.thrift.TBase<Token, Token._Fields>, jav
     this.lemma = null;
     this.pos = null;
     this.entity_type = null;
-    this.mention_id = (short)-1;
+    this.mention_id = -1;
 
     this.equiv_id = -1;
 
@@ -425,6 +443,7 @@ public class Token implements org.apache.thrift.TBase<Token, Token._Fields>, jav
     this.dependency_path = null;
     this.labels = new HashMap<String,List<Label>>();
 
+    this.mention_type = null;
   }
 
   /**
@@ -659,36 +678,34 @@ public class Token implements org.apache.thrift.TBase<Token, Token._Fields>, jav
   }
 
   /**
-   * Identifier for a each mention in a sentence.  Must be zero-based
-   * within each sentence, so is not unique at the document level.
-   * Serves two purposes:
+   * Identifier for a each mention in this TaggerID's description of
+   * the document.  Is unique at the document level.  Serves two
+   * purposes:
    * 
    *   1) Distinguishing multi-token mention.  Needed when the
    *   entity_type and equiv_id do not change between tokens that are
    *   part of separate mentions, e.g. "The senator is known to his
    *   friends as David, Davy, Zeus, and Mr. Elephant."
    * 
-   *   2) Refering to mentions used in Relation objects.  Used in
-   *   conjunction with sentence_id
+   *   2) Refering to mentions used in Relation objects.
    */
-  public short getMention_id() {
+  public int getMention_id() {
     return this.mention_id;
   }
 
   /**
-   * Identifier for a each mention in a sentence.  Must be zero-based
-   * within each sentence, so is not unique at the document level.
-   * Serves two purposes:
+   * Identifier for a each mention in this TaggerID's description of
+   * the document.  Is unique at the document level.  Serves two
+   * purposes:
    * 
    *   1) Distinguishing multi-token mention.  Needed when the
    *   entity_type and equiv_id do not change between tokens that are
    *   part of separate mentions, e.g. "The senator is known to his
    *   friends as David, Davy, Zeus, and Mr. Elephant."
    * 
-   *   2) Refering to mentions used in Relation objects.  Used in
-   *   conjunction with sentence_id
+   *   2) Refering to mentions used in Relation objects.
    */
-  public Token setMention_id(short mention_id) {
+  public Token setMention_id(int mention_id) {
     this.mention_id = mention_id;
     setMention_idIsSet(true);
     return this;
@@ -842,6 +859,40 @@ public class Token implements org.apache.thrift.TBase<Token, Token._Fields>, jav
     }
   }
 
+  /**
+   * Identify the type of mention, e.g. pronoun, description, proper name
+   * 
+   * @see MentionType
+   */
+  public MentionType getMention_type() {
+    return this.mention_type;
+  }
+
+  /**
+   * Identify the type of mention, e.g. pronoun, description, proper name
+   * 
+   * @see MentionType
+   */
+  public Token setMention_type(MentionType mention_type) {
+    this.mention_type = mention_type;
+    return this;
+  }
+
+  public void unsetMention_type() {
+    this.mention_type = null;
+  }
+
+  /** Returns true if field mention_type is set (has been assigned a value) and false otherwise */
+  public boolean isSetMention_type() {
+    return this.mention_type != null;
+  }
+
+  public void setMention_typeIsSet(boolean value) {
+    if (!value) {
+      this.mention_type = null;
+    }
+  }
+
   public void setFieldValue(_Fields field, Object value) {
     switch (field) {
     case TOKEN_NUM:
@@ -904,7 +955,7 @@ public class Token implements org.apache.thrift.TBase<Token, Token._Fields>, jav
       if (value == null) {
         unsetMention_id();
       } else {
-        setMention_id((Short)value);
+        setMention_id((Integer)value);
       }
       break;
 
@@ -940,6 +991,14 @@ public class Token implements org.apache.thrift.TBase<Token, Token._Fields>, jav
       }
       break;
 
+    case MENTION_TYPE:
+      if (value == null) {
+        unsetMention_type();
+      } else {
+        setMention_type((MentionType)value);
+      }
+      break;
+
     }
   }
 
@@ -967,7 +1026,7 @@ public class Token implements org.apache.thrift.TBase<Token, Token._Fields>, jav
       return getEntity_type();
 
     case MENTION_ID:
-      return Short.valueOf(getMention_id());
+      return Integer.valueOf(getMention_id());
 
     case EQUIV_ID:
       return Integer.valueOf(getEquiv_id());
@@ -980,6 +1039,9 @@ public class Token implements org.apache.thrift.TBase<Token, Token._Fields>, jav
 
     case LABELS:
       return getLabels();
+
+    case MENTION_TYPE:
+      return getMention_type();
 
     }
     throw new IllegalStateException();
@@ -1016,6 +1078,8 @@ public class Token implements org.apache.thrift.TBase<Token, Token._Fields>, jav
       return isSetDependency_path();
     case LABELS:
       return isSetLabels();
+    case MENTION_TYPE:
+      return isSetMention_type();
     }
     throw new IllegalStateException();
   }
@@ -1138,6 +1202,15 @@ public class Token implements org.apache.thrift.TBase<Token, Token._Fields>, jav
       if (!(this_present_labels && that_present_labels))
         return false;
       if (!this.labels.equals(that.labels))
+        return false;
+    }
+
+    boolean this_present_mention_type = true && this.isSetMention_type();
+    boolean that_present_mention_type = true && that.isSetMention_type();
+    if (this_present_mention_type || that_present_mention_type) {
+      if (!(this_present_mention_type && that_present_mention_type))
+        return false;
+      if (!this.mention_type.equals(that.mention_type))
         return false;
     }
 
@@ -1277,6 +1350,16 @@ public class Token implements org.apache.thrift.TBase<Token, Token._Fields>, jav
         return lastComparison;
       }
     }
+    lastComparison = Boolean.valueOf(isSetMention_type()).compareTo(typedOther.isSetMention_type());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetMention_type()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.mention_type, typedOther.mention_type);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
     return 0;
   }
 
@@ -1389,6 +1472,16 @@ public class Token implements org.apache.thrift.TBase<Token, Token._Fields>, jav
         sb.append("null");
       } else {
         sb.append(this.labels);
+      }
+      first = false;
+    }
+    if (isSetMention_type()) {
+      if (!first) sb.append(", ");
+      sb.append("mention_type:");
+      if (this.mention_type == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.mention_type);
       }
       first = false;
     }
@@ -1507,8 +1600,8 @@ public class Token implements org.apache.thrift.TBase<Token, Token._Fields>, jav
             }
             break;
           case 8: // MENTION_ID
-            if (schemeField.type == org.apache.thrift.protocol.TType.I16) {
-              struct.mention_id = iprot.readI16();
+            if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
+              struct.mention_id = iprot.readI32();
               struct.setMention_idIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
@@ -1565,6 +1658,14 @@ public class Token implements org.apache.thrift.TBase<Token, Token._Fields>, jav
                 iprot.readMapEnd();
               }
               struct.setLabelsIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 13: // MENTION_TYPE
+            if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
+              struct.mention_type = MentionType.findByValue(iprot.readI32());
+              struct.setMention_typeIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
@@ -1635,7 +1736,7 @@ public class Token implements org.apache.thrift.TBase<Token, Token._Fields>, jav
       }
       if (struct.isSetMention_id()) {
         oprot.writeFieldBegin(MENTION_ID_FIELD_DESC);
-        oprot.writeI16(struct.mention_id);
+        oprot.writeI32(struct.mention_id);
         oprot.writeFieldEnd();
       }
       if (struct.isSetEquiv_id()) {
@@ -1674,6 +1775,13 @@ public class Token implements org.apache.thrift.TBase<Token, Token._Fields>, jav
             }
             oprot.writeMapEnd();
           }
+          oprot.writeFieldEnd();
+        }
+      }
+      if (struct.mention_type != null) {
+        if (struct.isSetMention_type()) {
+          oprot.writeFieldBegin(MENTION_TYPE_FIELD_DESC);
+          oprot.writeI32(struct.mention_type.getValue());
           oprot.writeFieldEnd();
         }
       }
@@ -1731,7 +1839,10 @@ public class Token implements org.apache.thrift.TBase<Token, Token._Fields>, jav
       if (struct.isSetLabels()) {
         optionals.set(11);
       }
-      oprot.writeBitSet(optionals, 12);
+      if (struct.isSetMention_type()) {
+        optionals.set(12);
+      }
+      oprot.writeBitSet(optionals, 13);
       if (struct.isSetToken_num()) {
         oprot.writeI32(struct.token_num);
       }
@@ -1761,7 +1872,7 @@ public class Token implements org.apache.thrift.TBase<Token, Token._Fields>, jav
         oprot.writeI32(struct.entity_type.getValue());
       }
       if (struct.isSetMention_id()) {
-        oprot.writeI16(struct.mention_id);
+        oprot.writeI32(struct.mention_id);
       }
       if (struct.isSetEquiv_id()) {
         oprot.writeI32(struct.equiv_id);
@@ -1788,12 +1899,15 @@ public class Token implements org.apache.thrift.TBase<Token, Token._Fields>, jav
           }
         }
       }
+      if (struct.isSetMention_type()) {
+        oprot.writeI32(struct.mention_type.getValue());
+      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, Token struct) throws org.apache.thrift.TException {
       TTupleProtocol iprot = (TTupleProtocol) prot;
-      BitSet incoming = iprot.readBitSet(12);
+      BitSet incoming = iprot.readBitSet(13);
       if (incoming.get(0)) {
         struct.token_num = iprot.readI32();
         struct.setToken_numIsSet(true);
@@ -1835,7 +1949,7 @@ public class Token implements org.apache.thrift.TBase<Token, Token._Fields>, jav
         struct.setEntity_typeIsSet(true);
       }
       if (incoming.get(7)) {
-        struct.mention_id = iprot.readI16();
+        struct.mention_id = iprot.readI32();
         struct.setMention_idIsSet(true);
       }
       if (incoming.get(8)) {
@@ -1874,6 +1988,10 @@ public class Token implements org.apache.thrift.TBase<Token, Token._Fields>, jav
           }
         }
         struct.setLabelsIsSet(true);
+      }
+      if (incoming.get(12)) {
+        struct.mention_type = MentionType.findByValue(iprot.readI32());
+        struct.setMention_typeIsSet(true);
       }
     }
   }
