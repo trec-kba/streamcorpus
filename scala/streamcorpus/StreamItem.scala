@@ -51,7 +51,7 @@ object StreamItem extends ThriftStructCodec[StreamItem] {
   def apply(_iprot: TProtocol): StreamItem = decode(_iprot)
 
   def apply(
-    version: Versions,
+    version: Versions = 1,
     docId: String,
     absUrl: Option[ByteBuffer] = None,
     schost: Option[String] = None,
@@ -83,7 +83,7 @@ object StreamItem extends ThriftStructCodec[StreamItem] {
   object Immutable extends ThriftStructCodec[StreamItem] {
     def encode(_item: StreamItem, _oproto: TProtocol) { _item.write(_oproto) }
     def decode(_iprot: TProtocol) = {
-      var version: Versions = null
+      var version: Versions = 1
       var _got_version = false
       var docId: String = null
       var _got_docId = false
@@ -328,7 +328,7 @@ object StreamItem extends ThriftStructCodec[StreamItem] {
    * new instances.
    */
   class Immutable(
-    val version: Versions,
+    val version: Versions = 1,
     val docId: String,
     val absUrl: Option[ByteBuffer] = None,
     val schost: Option[String] = None,

@@ -27,6 +27,8 @@ object ContentItem extends ThriftStructCodec[ContentItem] {
   val SentenceBlobsField = new TField("sentenceBlobs", TType.MAP, 10)
   val LanguageField = new TField("language", TType.STRUCT, 11)
   val RelationsField = new TField("relations", TType.MAP, 12)
+  val AttributesField = new TField("attributes", TType.MAP, 13)
+  val ExternalIdsField = new TField("externalIds", TType.MAP, 14)
 
   /**
    * Checks that all required fields are non-null.
@@ -51,7 +53,9 @@ object ContentItem extends ThriftStructCodec[ContentItem] {
     sentences: Map[String, Seq[Sentence]] = Map(),
     sentenceBlobs: Map[String, ByteBuffer] = Map(),
     language: Option[Language] = None,
-    relations: Map[String, Seq[Relation]] = Map()
+    relations: Map[String, Seq[Relation]] = Map(),
+    attributes: Map[String, Seq[Attribute]] = Map(),
+    externalIds: Map[String, Map[Int, String]] = Map()
   ): ContentItem = new Immutable(
     raw,
     encoding,
@@ -64,10 +68,12 @@ object ContentItem extends ThriftStructCodec[ContentItem] {
     sentences,
     sentenceBlobs,
     language,
-    relations
+    relations,
+    attributes,
+    externalIds
   )
 
-  def unapply(_item: ContentItem): Option[Product12[Option[ByteBuffer], Option[String], Option[String], Option[String], Option[String], Seq[String], Map[String, Tagging], Map[String, Seq[Label]], Map[String, Seq[Sentence]], Map[String, ByteBuffer], Option[Language], Map[String, Seq[Relation]]]] = Some(_item)
+  def unapply(_item: ContentItem): Option[Product14[Option[ByteBuffer], Option[String], Option[String], Option[String], Option[String], Seq[String], Map[String, Tagging], Map[String, Seq[Label]], Map[String, Seq[Sentence]], Map[String, ByteBuffer], Option[Language], Map[String, Seq[Relation]], Map[String, Seq[Attribute]], Map[String, Map[Int, String]]]] = Some(_item)
 
   object Immutable extends ThriftStructCodec[ContentItem] {
     def encode(_item: ContentItem, _oproto: TProtocol) { _item.write(_oproto) }
@@ -96,6 +102,10 @@ object ContentItem extends ThriftStructCodec[ContentItem] {
       var _got_language = false
       var relations: Map[String, Seq[Relation]] = Map()
       var _got_relations = false
+      var attributes: Map[String, Seq[Attribute]] = Map()
+      var _got_attributes = false
+      var externalIds: Map[String, Map[Int, String]] = Map()
+      var _got_externalIds = false
       var _done = false
       _iprot.readStructBegin()
       while (!_done) {
@@ -346,6 +356,80 @@ object ContentItem extends ThriftStructCodec[ContentItem] {
                 case _ => TProtocolUtil.skip(_iprot, _field.`type`)
               }
             }
+            case 13 => { /* attributes */
+              _field.`type` match {
+                case TType.MAP => {
+                  attributes = {
+                    val _map = _iprot.readMapBegin()
+                    val _rv = new mutable.HashMap[String, Seq[Attribute]]
+                    var _i = 0
+                    while (_i < _map.size) {
+                      val _key = {
+                        _iprot.readString()
+                      }
+                      val _value = {
+                        val _list = _iprot.readListBegin()
+                        val _rv = new mutable.ArrayBuffer[Attribute](_list.size)
+                        var _i = 0
+                        while (_i < _list.size) {
+                          _rv += {
+                            Attribute.decode(_iprot)
+                          }
+                          _i += 1
+                        }
+                        _iprot.readListEnd()
+                        _rv
+                      }
+                      _rv(_key) = _value
+                      _i += 1
+                    }
+                    _iprot.readMapEnd()
+                    _rv
+                  }
+                  _got_attributes = true
+                }
+                case _ => TProtocolUtil.skip(_iprot, _field.`type`)
+              }
+            }
+            case 14 => { /* externalIds */
+              _field.`type` match {
+                case TType.MAP => {
+                  externalIds = {
+                    val _map = _iprot.readMapBegin()
+                    val _rv = new mutable.HashMap[String, Map[Int, String]]
+                    var _i = 0
+                    while (_i < _map.size) {
+                      val _key = {
+                        _iprot.readString()
+                      }
+                      val _value = {
+                        val _map = _iprot.readMapBegin()
+                        val _rv = new mutable.HashMap[Int, String]
+                        var _i = 0
+                        while (_i < _map.size) {
+                          val _key = {
+                            _iprot.readI32()
+                          }
+                          val _value = {
+                            _iprot.readString()
+                          }
+                          _rv(_key) = _value
+                          _i += 1
+                        }
+                        _iprot.readMapEnd()
+                        _rv
+                      }
+                      _rv(_key) = _value
+                      _i += 1
+                    }
+                    _iprot.readMapEnd()
+                    _rv
+                  }
+                  _got_externalIds = true
+                }
+                case _ => TProtocolUtil.skip(_iprot, _field.`type`)
+              }
+            }
             case _ => TProtocolUtil.skip(_iprot, _field.`type`)
           }
           _iprot.readFieldEnd()
@@ -364,7 +448,9 @@ object ContentItem extends ThriftStructCodec[ContentItem] {
         sentences,
         sentenceBlobs,
         if (_got_language) Some(language) else None,
-        relations
+        relations,
+        attributes,
+        externalIds
       )
     }
   }
@@ -386,7 +472,9 @@ object ContentItem extends ThriftStructCodec[ContentItem] {
     val sentences: Map[String, Seq[Sentence]] = Map(),
     val sentenceBlobs: Map[String, ByteBuffer] = Map(),
     val language: Option[Language] = None,
-    val relations: Map[String, Seq[Relation]] = Map()
+    val relations: Map[String, Seq[Relation]] = Map(),
+    val attributes: Map[String, Seq[Attribute]] = Map(),
+    val externalIds: Map[String, Map[Int, String]] = Map()
   ) extends ContentItem
 
   /**
@@ -408,11 +496,13 @@ object ContentItem extends ThriftStructCodec[ContentItem] {
     def sentenceBlobs: Map[String, ByteBuffer] = _underlying_ContentItem.sentenceBlobs
     def language: Option[Language] = _underlying_ContentItem.language
     def relations: Map[String, Seq[Relation]] = _underlying_ContentItem.relations
+    def attributes: Map[String, Seq[Attribute]] = _underlying_ContentItem.attributes
+    def externalIds: Map[String, Map[Int, String]] = _underlying_ContentItem.externalIds
   }
 }
 
 trait ContentItem extends ThriftStruct
-  with Product12[Option[ByteBuffer], Option[String], Option[String], Option[String], Option[String], Seq[String], Map[String, Tagging], Map[String, Seq[Label]], Map[String, Seq[Sentence]], Map[String, ByteBuffer], Option[Language], Map[String, Seq[Relation]]]
+  with Product14[Option[ByteBuffer], Option[String], Option[String], Option[String], Option[String], Seq[String], Map[String, Tagging], Map[String, Seq[Label]], Map[String, Seq[Sentence]], Map[String, ByteBuffer], Option[Language], Map[String, Seq[Relation]], Map[String, Seq[Attribute]], Map[String, Map[Int, String]]]
   with java.io.Serializable
 {
   import ContentItem._
@@ -429,6 +519,8 @@ trait ContentItem extends ThriftStruct
   def sentenceBlobs: Map[String, ByteBuffer]
   def language: Option[Language]
   def relations: Map[String, Seq[Relation]]
+  def attributes: Map[String, Seq[Attribute]]
+  def externalIds: Map[String, Map[Int, String]]
 
   def _1 = raw
   def _2 = encoding
@@ -442,6 +534,8 @@ trait ContentItem extends ThriftStruct
   def _10 = sentenceBlobs
   def _11 = language
   def _12 = relations
+  def _13 = attributes
+  def _14 = externalIds
 
   override def write(_oprot: TProtocol) {
     ContentItem.validate(this)
@@ -569,6 +663,43 @@ trait ContentItem extends ThriftStruct
       _oprot.writeMapEnd()
       _oprot.writeFieldEnd()
     }
+    if (true) {
+      val attributes_item = attributes
+      _oprot.writeFieldBegin(AttributesField)
+      _oprot.writeMapBegin(new TMap(TType.STRING, TType.LIST, attributes_item.size))
+      attributes_item.foreach { _pair =>
+        val attributes_item_key = _pair._1
+        val attributes_item_value = _pair._2
+        _oprot.writeString(attributes_item_key)
+        _oprot.writeListBegin(new TList(TType.STRUCT, attributes_item_value.size))
+        attributes_item_value.foreach { attributes_item_value_element =>
+          attributes_item_value_element.write(_oprot)
+        }
+        _oprot.writeListEnd()
+      }
+      _oprot.writeMapEnd()
+      _oprot.writeFieldEnd()
+    }
+    if (true) {
+      val externalIds_item = externalIds
+      _oprot.writeFieldBegin(ExternalIdsField)
+      _oprot.writeMapBegin(new TMap(TType.STRING, TType.MAP, externalIds_item.size))
+      externalIds_item.foreach { _pair =>
+        val externalIds_item_key = _pair._1
+        val externalIds_item_value = _pair._2
+        _oprot.writeString(externalIds_item_key)
+        _oprot.writeMapBegin(new TMap(TType.I32, TType.STRING, externalIds_item_value.size))
+        externalIds_item_value.foreach { _pair =>
+          val externalIds_item_value_key = _pair._1
+          val externalIds_item_value_value = _pair._2
+          _oprot.writeI32(externalIds_item_value_key)
+          _oprot.writeString(externalIds_item_value_value)
+        }
+        _oprot.writeMapEnd()
+      }
+      _oprot.writeMapEnd()
+      _oprot.writeFieldEnd()
+    }
     _oprot.writeFieldStop()
     _oprot.writeStructEnd()
   }
@@ -585,7 +716,9 @@ trait ContentItem extends ThriftStruct
     sentences: Map[String, Seq[Sentence]] = this.sentences, 
     sentenceBlobs: Map[String, ByteBuffer] = this.sentenceBlobs, 
     language: Option[Language] = this.language, 
-    relations: Map[String, Seq[Relation]] = this.relations
+    relations: Map[String, Seq[Relation]] = this.relations, 
+    attributes: Map[String, Seq[Attribute]] = this.attributes, 
+    externalIds: Map[String, Map[Int, String]] = this.externalIds
   ): ContentItem = new Immutable(
     raw, 
     encoding, 
@@ -598,7 +731,9 @@ trait ContentItem extends ThriftStruct
     sentences, 
     sentenceBlobs, 
     language, 
-    relations
+    relations, 
+    attributes, 
+    externalIds
   )
 
   override def canEqual(other: Any): Boolean = other.isInstanceOf[ContentItem]
@@ -610,7 +745,7 @@ trait ContentItem extends ThriftStruct
   override def toString: String = runtime.ScalaRunTime._toString(this)
 
 
-  override def productArity: Int = 12
+  override def productArity: Int = 14
 
   override def productElement(n: Int): Any = n match {
     case 0 => raw
@@ -625,6 +760,8 @@ trait ContentItem extends ThriftStruct
     case 9 => sentenceBlobs
     case 10 => language
     case 11 => relations
+    case 12 => attributes
+    case 13 => externalIds
     case _ => throw new IndexOutOfBoundsException(n.toString)
   }
 
