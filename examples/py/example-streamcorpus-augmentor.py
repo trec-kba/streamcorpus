@@ -68,21 +68,24 @@ for si in i_chunk:
             token='over',
             ),
         Token(
-            token='The',
+            token='the',
             ),
         Token(
-            token='The',
+            token='car',
+            ),
+        Token(
+            token='.',
             ),
         ]
 
     ## store metadata about the tagger here:
-    #si.body.taggings['my_tagger_name'] = Taggings(
-    #    tagger_id = 'my_tagger_name', ## must match the key in the taggings map
-    #    raw_tagging = tagger_output_str,  ## serialized tagging data in some "native" format
-    #    tagger_config = 'streamcorpus-all.params',
-    #    tagger_config = '6.0.1',
-    #    generation_time = make_stream_time('2013-04-18T18:18:20.000000Z'),
-    #    )
+    si.body.taggings['my_tagger_name'] = Taggings(
+        tagger_id  = 'my_tagger_name', ## must match the key in the taggings map
+        raw_tagging = '',  ## OPTIONAL, serialized tagging data in some "native" format
+        tagger_config = 'streamcorpus-all.params',
+        tagger_version = '6.0.1',
+        generation_time = make_stream_time('2013-04-18T18:18:20.000000Z'),
+        )
 
     
     si.body.sentences[tagger_id] = [Sentence(....) for ... in sentence_builder]
