@@ -8,11 +8,9 @@ import streamcorpus.Sentence;
 import streamcorpus.StreamItem;
 import streamcorpus.Token;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * User: jacek
@@ -22,11 +20,11 @@ import java.util.ArrayList;
 public final class AddTagging {
     public static void main(String[] args) {
         try {
-            TTransport i_transport = new TIOStreamTransport(new BufferedInputStream(new FileInputStream("test-data/john-smith-tagged-by-lingpipe-0-v0_3_0.sc")));
-            TTransport o_transport = new TIOStreamTransport(new BufferedOutputStream(new FileOutputStream("test-data/john-smith-tagged-by-lingpipe-0-v0_3_0-augmented.sc")));
+            final TTransport i_transport = new TIOStreamTransport(new FileInputStream("test-data/john-smith-tagged-by-lingpipe-0-v0_3_0.sc"));
+            final TTransport o_transport = new TIOStreamTransport(new FileOutputStream("test-data/john-smith-tagged-by-lingpipe-0-v0_3_0-augmented.sc"));
             try {
-                TBinaryProtocol i_protocol = new TBinaryProtocol(i_transport);
-                TBinaryProtocol o_protocol = new TBinaryProtocol(o_transport);
+                final TBinaryProtocol i_protocol = new TBinaryProtocol(i_transport);
+                final TBinaryProtocol o_protocol = new TBinaryProtocol(o_transport);
                 i_transport.open();
                 int counter = 0;
                 while (true) {
@@ -34,40 +32,36 @@ public final class AddTagging {
                     item.read(i_protocol);
                     System.out.println("counter = " + ++counter);
                     System.out.println("item = " + item);
+                    System.out.println("item.body.clean_visible.length " + item.body.clean_visible.length());
 
-                    ArrayList<Sentence> sentences = new ArrayList<Sentence>();
-                    ArrayList<Token> tokens = new ArrayList<Token>();
-
-
-                    Token tok = new Token(0, "The");
-                    tok.equiv_id = 2;
-                    tok.entity_type = EntityType.FAC;
-
-                    tokens.add(tok);
-
-                    tokens.add(new Token(1, "cat"));
-                    tokens.add(new Token(2, "jumped"));
-                    tokens.add(new Token(3, "high"));
-
-                    Sentence sentence = new Sentence(tokens);
-
-
-                    sentences.add(sentence);
-                    item.body.sentences.put("my_tagger", sentences);
+                    item.body.sentences.put("my_tagger", Arrays.asList(sentence(tok(0, "The"), tok(1, "cat"), tok(2, "jumped"), tok(3, "high"))));
                     item.write(o_protocol);
                 }
-
-
             } catch (TTransportException te) {
                 if (te.getType() == TTransportException.END_OF_FILE) {
                     System.out.println("*** EOF ***");
                     i_transport.close();
                     o_transport.close();
+                } else {
+                    throw te;
                 }
             }
         } catch (Exception e1) {
-
-
+            System.err.println(e1);
         }
+    }
+
+    // auxiliary functions to make Sentence creation less verbose
+    // bringing Java code closer to the spirit of Scala
+
+    static Token tok(int num, String content) {
+        final Token tok = new Token(num, content);
+        tok.equiv_id = 2;
+        tok.entity_type = EntityType.FAC;
+        return tok;
+    }
+
+    static Sentence sentence(Token... tokens) {
+        return new Sentence(Arrays.asList(tokens));
     }
 }
