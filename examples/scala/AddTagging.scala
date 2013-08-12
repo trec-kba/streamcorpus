@@ -3,7 +3,7 @@ package test.scala.streamcorpus
 import org.apache.thrift.transport.{TTransportException, TIOStreamTransport, TTransport}
 import java.io.{FileOutputStream, FileInputStream}
 import org.apache.thrift.protocol.TBinaryProtocol
-import streamcorpus.{Token, Sentence, StreamItem}
+import streamcorpus.{Token, Sentence, StreamItem, EntityType}
 
 /**
  * User: jacek
@@ -23,7 +23,23 @@ object AddTagging {
         val item: StreamItem = StreamItem.decode(i_binProto)
         item.body match {
           case Some(contentItem) => {
-            contentItem.sentences + ("my_tagger" -> Seq(Sentence(Seq(Token(0, "The"), Token(1, "cat")))))
+
+	    /* jacek, not sure if this is correct syntax -- can you fix it for me? */
+	    val tok1: Token = new Token(0, "The")
+	    tok1.token_num = 0
+
+	    val tok2: Token = new  Token(1, "cat")
+	    tok1.token_num = 1
+
+	    /* especially this needs to work, see Java example */
+	    tok2.entity_type = EntityType.PER
+	    
+	    val tok3: Token = new  Token(1, "is")
+	    tok1.token_num = 2
+
+
+	    val sentence1: Sentence = new Sentence(Seq(tok1, tok2, tok3))
+            contentItem.sentences + ("my_tagger" -> Seq(sentence1))
           }
           case None => println("no content")
         }
