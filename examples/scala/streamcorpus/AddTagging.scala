@@ -23,7 +23,7 @@ object AddTagging {
         val item: StreamItem = StreamItem.decode(i_binProto)
         item.body match {
           case Some(contentItem) => {
-            contentItem.sentences + ("my_tagger" -> Seq(Sentence(Seq(Token(0, "The"), Token(1, "cat")))))
+            contentItem.sentences + ("my_tagger" -> Seq(Sentence(Seq(Token(0, "The"), Token(1, "cat", entityType = Some(EntityType.Per))))))
           }
           case None => println("no content")
         }
