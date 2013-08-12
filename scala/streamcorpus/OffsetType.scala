@@ -15,7 +15,7 @@ import com.twitter.scrooge.ThriftEnum
  *
  * annotation applies to a range of chars, typically unicode chars
  */
-@javax.annotation.Generated(value = Array("com.twitter.scrooge.Compiler"), date = "2013-08-10T15:41:41.385-0400")
+@javax.annotation.Generated(value = Array("com.twitter.scrooge.Compiler"), date = "2013-08-12T15:12:53.355-0400")
 case object OffsetType {
   
   case object Lines extends OffsetType {
@@ -86,5 +86,5 @@ case object OffsetType {
  *
  * annotation applies to a range of chars, typically unicode chars
  */
-@javax.annotation.Generated(value = Array("com.twitter.scrooge.Compiler"), date = "2013-08-10T15:41:41.385-0400")
+@javax.annotation.Generated(value = Array("com.twitter.scrooge.Compiler"), date = "2013-08-12T15:12:53.355-0400")
 sealed trait OffsetType extends ThriftEnum with Serializable

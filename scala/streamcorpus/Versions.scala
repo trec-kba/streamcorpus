@@ -12,7 +12,7 @@ import com.twitter.scrooge.ThriftEnum
  * v0_1_0 refers to the kba.thrift definition, which was before
  * Versions was included in the spec.
  */
-@javax.annotation.Generated(value = Array("com.twitter.scrooge.Compiler"), date = "2013-08-10T15:41:41.385-0400")
+@javax.annotation.Generated(value = Array("com.twitter.scrooge.Compiler"), date = "2013-08-12T15:12:53.355-0400")
 case object Versions {
   
   case object V020 extends Versions {
@@ -71,5 +71,5 @@ case object Versions {
  * v0_1_0 refers to the kba.thrift definition, which was before
  * Versions was included in the spec.
  */
-@javax.annotation.Generated(value = Array("com.twitter.scrooge.Compiler"), date = "2013-08-10T15:41:41.385-0400")
+@javax.annotation.Generated(value = Array("com.twitter.scrooge.Compiler"), date = "2013-08-12T15:12:53.355-0400")
 sealed trait Versions extends ThriftEnum with Serializable

@@ -6,7 +6,7 @@ package streamcorpus
 import com.twitter.scrooge.ThriftEnum
 
 
-@javax.annotation.Generated(value = Array("com.twitter.scrooge.Compiler"), date = "2013-08-10T15:41:41.385-0400")
+@javax.annotation.Generated(value = Array("com.twitter.scrooge.Compiler"), date = "2013-08-12T15:12:53.355-0400")
 case object Gender {
   
   case object Female extends Gender {
@@ -59,5 +59,5 @@ case object Gender {
 
 
 
-@javax.annotation.Generated(value = Array("com.twitter.scrooge.Compiler"), date = "2013-08-10T15:41:41.385-0400")
+@javax.annotation.Generated(value = Array("com.twitter.scrooge.Compiler"), date = "2013-08-12T15:12:53.355-0400")
 sealed trait Gender extends ThriftEnum with Serializable

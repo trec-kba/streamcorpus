@@ -6,7 +6,7 @@ package streamcorpus
 import com.twitter.scrooge.ThriftEnum
 
 
-@javax.annotation.Generated(value = Array("com.twitter.scrooge.Compiler"), date = "2013-08-10T15:41:41.385-0400")
+@javax.annotation.Generated(value = Array("com.twitter.scrooge.Compiler"), date = "2013-08-12T15:12:53.355-0400")
 case object MentionType {
   
   case object Name extends MentionType {
@@ -68,5 +68,5 @@ case object MentionType {
 
 
 
-@javax.annotation.Generated(value = Array("com.twitter.scrooge.Compiler"), date = "2013-08-10T15:41:41.385-0400")
+@javax.annotation.Generated(value = Array("com.twitter.scrooge.Compiler"), date = "2013-08-12T15:12:53.355-0400")
 sealed trait MentionType extends ThriftEnum with Serializable

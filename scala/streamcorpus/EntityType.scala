@@ -15,7 +15,7 @@ import com.twitter.scrooge.ThriftEnum
  *
  * MISC: uncategorized named entities, e.g. Civil War for Stanford CoreNLP
  */
-@javax.annotation.Generated(value = Array("com.twitter.scrooge.Compiler"), date = "2013-08-10T15:41:41.385-0400")
+@javax.annotation.Generated(value = Array("com.twitter.scrooge.Compiler"), date = "2013-08-12T15:12:53.355-0400")
 case object EntityType {
   
   case object Per extends EntityType {
@@ -194,5 +194,5 @@ case object EntityType {
  *
  * MISC: uncategorized named entities, e.g. Civil War for Stanford CoreNLP
  */
-@javax.annotation.Generated(value = Array("com.twitter.scrooge.Compiler"), date = "2013-08-10T15:41:41.385-0400")
+@javax.annotation.Generated(value = Array("com.twitter.scrooge.Compiler"), date = "2013-08-12T15:12:53.355-0400")
 sealed trait EntityType extends ThriftEnum with Serializable

@@ -12,7 +12,7 @@ import com.twitter.scrooge.ThriftEnum
  *
  * http://projects.ldc.upenn.edu/ace/docs/English-Events-Guidelines_v5.4.3.pdf
  */
-@javax.annotation.Generated(value = Array("com.twitter.scrooge.Compiler"), date = "2013-08-10T15:41:41.385-0400")
+@javax.annotation.Generated(value = Array("com.twitter.scrooge.Compiler"), date = "2013-08-12T15:12:53.355-0400")
 case object RelationType {
   
   case object PhysLocated extends RelationType {
@@ -512,5 +512,5 @@ case object RelationType {
  *
  * http://projects.ldc.upenn.edu/ace/docs/English-Events-Guidelines_v5.4.3.pdf
  */
-@javax.annotation.Generated(value = Array("com.twitter.scrooge.Compiler"), date = "2013-08-10T15:41:41.385-0400")
+@javax.annotation.Generated(value = Array("com.twitter.scrooge.Compiler"), date = "2013-08-12T15:12:53.355-0400")
 sealed trait RelationType extends ThriftEnum with Serializable
