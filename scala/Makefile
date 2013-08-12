@@ -26,8 +26,9 @@ build: # compile
 	mv $(TMP)/$(OUTPUT_JAR) .
 
 compile_test:
-	scalac -d $(TMP)/classes ../examples/scala/streamcorpus/*
+	mkdir -p $(TMP)/classes
+	scalac -d $(TMP)/classes src/test/scala/streamcorpus/*
 
-test: # build
-	scala -cp $(TMP)/classes:$(CLASSPATH) streamcorpus.AddTagging
+test:  compile_test
+	scala -cp $(TMP)/classes:$(CLASSPATH) Test
 	rm -rf $(TMP)
