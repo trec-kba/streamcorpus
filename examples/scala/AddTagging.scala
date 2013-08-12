@@ -13,7 +13,7 @@ import streamcorpus.{Token, Sentence, StreamItem}
 
 object AddTagging {
   def main(args: Array[String]) {
-    val i_transport: TTransport = new TIOStreamTransport(new FileInputStream("../test-data/john-smith-tagged-by-lingpipe-0-v0_3_0.sc"))
+    val i_transport: TTransport = new TIOStreamTransport(new FileInputStream("../../test-data/john-smith-tagged-by-lingpipe-0-v0_3_0.sc"))
     val o_transport: TTransport = new TIOStreamTransport(new FileOutputStream("/tmp/john-smith-tagged-by-lingpipe-0-v0_3_0.sc"))
     val i_binProto: TBinaryProtocol = new TBinaryProtocol(i_transport)
     val o_binProto: TBinaryProtocol = new TBinaryProtocol(o_transport)
