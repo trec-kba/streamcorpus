@@ -3,7 +3,7 @@ package streamcorpus_example
 import org.apache.thrift.transport.{TTransportException, TIOStreamTransport, TTransport}
 import java.io.{FileOutputStream, FileInputStream}
 import org.apache.thrift.protocol.TBinaryProtocol
-import streamcorpus.{Token, Sentence, StreamItem}
+import streamcorpus._
 
 /**
  * User: jacek
