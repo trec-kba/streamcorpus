@@ -12,7 +12,7 @@ clean:
 
 build: clean
 	mkdir -p $(TMP)/classes
-	scalac -d $(TMP)/classes streamcorpus/AddTagging.scala
+	scalac -d $(TMP)/classes streamcorpus_example/AddTagging.scala
 
 test: build
-	scala -cp $(TMP)/classes:$(CLASSPATH) streamcorpus.AddTagging
+	scala -cp $(TMP)/classes:$(CLASSPATH) streamcorpus_example.AddTagging
