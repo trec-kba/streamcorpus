@@ -29,14 +29,14 @@ object AddTagging {
           case Some(contentItem) => {
 
             // taggings is optional
-	    val newTaggings = contentItem.taggings + (
-              "my_tagger" -> Some(Tagging(
+            val newTaggings = contentItem.taggings + (
+              "my_tagger" -> Tagging(
                 taggerId = "my_tagger",
                 rawTagging = ByteBuffer.wrap(Array[Byte]()), // serialized tagging data in some "native" format, such as XML or JSON
                 taggerConfig = Option("some description"),
                 taggerVersion = Option("v0.0.infinity"),
                 generationTime = Some(StreamTime(zuluTimestamp = "1970-01-01T00:00:01.000000Z", epochTicks = 1))
-              )))
+              ))
 
             val newSentences = contentItem.sentences + (
               "my_tagger" -> Seq(Sentence(tokens = Seq(
@@ -49,15 +49,16 @@ object AddTagging {
               ))))
 
             val newRelations = contentItem.relations + (
-              "my_tagger" -> Seq(Relation(mentionId1=Option(1), mentionId2=Option(2), relationType=Option(RelationType.LifeInjure)))
-	    )
+              "my_tagger" -> Seq(Relation(mentionId1 = Option(1), mentionId2 = Option(2), relationType = Option(RelationType.LifeInjure)))
+              )
 
             val newItem = item.copy(body = Some(contentItem.copy(
-	       //  If I uncomment this next line, it fails....
-	       //taggings = newTaggings,
-	       sentences = newSentences/*,
-	       relations = newRelations*/
- 	    )))
+              //  If I uncomment this next line, it fails....
+              taggings = newTaggings,
+              sentences = newSentences
+              /*,
+              relations = newRelations*/
+            )))
 
             newItem.body match {
               case Some(contentItem) => {
