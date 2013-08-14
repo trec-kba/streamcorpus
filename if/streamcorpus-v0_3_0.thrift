@@ -771,7 +771,7 @@ struct StreamItem {
   /**
    * must provide a version number here
    */
-  1: Versions version = 1,
+  1: Versions version = Versions.v0_3_0,
 
   /**
    * md5 hash of the abs_url
