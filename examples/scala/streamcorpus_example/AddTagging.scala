@@ -45,7 +45,7 @@ The general flow is this:
   5) if available, construct body.relations and body.attributes
 
   6) put the updated StreamItem back out to a chunk file
-*/
+ */
 
 object AddTagging {
   def main(args: Array[String]) {
@@ -63,99 +63,102 @@ object AddTagging {
         item.body match {
           case Some(contentItem) => {
 
-	    // general StreamItem instances have body.raw,
-	    // body.clean_html, and body.clean_visible.  The last two
-	    // are the same byte length and already converted to UTF-8
-	    val raw = contentItem.raw getOrElse ByteBuffer.wrap(Array[Byte]())
+            // general StreamItem instances have body.raw,
+            // body.clean_html, and body.clean_visible.  The last two
+            // are the same byte length and already converted to UTF-8
+            val raw = contentItem.raw getOrElse ByteBuffer.wrap(Array[Byte]())
             println(raw.toString().length() + " bytes of raw to process")
 
-	    val clean_html = contentItem.cleanHtml getOrElse ""
+            val clean_html = contentItem.cleanHtml getOrElse ""
             println(clean_html.length() + " bytes of clean_html to process")
 
             // clean_visible is generated from clean_html by replacing
             // all tags with whitespace, to maintain byte and
             // character offsets.
-	    val clean_visible = contentItem.cleanVisible getOrElse ""
+            val clean_visible = contentItem.cleanVisible getOrElse ""
             println(clean_visible.length() + " bytes of clean_visible to process")
 
+            val tag: String = "my_tagger"
             // taggings is optional
             val newTaggings = contentItem.taggings + (
-                "my_tagger" -> Tagging(
-                    taggerId = "my_tagger",
-                    rawTagging = ByteBuffer.wrap(Array[Byte]()), // serialized tagging data in some "native" format, such as XML or JSON
-                    taggerConfig = Option("some description"),
-                    taggerVersion = Option("v0.0.infinity"),
-                    generationTime = Some(StreamTime(zuluTimestamp = "1970-01-01T00:00:01.000000Z", epochTicks = 1))
-                ))
+              tag -> Tagging(
+                taggerId = tag,
+                rawTagging = ByteBuffer.wrap(Array[Byte]()), // serialized tagging data in some "native" format, such as XML or JSON
+                taggerConfig = Some("some description"),
+                taggerVersion = Some("v0.0.infinity"),
+                generationTime = Some(StreamTime(zuluTimestamp = "1970-01-01T00:00:01.000000Z", epochTicks = 1))
+              ))
 
             val newSentences = contentItem.sentences + (
-                "my_tagger" -> Seq(
-                    Sentence(tokens = Seq(
-                        Token(0, "The", sentencePos=0),
-                        Token(1, "ten-year-old", sentencePos=1),
-                        Token(2, "cat", 
-                              entityType = Some(EntityType.Per), 
-                              mentionType = Some(MentionType.Nom), 
-			      sentencePos=2,
-                              mentionId = 1,
-                              equivId = 1 // identifier for within-doc coref chain
-                          ),
-                        Token(3, "ate", sentencePos=3,
-			      // part-of-speech names from
-			      // http://www.ling.upenn.edu/courses/Fall_2003/ling001/penn_treebank_pos.html
-			      pos=Option("VBD")),
-                        Token(5, "the", sentencePos=4),
-                        Token(6, "bird", 
-                              entityType = Some(EntityType.Per), 
-                              mentionType = Some(MentionType.Nom), 
+              tag -> Seq(
+                Sentence(tokens = Seq(
+                  Token(0, "The", sentencePos = 0),
+                  Token(1, "ten-year-old", sentencePos = 1),
+                  Token(2, "cat",
+                    entityType = Some(EntityType.Per),
+                    mentionType = Some(MentionType.Nom),
+                    sentencePos = 2,
+                    mentionId = 1,
+                    equivId = 1 // identifier for within-doc coref chain
+                  ),
+                  Token(3, "ate", sentencePos = 3,
+                    // part-of-speech names from
+                    // http://www.ling.upenn.edu/courses/Fall_2003/ling001/penn_treebank_pos.html
+                    pos = Some("VBD")),
+                  Token(5, "the", sentencePos = 4),
+                  Token(6, "bird",
+                    entityType = Some(EntityType.Per),
+                    mentionType = Some(MentionType.Nom),
 
-                              // a parse tree can be recovered from
-                              // this format.  The reason to transform
-                              // the parse tree data into the tokens,
-                              // is that it makes it easier to convert
-                              // these strings and pointers to parents
-                              // into features for coref and IR
-                              // purposes
-			      parentId = 3, // sentencePos of parent in parse tree
-			      dependencyPath = Option(""), // grammatical relation label on the path to parent
+                    // a parse tree can be recovered from
+                    // this format.  The reason to transform
+                    // the parse tree data into the tokens,
+                    // is that it makes it easier to convert
+                    // these strings and pointers to parents
+                    // into features for coref and IR
+                    // purposes
+                    parentId = 3, // sentencePos of parent in parse tree
+                    dependencyPath = Some(""), // grammatical relation label on the path to parent
 
-			      sentencePos = 5,
-                              mentionId = 2,
-                              equivId = 2
-                          ),
-                        Token(7, ".") // a tagger can define whatever tokenization and sentence chunking it likes
-                    )),
-                    Sentence(tokens = Seq(
-                        Token(0, "Bad", sentencePos=0),
-                        Token(1, "kitty", 
-			      entityType = Some(EntityType.Per), 
-                              mentionType = Some(MentionType.Nom), 
-			      sentencePos = 1,
-                              mentionId = 3,
-                              equivId = 1 // identifier for within-doc coref chain (see above)
-                          ),
-                        Token(3, ".")
-                    )
+                    sentencePos = 5,
+                    mentionId = 2,
+                    equivId = 2
+                  ),
+                  Token(7, ".") // a tagger can define whatever tokenization and sentence chunking it likes
+                )),
+                Sentence(tokens = Seq(
+                  Token(0, "Bad", sentencePos = 0),
+                  Token(1, "kitty",
+                    entityType = Some(EntityType.Per),
+                    mentionType = Some(MentionType.Nom),
+                    sentencePos = 1,
+                    mentionId = 3,
+                    equivId = 1 // identifier for within-doc coref chain (see above)
+                  ),
+                  Token(3, ".")
                 )
-            ))
+                )
+              ))
 
-	    // relations and attributes are defined by reference to
-	    // mentionId on tokens, which are unique at the document
-	    // level
+            // relations and attributes are defined by reference to
+            // mentionId on tokens, which are unique at the document
+            // level
             val newRelations = contentItem.relations + (
-              "my_tagger" -> Seq(
-                  // a list of triples between mentions with labels
-                  // from RelationType, which can be expanded by
-                  // adding more to streamcorpus-v0_3_0.thrift
-		  Relation(mentionId1 = Option(1), mentionId2 = Option(2), relationType = Option(RelationType.LifeInjure))
-                )
+              tag -> Seq(
+                // a list of triples between mentions with labels
+                // from RelationType, which can be expanded by
+                // adding more to streamcorpus-v0_3_0.thrift
+                Relation(mentionId1 = Some(1), mentionId2 = Some(2), relationType = Some(RelationType.LifeInjure))
+              )
               )
 
             val newAttributes = contentItem.attributes + (
-              "my_tagger" -> Seq(
-		 Attribute(mentionId = Option(1), attributeType = Option(AttributeType.PerAge), evidence = Option("ten-year-old"))
-	      )
-            )
+              tag -> Seq(
+                Attribute(mentionId = Some(1),
+                  attributeType = Some(AttributeType.PerAge),
+                  evidence = Some("ten-year-old"))
+              )
+              )
 
             // in Scala, the item is immutable, so we must copy it.
             // Hopefully this is not too inefficient.  There may be
@@ -166,26 +169,26 @@ object AddTagging {
               taggings = newTaggings,
               sentences = newSentences,
               relations = newRelations,
-	      attributes = newAttributes
+              attributes = newAttributes
             )))
 
             newItem.body match {
               case Some(contentItem) => {
 
-	        // verify that the other sentences data was not destroyed
-                assert (contentItem.sentences.contains("lingpipe"), println("sentences lost lingpipe"))
-		// and that our tagging info got added
-                assert (contentItem.sentences.contains("my_tagger"), println("sentences missing my_tagger"))
+                // verify that the other sentences data was not destroyed
+                assert(contentItem.sentences.contains("lingpipe"), println("sentences lost lingpipe"))
+                // and that our tagging info got added
+                assert(contentItem.sentences.contains(tag), println("sentences missing my_tagger"))
 
-	        // verify similar things about taggings
-                assert (contentItem.taggings.contains("lingpipe"), println("taggings lost lingpipe"))
-                assert (contentItem.taggings.contains("my_tagger"), println("taggings missing my_tagger"))
+                // verify similar things about taggings
+                assert(contentItem.taggings.contains("lingpipe"), println("taggings lost lingpipe"))
+                assert(contentItem.taggings.contains(tag), println("taggings missing my_tagger"))
 
-		// verify that relations has our data, there were not reln from lingpipe
-                assert (contentItem.relations.contains("my_tagger"), println("relations missing my_tagger"))
+                // verify that relations has our data, there were not reln from lingpipe
+                assert(contentItem.relations.contains(tag), println("relations missing my_tagger"))
 
-		// verify that attributes has our data, there were not reln from lingpipe
-                assert (contentItem.attributes.contains("my_tagger"), println("attributes missing my_tagger"))
+                // verify that attributes has our data, there were not reln from lingpipe
+                assert(contentItem.attributes.contains(tag), println("attributes missing my_tagger"))
 
                 println("valid")
 
