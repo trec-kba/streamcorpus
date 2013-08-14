@@ -311,7 +311,7 @@ struct Attribute {
    * A normalized, strongly typed value derived from the evidence.
    * The actual type must be determined by programmatically
    * interpretint the attribute_type.  For example,
-   * attribute_type==AttributeType.PER_AGE implies that this value
+   * attribute_type==AttributeType.PER_GENDER implies that this value
    * will be a string containing an integer index into the Gender
    * enum.
    *
@@ -327,9 +327,7 @@ struct Attribute {
 
   /**
    * Index into the mentions in the document.  This identifies the
-   * origin of the relation.  For example, the relation
-   *    (Bob, PHYS_Located, Chicago)
-   * would have mention_id_1 point to Bob.
+   * mention to which the attrribute applies
    */
   5: optional MentionID mention_id,
 }
