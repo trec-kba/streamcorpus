@@ -53,20 +53,24 @@ object AddTagging {
               )
 
             val newItem = item.copy(body = Some(contentItem.copy(
-              //  If I uncomment this next line, it fails....
               taggings = newTaggings,
-              sentences = newSentences
-              /*,
-              relations = newRelations*/
+              sentences = newSentences,
+              relations = newRelations
             )))
 
             newItem.body match {
               case Some(contentItem) => {
-                println(contentItem.sentences.contains("lingpipe"))
-                println(contentItem.sentences.contains("my_tagger"))
-                println(contentItem.taggings.contains("lingpipe"))
-                println(contentItem.taggings.contains("my_tagger"))
-                println(contentItem.relations.contains("my_tagger"))
+	        // verify that the other sentences data was not destroyed
+                assert (contentItem.sentences.contains("lingpipe"), println("sentences lost lingpipe"))
+		// and that our tagging info got added
+                assert (contentItem.sentences.contains("my_tagger"), println("sentences missing my_tagger"))
+
+	        // verify similar things about taggings
+                assert (contentItem.taggings.contains("lingpipe"), println("taggings lost lingpipe"))
+                assert (contentItem.taggings.contains("my_tagger"), println("taggings missing my_tagger"))
+
+		// verify that relations has our data, there were not reln from lingpipe
+                assert (contentItem.relations.contains("my_tagger"), println("relations missing my_tagger"))
               }
               case _ =>
             }
