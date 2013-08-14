@@ -29,8 +29,8 @@ object AddTagging {
           case Some(contentItem) => {
 
             // taggings is optional
-            contentItem.taggings +
-              ("my_tagger" -> Some(Tagging(
+	    val newTaggings = contentItem.taggings + (
+              "my_tagger" -> Some(Tagging(
                 taggerId = "my_tagger",
                 rawTagging = ByteBuffer.wrap(Array[Byte]()), // serialized tagging data in some "native" format, such as XML or JSON
                 taggerConfig = Option("some description"),
@@ -38,7 +38,7 @@ object AddTagging {
                 generationTime = Some(StreamTime(zuluTimestamp = "1970-01-01T00:00:01.000000Z", epochTicks = 1))
               )))
 
-            val newMap = contentItem.sentences + (
+            val newSentences = contentItem.sentences + (
               "my_tagger" -> Seq(Sentence(tokens = Seq(
                 Token(0, "The"),
                 Token(1, "cat", entityType = Some(EntityType.Per), mentionType = Some(MentionType.Nom), mentionId = 1),
@@ -48,11 +48,24 @@ object AddTagging {
                 Token(5, ".") // a tagger can define whatever tokenization and sentence chunking it likes
               ))))
 
-            val newItem = item.copy(body = Some(contentItem.copy(sentences = newMap)))
+            val newRelations = contentItem.relations + (
+              "my_tagger" -> Seq(Relation(mentionId1=Option(1), mentionId2=Option(2), relationType=Option(RelationType.LifeInjure)))
+	    )
+
+            val newItem = item.copy(body = Some(contentItem.copy(
+	       //  If I uncomment this next line, it fails....
+	       //taggings = newTaggings,
+	       sentences = newSentences/*,
+	       relations = newRelations*/
+ 	    )))
 
             newItem.body match {
               case Some(contentItem) => {
+                println(contentItem.sentences.contains("lingpipe"))
                 println(contentItem.sentences.contains("my_tagger"))
+                println(contentItem.taggings.contains("lingpipe"))
+                println(contentItem.taggings.contains("my_tagger"))
+                println(contentItem.relations.contains("my_tagger"))
               }
               case _ =>
             }
