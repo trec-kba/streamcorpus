@@ -53,21 +53,22 @@ object AddTagging {
                 "my_tagger" -> Seq(
                     Sentence(tokens = Seq(
                         Token(0, "The"),
-                        Token(1, "cat", 
+                        Token(1, "ten-year-old"),
+                        Token(2, "cat", 
                               entityType = Some(EntityType.Per), 
                               mentionType = Some(MentionType.Nom), 
                               mentionId = 1,
                               equivId = 1 // identifier for within-doc coref chain
                           ),
-                        Token(2, "ate"),
-                        Token(3, "the"),
-                        Token(4, "bird", 
+                        Token(3, "ate"),
+                        Token(5, "the"),
+                        Token(6, "bird", 
                               entityType = Some(EntityType.Per), 
                               mentionType = Some(MentionType.Nom), 
                               mentionId = 2,
                               equivId = 2
                           ),
-                        Token(5, ".") // a tagger can define whatever tokenization and sentence chunking it likes
+                        Token(7, ".") // a tagger can define whatever tokenization and sentence chunking it likes
                     )),
                     Sentence(tokens = Seq(
                         Token(0, "Bad"),
@@ -81,15 +82,29 @@ object AddTagging {
                 )
             ))
 
-
+	    // relations and attributes are defined by reference to
+	    // mentionId on tokens, which are unique at the document
+	    // level
             val newRelations = contentItem.relations + (
-              "my_tagger" -> Seq(Relation(mentionId1 = Option(1), mentionId2 = Option(2), relationType = Option(RelationType.LifeInjure)))
+              "my_tagger" -> Seq(
+                  // a list of triples between mentions with labels
+                  // from RelationType, which can be expanded by
+                  // adding more to streamcorpus-v0_3_0.thrift
+		  Relation(mentionId1 = Option(1), mentionId2 = Option(2), relationType = Option(RelationType.LifeInjure))
+                )
               )
+
+            val newAttributes = contentItem.attributes + (
+              "my_tagger" -> Seq(
+		 Attribute(mentionId = Option(1), attributeType = Option(AttributeType.PerAge), evidence = Option("ten-year-old"))
+	      )
+            )
 
             val newItem = item.copy(body = Some(contentItem.copy(
               taggings = newTaggings,
               sentences = newSentences,
-              relations = newRelations
+              relations = newRelations,
+	      attributes = newAttributes
             )))
 
             newItem.body match {
@@ -106,6 +121,9 @@ object AddTagging {
 
 		// verify that relations has our data, there were not reln from lingpipe
                 assert (contentItem.relations.contains("my_tagger"), println("relations missing my_tagger"))
+
+		// verify that attributes has our data, there were not reln from lingpipe
+                assert (contentItem.attributes.contains("my_tagger"), println("attributes missing my_tagger"))
 
                 println("valid")
 
