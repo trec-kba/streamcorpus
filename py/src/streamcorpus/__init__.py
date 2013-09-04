@@ -9,7 +9,7 @@ Copyright 2012 Diffeo, Inc.
 '''
 
 import re
-import time
+from time import mktime
 import hashlib
 from datetime import datetime
 from cStringIO import StringIO
@@ -73,7 +73,38 @@ def get_date_hour(stream_thing):
     return stream_thing.zulu_timestamp.split(':')[0].replace('T', '-')
 
 
-def make_stream_time(zulu_timestamp=None):
+def make_stream_time(zulu_timestamp=None, epoch_ticks=None):
+    '''
+    Creates a StreamTime object from either a string or a unix-time number.
+    string should be formatted like '2000-01-01T12:34:00.000123Z'
+    zulu_timestamp can be either a string or a number
+    epoch_ticks must be int, long, or float
+    zulu_timestamp is type detected so that it can be passed through from the sole zulu_timestamp parameter of make_stream_item() below
+    '''
+    if zulu_timestamp is not None:
+        if isinstance(zulu_timestamp, basestring):
+            return _stream_time_from_string(zulu_timestamp)
+        if isinstance(zulu_timestamp, (int,long,float)):
+            return _stream_time_from_number(zulu_timestamp)
+    if epoch_ticks is not None:
+        return _stream_time_from_number(epoch_ticks)
+    return _stream_time_from_string(None)
+
+
+_zulu_timestamp_format = '%Y-%m-%dT%H:%M:%S.%fZ'
+
+
+def _stream_time_from_number(epoch_ticks):
+    '''
+    Make a StreamTime object from a utc unix time number.
+    '''
+    then = datetime.fromtimestamp(epoch_ticks)
+    return StreamTime(
+        zulu_timestamp=then.strftime(_zulu_timestamp_format),
+        epoch_ticks=epoch_ticks)
+
+
+def _stream_time_from_string(zulu_timestamp):
     '''
     Make a StreamTime object for a zulu_timestamp in this format:
     '2000-01-01T12:34:00.000123Z'
@@ -81,23 +112,22 @@ def make_stream_time(zulu_timestamp=None):
 
     If zulu_timestamp is not specified, it defaults to UTC now.
     '''
-    zulu_timestamp_format = '%Y-%m-%dT%H:%M:%S.%fZ'
     if zulu_timestamp is None:
-        zulu_timestamp = datetime.utcnow().strftime(
-            zulu_timestamp_format)
-    st = StreamTime(zulu_timestamp=zulu_timestamp)
-    ## for reference http://www.epochconverter.com/
-    st.epoch_ticks = time.mktime(time.strptime(
-            zulu_timestamp, 
-            zulu_timestamp_format)) - time.timezone
-    ## subtracting the time.timezone is crucial
-    return st
+        then = datetime.utcnow()
+    else:
+        then = datetime.strptime(zulu_timestamp, _zulu_timestamp_format)
+    return StreamTime(
+        zulu_timestamp=zulu_timestamp,
+        epoch_ticks=mktime(then.timetuple()))
+
 
 def make_stream_item(zulu_timestamp, abs_url):
     '''
     Assemble a minimal StreamItem with internally consistent
     .stream_time.zulu_timestamp, .stream_time.epoch_ticks, .abs_url,
     .doc_id, and .stream_id
+
+    zulu_timestamp may be either a unix-time number or a string like '2000-01-01T12:34:00.000123Z'
     '''
     st = make_stream_time(zulu_timestamp)
     si = StreamItem()
