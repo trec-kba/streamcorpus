@@ -290,13 +290,16 @@ def _show_fields(fpaths, fields, len_fields):
     global message_class
     for fpath in fpaths:
         for si in Chunk(path=fpath, mode='rb', message=message_class):
+            output = []
             for field in fields:
                 prop = si
                 for prop_name in field.split('.'):
                     prop = getattr(prop, prop_name, None)
                     if not prop: break
                 if prop:
-                    print field, prop
+                    if not isinstance(prop, basestring):
+                        prop = repr(prop)
+                    output.append( '%s: %s' % (field, prop) )
             
             for field in len_fields:
                 prop = si
@@ -304,7 +307,9 @@ def _show_fields(fpaths, fields, len_fields):
                     prop = getattr(prop, prop_name, None)
                     if not prop: break
                 if prop:
-                    print field, len(prop)
+                    output.append('%s: %d' % (field, len(prop)))
+            sys.stdout.write('%s\n' % ' '.join(output))
+            sys.stdout.flush()
 
 
 def _find_missing_labels(fpaths, annotator_ids, component):
