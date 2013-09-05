@@ -138,13 +138,19 @@ def test_exists_exception():
     assert excinfo.value.errno == errno.EEXIST
 
 def test_compress_and_encrypt_path():    
+    originalSize = os.path.getsize(path)
     errors, o_path = compress_and_encrypt_path(path)
     if errors:
         print '\n'.join(errors)
         raise Exception(errors)
-    assert len(open(o_path).read()) in [240, 244, 248]
+    #assert len(open(o_path).read()) in [240, 244, 248]
+    print 'path=%r o_path=%r size=%s' % (path, o_path, os.path.getsize(o_path))
+    newSize = os.path.getsize(o_path)
+    assert newSize < originalSize
+    assert (newSize % 4) == 0
 
     ## this should go in a "cleanup" method...
+    os.remove(o_path)
     os.remove(path)
 
 def test_with():
