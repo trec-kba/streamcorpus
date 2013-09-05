@@ -114,6 +114,7 @@ token_attrs = [
     'offsets',
     'lemma',
     'pos',
+    'mention_type',
     'entity_type',
     'mention_id',
     'equiv_id',
