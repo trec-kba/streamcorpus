@@ -38,7 +38,7 @@ install: build
 	python setup.py clean --all
 	python setup.py install
 
-test: clean
+test: 
 	py.test --genscript=runtests.py
 	python runtests.py -s
 
