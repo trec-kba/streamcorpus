@@ -49,4 +49,4 @@ build_packages: build_eggs
 	python setup.py bdist_rpm
 
 register: build
-	python setup.py register sdist upload
+	python setup.py sdist upload
