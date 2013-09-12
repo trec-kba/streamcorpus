@@ -32,20 +32,40 @@
 #   include RELEASE-VERSION
  
 __all__ = ("get_git_version")
- 
+
+import sys
+import traceback
 from subprocess import Popen, PIPE
  
  
 def call_git_describe(abbrev=4):
+    line = None
     try:
         p = Popen(['git', 'describe', '--abbrev=%d' % abbrev],
                   stdout=PIPE, stderr=PIPE)
         p.stderr.close()
-        line = p.stdout.readlines()[0]
-        return line.strip()
+        describe_line = p.stdout.readlines()[0].strip()
+
+        p = Popen(['git', 'rev-parse', 'HEAD'],
+                  stdout=PIPE, stderr=PIPE)
+        p.stderr.close()
+        source_hash = p.stdout.readlines()[0].strip()
+        source_hash = source_hash[:abbrev]
+
+        parts = describe_line.split('-')
+        if len(parts) == 1:
+            version = parts[0]
+
+        else:
+            ver, rel, source_hash = parts
+            version = '%s.dev%s' % (ver, rel)
+
+        return version, source_hash
  
-    except:
-        return None
+    except Exception, exc:
+        sys.stderr.write('line: %r\n' % line)
+        sys.stderr.write(traceback.format_exc(exc))
+        return None, None
  
  
 def read_release_version():
@@ -54,51 +74,53 @@ def read_release_version():
  
         try:
             version = f.readlines()[0]
-            return version.strip()
+            return version.strip().split(',')
  
         finally:
             f.close()
  
     except:
-        return None
+        return None, None
  
  
-def write_release_version(version):
+def write_release_version(version, source_hash):
     f = open("RELEASE-VERSION", "w")
-    f.write("%s\n" % version)
+    f.write("%s,%s\n" % (version, source_hash))
     f.close()
  
  
 def get_git_version(abbrev=4):
     # Read in the version that's currently in RELEASE-VERSION.
  
-    release_version = read_release_version()
+    release_version, release_source_hash = read_release_version()
  
     # First try to get the current version using “git describe”.
  
-    version = call_git_describe(abbrev)
+    version, source_hash = call_git_describe(abbrev)
  
     # If that doesn't work, fall back on the value that's in
     # RELEASE-VERSION.
  
     if version is None:
         version = release_version
+        source_hash = release_source_hash
  
     # If we still don't have anything, that's an error.
  
     if version is None:
         # raise ValueError("Cannot find the version number!")
         version = '0.1.0'
+        source_hash = ''
  
     # If the current version is different from what's in the
     # RELEASE-VERSION file, update the file to be current.
  
-    if version != release_version:
-        write_release_version(version)
+    if version != release_version or source_hash != release_source_hash:
+        write_release_version(version, source_hash)
  
     # Finally, return the current version.
  
-    return version
+    return version, source_hash
  
  
 if __name__ == "__main__":
