@@ -46,7 +46,7 @@ install: build
 	python setup.py clean --all
 	python setup.py install
 
-test: clean
+test: 
 	py.test --genscript=runtests.py
 	python runtests.py -s src
 
@@ -57,4 +57,4 @@ build_packages: build_eggs
 	python setup.py bdist_rpm
 
 register: build
-	python setup.py register sdist upload
+	python setup.py sdist upload
