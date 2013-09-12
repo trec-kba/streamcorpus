@@ -14,7 +14,7 @@ from distutils.core import Command
 from setuptools import setup, find_packages
 
 from version import get_git_version
-VERSION = get_git_version()
+VERSION, SOURCE_LABEL = get_git_version()
 PROJECT = 'streamcorpus-dev'
 URL = 'http://github.com/trec-kba/streamcorpus'
 AUTHOR = 'Diffeo, Inc.'
@@ -53,6 +53,7 @@ class PyTest(Command):
 setup(
     name=PROJECT,
     version=VERSION,
+    #source_label=SOURCE_LABEL,
     description=DESC,
     long_description=read_file('README.rst'),
     author=AUTHOR,
