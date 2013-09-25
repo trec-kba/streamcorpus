@@ -14,7 +14,7 @@ import json
 import itertools
 import collections
 from _chunk import Chunk
-from . import OffsetType
+from .ttypes import OffsetType
 
 from ttypes import StreamItem as StreamItem_v0_3_0
 from ttypes_v0_1_0 import StreamItem as StreamItem_v0_1_0
@@ -26,6 +26,41 @@ versioned_classes = {
     'v0_1_0': StreamItem_v0_1_0,
     }
 
+
+def smart_repr_trim(ob, limit=50, newlineSplitFields=False, indent=1):
+    '''
+    returns repr(ob), unless ob is a string that is too long
+    '''
+    if isinstance(ob, basestring):
+        if len(ob) > limit:
+            suffix = '...len(%d)' % len(ob)
+            prefix = ob[0:limit-len(suffix)]
+            return repr(prefix) + suffix
+    return smart_repr(ob, limit=limit, newlineSplitFields=newlineSplitFields, indent=indent)
+
+
+def smart_repr(x, limit=50, newlineSplitFields=False, indent=1):
+    '''
+    In case of long fields, print: fieldName='blahblahblhah...'len(9999)
+    '''
+    if newlineSplitFields:
+        splitter = ',\n' + ('  ' * indent)
+    else:
+        slpitter = ', '
+    if hasattr(x, '__slots__'):
+        vals = ['%s=%s' % (key, smart_repr_trim(getattr(x,key), limit=limit, newlineSplitFields=newlineSplitFields, indent=indent+1)) for key in x.__slots__]
+    elif isinstance(x, list):
+        return '[%s]' % splitter.join(map(lambda y: smart_repr(y, limit, newlineSplitFields, indent+1), x))
+    elif isinstance(x, dict):
+        vals = ['%s: %s' % (repr(k),smart_repr(v,limit,newlineSplitFields,indent+1)) for k,v in x.iteritems()]
+        return '{' + splitter.join(vals) + '}'
+    else:
+        # Right now this is how we split on primitives vs other objects.
+        # Thrift objects all helpfully generate __slots__, but it might be useful to
+        # extend smart_repr to other non-thrift non-primitive objects.
+        return repr(x)
+    return '%s(%s)' % (x.__class__.__name__, splitter.join(vals))
+
 def _dump(fpath, args):
     '''
     Reads in a streamcorpus.Chunk file and prints the metadata of each
@@ -34,6 +69,10 @@ def _dump(fpath, args):
     if args.count:
         num_stream_items = 0
         num_labeled_stream_items = set()
+
+    stats = None
+    if args.stats:
+        stats = {}
 
     global message_class
     for num, si in enumerate(Chunk(path=fpath, mode='rb', message=message_class)):
@@ -59,7 +98,7 @@ def _dump(fpath, args):
                                 else:
                                     print si.stream_id, tok.token.decode('utf8').encode('utf8'), tok.labels
 
-        elif not args.show_all:
+        elif not (args.show_all or args.smart_dump):
             si.body = None
             if getattr(si, 'other_content', None):
                 for oc in si.other_content:
@@ -68,6 +107,13 @@ def _dump(fpath, args):
         elif args.show_content_field and si.body:
             
             print getattr(si.body, args.show_content_field)
+
+        elif args.smart_dump:
+
+            vals = []
+            for fieldName in si.__slots__:
+                vals.append(fieldName + '=' + smart_repr(getattr(si,fieldName), newlineSplitFields=True, indent=2))
+            print '%s(%s)' % (si.__class__.__name__, ',\n  '.join(vals))
 
         else:
             print si
@@ -359,7 +405,6 @@ def _stats(fpaths):
     global message_class
     keys = ['stream_ids', 'num_targets_from_google', 'raw', 'raw_has_targs', 'raw_has_wp', 'media_type', 'clean_html', 'clean_has_targs', 'clean_has_wp',
             'clean_visible', 'labelsets', 'labels', 'labels_has_targs', 'sentences', 'tokens', 'at_least_one_label']
-    print '\t'.join(keys)
     for fpath in fpaths:
         #print fpath
         sys.stdout.flush()
@@ -370,11 +415,14 @@ def _stats(fpaths):
             sys.stdout.flush()
             c['stream_ids'] += 1
             if si.body:
-                target_ids = [rec['target_id'] for rec in json.loads( si.source_metadata['google'] )['MENTION']]
+                if 'google' in si.source_metadata:
+                    target_ids = [rec['target_id'] for rec in json.loads( si.source_metadata['google'] )['MENTION']]
+                else:
+                    target_ids = []
                 c['num_targets_from_google'] += len(target_ids)
                 c['raw'] += int(bool(si.body.raw))
                 c['raw_has_targs'] += sum(map(lambda targ: int(bool(targ in repr(si.body.raw))), target_ids))
-                c['raw_has_wp'] += int(bool('wikipedia.org' in si.body.raw))
+                c['raw_has_wp'] += int((si.body.raw is not None) and ('wikipedia.org' in si.body.raw))
                 c['media_type'] += int(bool(si.body.media_type))
                 c['clean_html'] += int(bool(si.body.clean_html))
                 if si.body.clean_html:
@@ -382,11 +430,12 @@ def _stats(fpaths):
                     c['clean_has_wp'] += int(bool('wikipedia.org' in si.body.clean_html))
 
                 c['clean_visible'] += int(bool(si.body.clean_visible))
-                c['labelsets'] += len(si.body.labelsets)
-                c['labels'] += sum(map(lambda labelset: len(labelset.labels), si.body.labelsets))
-                label_targs = []
-                for labelset in si.body.labelsets:
-                    label_targs += [label.target_id for label in labelset.labels]
+                # c['labelsets'] += len(si.body.labelsets)  # TODO: broken? no such field ContentItem.labelsets
+                #c['labels'] += sum(map(lambda labelset: len(labelset.labels), si.body.labelsets))
+                c['labels'] += len(si.body.labels)
+                label_targs = si.body.labels.keys()  # TODO: is this right? .values()
+                #for labelset in si.body.labelsets:
+                #    label_targs += [label.target_id for label in labelset.labels]
                 c['labels_has_targs'] += sum(map(lambda targ: int(bool(targ in label_targs)), target_ids))
                 _labels = collections.Counter()
                 for sentences in si.body.sentences.values():
@@ -394,20 +443,25 @@ def _stats(fpaths):
                     for sent in sentences:
                         for tok in sent.tokens:
                             c['tokens'] += 1
-                            for label in tok.labels:
-                                _labels[label.annotator.annotator_id] += 1
+                            for labell in tok.labels.itervalues():
+                                for label in labell:
+                                    _labels[label.annotator.annotator_id] += 1
                 #print _labels
                 labels += _labels
                 c['at_least_one_label'] += int(bool(_labels))
                 sys.stdout.flush()
 
-        print '\t'.join([str(c[k]) for k in keys] + ['%s:%d' % it for it in labels.items()])
+        print fpath
+        for k in keys:
+            v = c.get(k)
+            print '\t%s: %s' % (k, v)
+        print '\tlabels: ' + ', '.join(['%s:%d' % it for it in labels.items()])
         #print json.dumps( c, indent=4 )
         #print json.dumps( labels, indent=4 )
         sys.stdout.flush()
 
 
-if __name__ == '__main__':
+def main():
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -438,6 +492,8 @@ if __name__ == '__main__':
                         default=False, dest='show_all')
     parser.add_argument('--show-content-field', 
                         default=None, dest='show_content_field')
+    parser.add_argument('--smart-dump', action='store_true',
+                        default=False, dest='smart_dump')
     parser.add_argument('--len-field', 
                         action='append', 
                         default=[], dest='len_fields')
@@ -500,3 +556,7 @@ if __name__ == '__main__':
     else:
         for fpath in args.input_path:
             _dump(fpath, args)
+
+
+if __name__ == '__main__':
+    main()
