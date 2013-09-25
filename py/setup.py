@@ -101,8 +101,11 @@ class Thrift(Command):
         remove_tree('gen-py')
 
 
-distutils.command.build.build.sub_commands.insert(0, ('thrift', None))
-# TODO: add thrift commands to this so that `python setup.py build` does those parts too
+## We currently assume that the thrift generated python files are included in our source
+## generation.  If we actually want other users to be able to generate the thrift files (
+## which is very reasonable) we need to include the interface files in the
+## source distribution.  Comment this out until them.
+#distutils.command.build.build.sub_commands.insert(0, ('thrift', None))
 
 setup(
     name=PROJECT,
