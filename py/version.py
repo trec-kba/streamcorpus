@@ -69,11 +69,11 @@ def call_git_describe(abbrev=4):
         try:
             sys.stderr.write('p.stderr.read()=%s\n' % p.stderr.read())
         except Exception, exc:
-            pass
+            sys.stderr.write(traceback.format_exc(exc))
         try:
             sys.stderr.write('os.getcwd()=%s\n' % os.getcwd())
         except Exception, exc:
-            pass
+            sys.stderr.write(traceback.format_exc(exc))
         return None, None
  
  

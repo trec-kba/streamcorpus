@@ -12,8 +12,8 @@ clean:
 	rm -f runtests.py
 
 .PHONY : build
-build:
-	python setup.py build
+build: clean
+	python setup.py build sdist bdist_egg
 
 install:
 	## I think this `clean --all` step removes existing versions
