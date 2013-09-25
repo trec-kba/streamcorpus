@@ -40,6 +40,7 @@ from subprocess import Popen, PIPE
  
 def call_git_describe(abbrev=4):
     line = None
+    p = None
     try:
         p = Popen(['git', 'describe', '--abbrev=%d' % abbrev],
                   stdout=PIPE, stderr=PIPE)
@@ -65,6 +66,14 @@ def call_git_describe(abbrev=4):
     except Exception, exc:
         sys.stderr.write('line: %r\n' % line)
         sys.stderr.write(traceback.format_exc(exc))
+        try:
+            sys.stderr.write('p.stderr.read()=%s\n' % p.stderr.read())
+        except Exception, exc:
+            pass
+        try:
+            sys.stderr.write('os.getcwd()=%s\n' % os.getcwd())
+        except Exception, exc:
+            pass
         return None, None
  
  
