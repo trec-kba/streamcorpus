@@ -121,7 +121,7 @@ def _stream_time_from_string(zulu_timestamp):
         epoch_ticks=mktime(then.timetuple()))
 
 
-def make_stream_item(zulu_timestamp, abs_url):
+def make_stream_item(zulu_timestamp, abs_url, version=Versions.v0_3_0):
     '''
     Assemble a minimal StreamItem with internally consistent
     .stream_time.zulu_timestamp, .stream_time.epoch_ticks, .abs_url,
@@ -130,16 +130,22 @@ def make_stream_item(zulu_timestamp, abs_url):
     zulu_timestamp may be either a unix-time number or a string like '2000-01-01T12:34:00.000123Z'
     '''
     st = make_stream_time(zulu_timestamp)
-    si = StreamItem()
-    si.version = Versions.v0_3_0
+    if version == Versions.v0_3_0:
+        si = StreamItem_v0_3_0()
+        ## create an empty .body attribute and .body.language
+        si.body = ContentItem(language=Language(code='', name=''))
+    elif version == Versions.v0_2_0:
+        si = StreamItem_v0_2_0()
+        ## create an empty .body attribute and .body.language
+        si.body = ttypes_v0_2_0.ContentItem(
+            language=ttypes_v0_2_0.Language(code='', name=''))
+    si.version = version
     si.stream_time = st
     ## Always start with an abs_url and only move it to original_url
     ## if some fetching process decides that the URL needs repair.
     si.abs_url = abs_url
     si.doc_id = hashlib.md5(abs_url).hexdigest()
     si.stream_id = '%d-%s' % (st.epoch_ticks, si.doc_id)
-    ## create an empty .body attribute and .body.language
-    si.body = ContentItem(language=Language(code='', name=''))
     return si
 
 def add_annotation(data_item, *annotations):

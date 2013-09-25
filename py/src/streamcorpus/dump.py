@@ -160,6 +160,7 @@ token_attrs = [
     'offsets',
     'lemma',
     'pos',
+    'mention_type',
     'entity_type',
     'mention_id',
     'equiv_id',
@@ -329,21 +330,33 @@ def _find(fpaths, stream_id, dump_binary_stream_item=False):
                 else:
                     sys.exit('Found %s without si.body' % stream_id)
 
-def _show_fields(fpaths, fields):
+def _show_fields(fpaths, fields, len_fields):
     '''
     streamcorpus.Chunk files and display each field specified in 'fields'
     '''
     global message_class
     for fpath in fpaths:
         for si in Chunk(path=fpath, mode='rb', message=message_class):
+            output = []
             for field in fields:
                 prop = si
                 for prop_name in field.split('.'):
                     prop = getattr(prop, prop_name, None)
                     if not prop: break
                 if prop:
-                    print field, prop
-
+                    if not isinstance(prop, basestring):
+                        prop = repr(prop)
+                    output.append( '%s: %s' % (field, prop) )
+            
+            for field in len_fields:
+                prop = si
+                for prop_name in field.split('.'):
+                    prop = getattr(prop, prop_name, None)
+                    if not prop: break
+                if prop:
+                    output.append('%s: %d' % (field, len(prop)))
+            sys.stdout.write('%s\n' % ' '.join(output))
+            sys.stdout.flush()
 
 
 def _find_missing_labels(fpaths, annotator_ids, component):
@@ -481,6 +494,9 @@ def main():
                         default=None, dest='show_content_field')
     parser.add_argument('--smart-dump', action='store_true',
                         default=False, dest='smart_dump')
+    parser.add_argument('--len-field', 
+                        action='append', 
+                        default=[], dest='len_fields')
     parser.add_argument('--field', default=[], 
                         action='append', dest='fields',
                         help='".foo.bar" will yield StreamItem.foo.bar, if it exists.  Can request multiple --field .foo.bar1 --field .foo.bar2 ')
@@ -514,7 +530,7 @@ def main():
 
     ## now actually do whatever was requested
     if args.fields:
-        _show_fields(args.input_path, args.fields)
+        _show_fields(args.input_path, args.fields, args.len_fields)
 
     elif args.stats:
         _stats(args.input_path)
