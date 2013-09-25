@@ -12,8 +12,8 @@
  * especially for the SourceMetadata, which is stored in the thrift as
  * a JSON string using the schemas linked below.
  */
-namespace java kba
-namespace py kba
+namespace java streamcorpus
+namespace py streamcorpus
 
 /**
  * ContentItem is the thrift analog of

@@ -2,7 +2,6 @@
 
 import os
 import sys
-import fnmatch
 
 ## prepare to run PyTest as a command
 from distutils.core import Command
@@ -28,12 +27,17 @@ def read_file(file_name):
         )
     return open(file_path).read()
 
-def recursive_glob(treeroot, pattern):
-    results = []
-    for base, dirs, files in os.walk(treeroot):
-      goodfiles = fnmatch.filter(files, pattern)
-      results.extend(os.path.join(base, f) for f in goodfiles)
-    return results
+
+def _myinstall(pkgspec):
+    setup(
+        script_args = ['-q', 'easy_install', '-v', pkgspec],
+        script_name = 'easy_install'
+    )
+
+
+install_requires=[
+    'thrift>=0.9',
+]
 
 class PyTest(Command):
     '''run py.test'''
@@ -46,9 +50,59 @@ class PyTest(Command):
     def finalize_options(self):
         pass
     def run(self):
-        import subprocess
-        errno = subprocess.call([sys.executable, 'runtests.py'])
-        raise SystemExit(errno)
+        # ensure that pytest is installed
+        _myinstall('pytest>=2.3')
+        # and everything else we'd need. setuptools tests_require is dumb because it copies locally instead of installing to system, and install_requires isn't used untill install (but maybe someone wants to run the test before they install).
+        for pkgspec in install_requires:
+            _myinstall(pkgspec)
+        print sys.path
+        # reload sys.path for any new libraries installed
+        import site
+        site.main()
+        print sys.path
+        # use pytest to run tests
+        pytest = __import__('pytest')
+        pytest.main(['-s', 'src'])
+
+
+from distutils.dir_util import remove_tree
+from distutils.file_util import move_file
+from distutils.util import spawn, newer, execute
+
+import distutils.command.build
+
+def version_suffix_rename(fname, version):
+    assert fname.endswith('.py')
+    fname = fname[:-3]
+    return fname + version + '.py'
+
+class Thrift(Command):
+    '''run thrift'''
+    description = 'runs py.test to execute all tests'
+
+    user_options = []
+    def initialize_options(self):
+        pass
+    def finalize_options(self):
+        pass
+    def run(self):
+        self.maybe_thrift_gen('../if/streamcorpus-v0_1_0.thrift', 'src/streamcorpus', lambda x: version_suffix_rename(x, '_v0_1_0'))
+        self.maybe_thrift_gen('../if/streamcorpus-v0_2_0.thrift', 'src/streamcorpus', lambda x: version_suffix_rename(x, '_v0_2_0'))
+        self.maybe_thrift_gen('../if/streamcorpus-v0_3_0.thrift', 'src/streamcorpus', lambda x: x)
+
+    def maybe_thrift_gen(self, thrift_src, outdir, renamefunc):
+        needsbuild = newer(thrift_src, os.path.join(outdir, renamefunc('constants.py')))
+        needsbuild = needsbuild or newer(thrift_src, os.path.join(outdir, renamefunc('ttypes.py')))
+        if not needsbuild:
+            return
+        self.spawn(['thrift', '--gen', 'py:new_style,slots', thrift_src])
+        for fname in ('constants.py', 'ttypes.py'):
+            self.move_file('gen-py/streamcorpus/' + fname, os.path.join(outdir, renamefunc(fname)))
+        remove_tree('gen-py')
+
+
+distutils.command.build.build.sub_commands.insert(0, ('thrift', None))
+# TODO: add thrift commands to this so that `python setup.py build` does those parts too
 
 setup(
     name=PROJECT,
@@ -61,23 +115,12 @@ setup(
     url=URL,
     packages = find_packages('src'),
     package_dir = {'': 'src'},
-    cmdclass = {'test': PyTest},
+    cmdclass = {'test': PyTest, 'thrift': Thrift},
     # We can select proper classifiers later
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Topic :: Utilities',
         'License :: OSI Approved :: MIT License',  ## MIT/X11 license http://opensource.org/licenses/MIT
     ],
-    install_requires=[
-        'thrift',
-        'pytest',
-    ],
-    # include_package_data = True,
-    package_data = {
-        # If any package contains *.txt or *.rst files, include them:
-        # '': ['*.txt', '*.rst'],
-        # And include any files found in the 'data' package:
-        # '': recursive_glob('src/data/', '*')
-        '': recursive_glob('data/', '*')
-    }
+    install_requires=install_requires
 )

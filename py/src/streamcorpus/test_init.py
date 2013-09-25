@@ -61,3 +61,22 @@ def test_make_stream_time_now_round_trip():
     st4 = make_stream_time(st3.zulu_timestamp)
     assert int(st4.epoch_ticks) == int(st.epoch_ticks)
 
+
+if __name__ == '__main__':
+    # test that random times from 1970-2030 survive a round trip through our string form and back
+    import random
+    start = time.time()
+    count = 0
+    count_limit = 1000000
+    while True:
+        rtime = random.randint(0,2000000000)
+        st = make_stream_time(epoch_ticks=rtime)
+        st2 = make_stream_time(st.zulu_timestamp)
+        assert st2.epoch_ticks == rtime
+        count += 1
+        if (count % 10000) == 0:
+            now = time.time()
+            dt = now - start
+            print '%s in %s sec (%s/sec)' % (count, dt, count / dt)
+        if count > count_limit:
+            break

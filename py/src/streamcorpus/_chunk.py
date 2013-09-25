@@ -271,6 +271,10 @@ class Chunk(object):
         msg.write(self._o_protocol)
         self._count += 1
 
+    def flush(self):
+        if self._o_chunk_fh is not None:
+            self._o_transport.flush()
+
     def close(self):
         '''
         Close any chunk file that we might have had open for writing.
