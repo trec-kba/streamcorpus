@@ -65,6 +65,7 @@ def call_git_describe(abbrev=4):
         return version, source_hash
  
     except Exception, exc:
+        '''
         sys.stderr.write('line: %r\n' % line)
         sys.stderr.write(traceback.format_exc(exc))
         try:
@@ -75,6 +76,7 @@ def call_git_describe(abbrev=4):
             sys.stderr.write('os.getcwd()=%s\n' % os.getcwd())
         except Exception, exc:
             sys.stderr.write(traceback.format_exc(exc))
+        '''
         return None, None
  
  
