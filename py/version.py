@@ -33,6 +33,7 @@
  
 __all__ = ("get_git_version")
 
+import os
 import sys
 import traceback
 from subprocess import Popen, PIPE
