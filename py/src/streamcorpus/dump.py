@@ -20,11 +20,39 @@ from ttypes import StreamItem as StreamItem_v0_3_0
 from ttypes_v0_1_0 import StreamItem as StreamItem_v0_1_0
 from ttypes_v0_2_0 import StreamItem as StreamItem_v0_2_0
 
+from .ttypes import Token, EntityType, MentionType
+
 versioned_classes = {
     'v0_3_0': StreamItem_v0_3_0,
     'v0_2_0': StreamItem_v0_2_0,
     'v0_1_0': StreamItem_v0_1_0,
     }
+
+
+def Token_repr(tok, limit=50, newlineSplitFields=False, indent=1, splitter=', '):
+    assert isinstance(tok, Token)
+    fields = []
+    for name in tok.__slots__:
+        v = getattr(tok, name)
+        if v is None:
+            continue
+        if name == 'entity_type':
+            if v == -1:
+                continue
+            fields.append('%s=%s' % (name, EntityType._VALUES_TO_NAMES[v]))
+        elif name == 'mention_type':
+            if v == -1:
+                continue
+            fields.append('%s=%s' % (name, MentionType._VALUES_TO_NAMES[v]))
+        else:
+            fields.append('%s=%s' % (name, smart_repr_trim(v, limit=limit, newlineSplitFields=newlineSplitFields, indent=indent+1)))
+    return 'Token(' + splitter.join(fields) + ')'
+    
+
+# map from type to function
+_better_repr_functions = [
+    (Token, Token_repr),
+]
 
 
 def smart_repr_trim(ob, limit=50, newlineSplitFields=False, indent=1):
@@ -46,7 +74,12 @@ def smart_repr(x, limit=50, newlineSplitFields=False, indent=1):
     if newlineSplitFields:
         splitter = ',\n' + ('  ' * indent)
     else:
-        slpitter = ', '
+        splitter = ', '
+
+    for xtype, xrepr in _better_repr_functions:
+        if isinstance(x, xtype):
+            return xrepr(x, limit=limit, newlineSplitFields=newlineSplitFields, indent=indent, splitter=splitter)
+
     if hasattr(x, '__slots__'):
         vals = ['%s=%s' % (key, smart_repr_trim(getattr(x,key), limit=limit, newlineSplitFields=newlineSplitFields, indent=indent+1)) for key in x.__slots__]
     elif isinstance(x, list):
