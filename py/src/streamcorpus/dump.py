@@ -36,6 +36,10 @@ def Token_repr(tok, limit=50, newlineSplitFields=False, indent=1, splitter=', ')
         v = getattr(tok, name)
         if v is None:
             continue
+        if (name in ('mention_id', 'equiv_id', 'parent_id')) and (v == -1):
+            continue  # the no-value int value.
+        if ((name == 'offsets') or (name == 'labels')) and not v:
+            continue  # probably empty dict: {}
         if name == 'entity_type':
             if v == -1:
                 continue
