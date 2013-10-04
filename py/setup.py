@@ -118,7 +118,7 @@ setup(
     url=URL,
     packages = find_packages('src'),
     package_dir = {'': 'src'},
-    namespace_packages = ['streamcorpus.pipeline'],
+    namespace_packages = ['streamcorpus', 'streamcorpus.pipeline'],
     cmdclass = {'test': PyTest, 'thrift': Thrift},
     # We can select proper classifiers later
     classifiers=[
