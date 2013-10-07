@@ -63,6 +63,7 @@ from _chunk import Chunk, decrypt_and_uncompress, compress_and_encrypt, \
 
 __all__ = ['Chunk', 'decrypt_and_uncompress', 'compress_and_encrypt', 
            'compress_and_encrypt_path', 
+           'serialize', 'deserialize',
            'make_stream_time', 'make_stream_item',
            'get_date_hour',
            'StreamItem', 'ContentItem', 'Label', 'StreamTime', 
