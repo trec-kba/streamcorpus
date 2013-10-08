@@ -62,8 +62,8 @@ class PyTest(Command):
         print sys.path
         # use pytest to run tests
         pytest = __import__('pytest')
-        pytest.main(['-s', 'src'])
-
+        if pytest.main(['-s', 'src']):
+            sys.exit(1)
 
 from distutils.dir_util import remove_tree
 from distutils.file_util import move_file
