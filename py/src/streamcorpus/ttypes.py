@@ -2431,6 +2431,11 @@ class StreamItem(object):
   contained this anchor.  Such general link graph data may
   eventually motivate an extension to this thrift interface.
    - ratings: doc-level judgments relating entire StreamItem to a Target
+   - external_ids: doc-level map connecting either doc_id or stream_id (or both) to
+  external identifiers.  This allows external systems to associate
+  record IDs with individual doc_id or stream_id of this document.
+  The keys in the second level map can be either doc_id or
+  stream_id, or possibly other IDs in the future.
   """
 
   __slots__ = [ 
@@ -2446,6 +2451,7 @@ class StreamItem(object):
     'stream_time',
     'other_content',
     'ratings',
+    'external_ids',
    ]
 
   thrift_spec = (
@@ -2465,9 +2471,12 @@ class StreamItem(object):
     }, ), # 11
     (12, TType.MAP, 'ratings', (TType.STRING,None,TType.LIST,(TType.STRUCT,(Rating, Rating.thrift_spec))), {
     }, ), # 12
+    None, # 13
+    (14, TType.MAP, 'external_ids', (TType.STRING,None,TType.MAP,(TType.STRING,None,TType.STRING,None)), {
+    }, ), # 14
   )
 
-  def __init__(self, version=thrift_spec[1][4], doc_id=None, abs_url=None, schost=None, original_url=None, source=None, body=None, source_metadata=thrift_spec[8][4], stream_id=None, stream_time=None, other_content=thrift_spec[11][4], ratings=thrift_spec[12][4],):
+  def __init__(self, version=thrift_spec[1][4], doc_id=None, abs_url=None, schost=None, original_url=None, source=None, body=None, source_metadata=thrift_spec[8][4], stream_id=None, stream_time=None, other_content=thrift_spec[11][4], ratings=thrift_spec[12][4], external_ids=thrift_spec[14][4],):
     self.version = version
     self.doc_id = doc_id
     self.abs_url = abs_url
@@ -2489,6 +2498,10 @@ class StreamItem(object):
       ratings = {
     }
     self.ratings = ratings
+    if external_ids is self.thrift_spec[14][4]:
+      external_ids = {
+    }
+    self.external_ids = external_ids
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -2586,6 +2599,23 @@ class StreamItem(object):
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
+      elif fid == 14:
+        if ftype == TType.MAP:
+          self.external_ids = {}
+          (_ktype199, _vtype200, _size198 ) = iprot.readMapBegin() 
+          for _i202 in xrange(_size198):
+            _key203 = iprot.readString();
+            _val204 = {}
+            (_ktype206, _vtype207, _size205 ) = iprot.readMapBegin() 
+            for _i209 in xrange(_size205):
+              _key210 = iprot.readString();
+              _val211 = iprot.readString();
+              _val204[_key210] = _val211
+            iprot.readMapEnd()
+            self.external_ids[_key203] = _val204
+          iprot.readMapEnd()
+        else:
+          iprot.skip(ftype)
       else:
         iprot.skip(ftype)
       iprot.readFieldEnd()
@@ -2627,9 +2657,9 @@ class StreamItem(object):
     if self.source_metadata is not None:
       oprot.writeFieldBegin('source_metadata', TType.MAP, 8)
       oprot.writeMapBegin(TType.STRING, TType.STRING, len(self.source_metadata))
-      for kiter198,viter199 in self.source_metadata.items():
-        oprot.writeString(kiter198)
-        oprot.writeString(viter199)
+      for kiter212,viter213 in self.source_metadata.items():
+        oprot.writeString(kiter212)
+        oprot.writeString(viter213)
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.stream_id is not None:
@@ -2643,20 +2673,32 @@ class StreamItem(object):
     if self.other_content is not None:
       oprot.writeFieldBegin('other_content', TType.MAP, 11)
       oprot.writeMapBegin(TType.STRING, TType.STRUCT, len(self.other_content))
-      for kiter200,viter201 in self.other_content.items():
-        oprot.writeString(kiter200)
-        viter201.write(oprot)
+      for kiter214,viter215 in self.other_content.items():
+        oprot.writeString(kiter214)
+        viter215.write(oprot)
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.ratings is not None:
       oprot.writeFieldBegin('ratings', TType.MAP, 12)
       oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.ratings))
-      for kiter202,viter203 in self.ratings.items():
-        oprot.writeString(kiter202)
-        oprot.writeListBegin(TType.STRUCT, len(viter203))
-        for iter204 in viter203:
-          iter204.write(oprot)
+      for kiter216,viter217 in self.ratings.items():
+        oprot.writeString(kiter216)
+        oprot.writeListBegin(TType.STRUCT, len(viter217))
+        for iter218 in viter217:
+          iter218.write(oprot)
         oprot.writeListEnd()
+      oprot.writeMapEnd()
+      oprot.writeFieldEnd()
+    if self.external_ids is not None:
+      oprot.writeFieldBegin('external_ids', TType.MAP, 14)
+      oprot.writeMapBegin(TType.STRING, TType.MAP, len(self.external_ids))
+      for kiter219,viter220 in self.external_ids.items():
+        oprot.writeString(kiter219)
+        oprot.writeMapBegin(TType.STRING, TType.STRING, len(viter220))
+        for kiter221,viter222 in viter220.items():
+          oprot.writeString(kiter221)
+          oprot.writeString(viter222)
+        oprot.writeMapEnd()
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     oprot.writeFieldStop()

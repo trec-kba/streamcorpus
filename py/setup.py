@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import pdb
 
 import os
 import sys
@@ -66,7 +67,6 @@ class PyTest(Command):
             sys.exit(1)
 
 from distutils.dir_util import remove_tree
-from distutils.file_util import move_file
 from distutils.util import spawn, newer, execute
 
 import distutils.command.build
@@ -97,7 +97,7 @@ class Thrift(Command):
             return
         self.spawn(['thrift', '--gen', 'py:new_style,slots', thrift_src])
         for fname in ('constants.py', 'ttypes.py'):
-            self.move_file('gen-py/streamcorpus/' + fname, os.path.join(outdir, renamefunc(fname)))
+            self.copy_file('gen-py/streamcorpus/' + fname, os.path.join(outdir, renamefunc(fname)))
         remove_tree('gen-py')
 
 
