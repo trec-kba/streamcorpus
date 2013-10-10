@@ -753,6 +753,14 @@ enum Versions {
 }
 
 /**
+ * SystemID and DocIDorStreamID are used below in
+ * StreamItem.external_ids, these are just to make this file more
+ * self-documenting.
+ */
+typedef string SystemID
+typedef string DocIDorStreamID
+
+/**
  * This is the primary interface to the corpus data.  It is called
  * StreamItem rather than CorpusItem and has a required StreamTime
  * attribute, because even for a static corpus, each document was
@@ -839,4 +847,13 @@ struct StreamItem {
    * doc-level judgments relating entire StreamItem to a Target
    */
   12: optional map<AnnotatorID, list<Rating>> ratings = {},
+
+  /**
+   * doc-level map connecting either doc_id or stream_id (or both) to
+   * external identifiers.  This allows external systems to associate
+   * record IDs with individual doc_id or stream_id of this document.
+   * The keys in the second level map can be either doc_id or
+   * stream_id, or possibly other IDs in the future.
+   */
+  14: optional map<SystemID, map<DocIDorStreamID, string>> external_ids = {},
 }
