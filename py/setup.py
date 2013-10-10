@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import pdb
 
 import os
 import sys
@@ -78,11 +77,17 @@ def version_suffix_rename(fname, version):
 
 class Thrift(Command):
     '''run thrift'''
-    description = 'runs py.test to execute all tests'
+    description = 'run thrift generator from data language to generated python'
 
-    user_options = []
+    user_options = [
+        ('force', 'f',
+         "run all the build commands even if we don't need to")
+        ]
+
+    boolean_options = ['force']
+
     def initialize_options(self):
-        pass
+        self.force = 0
     def finalize_options(self):
         pass
     def run(self):
@@ -91,10 +96,13 @@ class Thrift(Command):
         self.maybe_thrift_gen('../if/streamcorpus-v0_3_0.thrift', 'src/streamcorpus', lambda x: x)
 
     def maybe_thrift_gen(self, thrift_src, outdir, renamefunc):
-        needsbuild = newer(thrift_src, os.path.join(outdir, renamefunc('constants.py')))
-        needsbuild = needsbuild or newer(thrift_src, os.path.join(outdir, renamefunc('ttypes.py')))
-        if not needsbuild:
-            return
+        self.make_file(
+            thrift_src,
+            os.path.join(outdir, renamefunc('ttypes.py')),
+            self._run_thrift,
+            [thrift_src, outdir, renamefunc])
+
+    def _run_thrift(self, thrift_src, outdir, renamefunc):
         self.spawn(['thrift', '--gen', 'py:new_style,slots', thrift_src])
         for fname in ('constants.py', 'ttypes.py'):
             self.copy_file('gen-py/streamcorpus/' + fname, os.path.join(outdir, renamefunc(fname)))
