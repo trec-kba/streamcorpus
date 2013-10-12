@@ -216,6 +216,14 @@ struct Label {
    * which it is attached.
    */
   3: optional map<OffsetType, Offset> offsets = {},
+
+  /**
+   * Labels are usually positive assertions that the token mentions
+   * the target_id.  It is sometimes useful to collect negative
+   * assertions that a token is NOT the target_id, which can be
+   * indicated by setting Label.positive to False
+   */
+  4: optional bool positive = true,
 }
 
 /**
