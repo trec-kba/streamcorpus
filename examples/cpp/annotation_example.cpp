@@ -7,9 +7,11 @@
 #include <iostream>
 #include <cstdio>
 #include <time.h>
+#include <regex>
 #include <boost/unordered_map.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/regex.hpp>
 #include <fstream>
 
 #include "streamcorpus_types.h"
@@ -84,14 +86,14 @@ int main(int argc, char **argv) {
     int output_fd = 1;
 
     // input
-    shared_ptr<TFDTransport> innerTransportInput(new TFDTransport(input_fd));
-    shared_ptr<TBufferedTransport> transportInput(new TBufferedTransport(innerTransportInput));
-    shared_ptr<TBinaryProtocol> protocolInput(new TBinaryProtocol(transportInput));
+    boost::shared_ptr<TFDTransport> innerTransportInput(new TFDTransport(input_fd));
+    boost::shared_ptr<TBufferedTransport> transportInput(new TBufferedTransport(innerTransportInput));
+    boost::shared_ptr<TBinaryProtocol> protocolInput(new TBinaryProtocol(transportInput));
     transportInput->open();
 
     // output 
-    shared_ptr<TFDTransport> transportOutput(new TFDTransport(output_fd));
-    shared_ptr<TBinaryProtocol> protocolOutput(new TBinaryProtocol(transportOutput));
+    boost::shared_ptr<TFDTransport> transportOutput(new TFDTransport(output_fd));
+    boost::shared_ptr<TBinaryProtocol> protocolOutput(new TBinaryProtocol(transportOutput));
     transportOutput->open();
 
     // Read and process all stream items
@@ -129,53 +131,54 @@ int main(int argc, char **argv) {
                     exit(-1);
                 }
             }
-          
-            // Needs fixed.  Removed code here. 
-            // nb_matches = search content and return number of matches
+         
+            // search content 
+	    boost::regex rgx("John.{0,5}Smith", boost::regex_constants::icase);
+	    boost::smatch m;
+	    boost::regex_iterator<std::string::iterator> rit ( content.begin(), content.end(), rgx);
+	    boost::regex_iterator<std::string::iterator> rend;
 
-            // Count total number of matches
-            matches += nb_matches;;
+	    // mapping between canonical form of target and text actually found in document
+	    unordered_map<string, set<string> > target_text_map;
 
             // For each of the current matches, add a label to the 
             // list of labels.  A label records the character 
             // positions of the match.
-            for(int i=0; i< nb_matches; i++) {
-
-                // Get start, end and len of current match
+	    while (rit!=rend) {
+		clog << "Found: " << rit->str() << " at offset: " << rit->position() << std::endl;
+		matches++;
                 
                 // Add the target identified to the label.  Note this 
                 // should be identical to what is in the rating 
                 // data we add later.
-                vector<string> target_ids(map[num]);
+                Target target;
+                target.target_id = "1";
 
-                // Iterator over all 
-                for (vector<string>::iterator it = target_ids.begin() ; it != target_ids.end(); ++it) {
-                    string target_id(*it); 
-                    Target target;
-                    target.target_id = target_id;
+                Label label;
+                label.target = target;
 
-                    Label label;
-                    label.target = target;
+                // Add the actual offsets 
+                Offset offset;
+                offset.type = OffsetType::CHARS;
+		
+                offset.first = (int) rit->position();
+                offset.length = (int) rit->length();
+                offset.content_form = rit->str(); 
 
-                    // Add the actual offsets 
-                    Offset offset;
-                    offset.type = OffsetType::CHARS;
-                    offset.first = start;
-                    offset.length = len;
-                    offset.content_form = actual_text_source; 
-                    label.offsets[OffsetType::CHARS] = offset;
-                    label.__isset.offsets = true;
+                label.offsets[OffsetType::CHARS] = offset;
+                label.__isset.offsets = true;
 
-                    // Add new label to the list of labels.
-                    stream_item.body.labels[annotatorID].push_back(label);
+                // Add new label to the list of labels.
+                stream_item.body.labels[annotatorID].push_back(label);
 
-                    // Here we build up a data structure which maps target id set
-                    // of unique text strings which matched.  We later put this
-                    // information in a rating object.
-                    // target_text_map[target_id].insert(FIX);
+		// Map of actual text mapped 
+	        target_text_map[target.target_id].insert(rit->str());
+
+		// Incerment the loop iterator
+	        ++rit;
+		
                 }
-            }
-
+            
             // Add the rating object for each target that matched in a document
             // Reminder:
             // match->first is key
