@@ -1,5 +1,9 @@
-Note that this example does not currently work.    I will prioritize making it
-work if anyone is interested.  Please send a quick email to bauer@diffeo.com if
-you need this.
+This example only looks for one target entity in the stream corpus.
 
+cat ../../test-data/john-smith-tagged-by-lingpipe-0-v0_2_0.sc | ./annotation_example  > annotated.sc
+
+In addition to boost, you need to install the boost libraries for regex,
+system, program_options and filesystem using commands like:
+
+     sudo apt-get install libboost-regex-dev
 

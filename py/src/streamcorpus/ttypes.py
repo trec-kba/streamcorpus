@@ -805,12 +805,17 @@ class Label(object):
    - offsets: pointers to data to which this label applies.  If empty, then
   label applies to the entire Token, Sentence, or ContentItem to
   which it is attached.
+   - positive: Labels are usually positive assertions that the token mentions
+  the target_id.  It is sometimes useful to collect negative
+  assertions that a token is NOT the target_id, which can be
+  indicated by setting Label.positive to False
   """
 
   __slots__ = [ 
     'annotator',
     'target',
     'offsets',
+    'positive',
    ]
 
   thrift_spec = (
@@ -819,15 +824,17 @@ class Label(object):
     (2, TType.STRUCT, 'target', (Target, Target.thrift_spec), None, ), # 2
     (3, TType.MAP, 'offsets', (TType.I32,None,TType.STRUCT,(Offset, Offset.thrift_spec)), {
     }, ), # 3
+    (4, TType.BOOL, 'positive', None, True, ), # 4
   )
 
-  def __init__(self, annotator=None, target=None, offsets=thrift_spec[3][4],):
+  def __init__(self, annotator=None, target=None, offsets=thrift_spec[3][4], positive=thrift_spec[4][4],):
     self.annotator = annotator
     self.target = target
     if offsets is self.thrift_spec[3][4]:
       offsets = {
     }
     self.offsets = offsets
+    self.positive = positive
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -862,6 +869,11 @@ class Label(object):
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.BOOL:
+          self.positive = iprot.readBool();
+        else:
+          iprot.skip(ftype)
       else:
         iprot.skip(ftype)
       iprot.readFieldEnd()
@@ -887,6 +899,10 @@ class Label(object):
         oprot.writeI32(kiter7)
         viter8.write(oprot)
       oprot.writeMapEnd()
+      oprot.writeFieldEnd()
+    if self.positive is not None:
+      oprot.writeFieldBegin('positive', TType.BOOL, 4)
+      oprot.writeBool(self.positive)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
