@@ -60,7 +60,10 @@ def call_git_describe(abbrev=4):
 
         else:
             ver, rel, source_hash = parts
-            version = '%s.dev%s' % (ver, rel)
+            ver_x, ver_y, ver_z = ver.split('.')
+            ## go to the next z-increment or "patch" release
+            ver_z = int(ver_z) + 1
+            version = '%s.%s.%d.dev%s' % (ver_x, ver_y, ver_z, rel)
 
         return version, source_hash
  
