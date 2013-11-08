@@ -36,6 +36,7 @@ Copyright 2012 Diffeo, Inc.
 
 import re
 from time import mktime
+import time
 import hashlib
 from datetime import datetime
 from cStringIO import StringIO
@@ -126,7 +127,7 @@ def _stream_time_from_number(epoch_ticks):
     '''
     Make a StreamTime object from a utc unix time number.
     '''
-    then = datetime.fromtimestamp(epoch_ticks)
+    then = datetime.utcfromtimestamp(epoch_ticks)
     return StreamTime(
         zulu_timestamp=then.strftime(_zulu_timestamp_format),
         epoch_ticks=epoch_ticks)
@@ -144,9 +145,12 @@ def _stream_time_from_string(zulu_timestamp):
         then = datetime.utcnow()
     else:
         then = datetime.strptime(zulu_timestamp, _zulu_timestamp_format)
+    offset = time.timezone
+    if time.daylight:
+        offset = time.altzone
     return StreamTime(
         zulu_timestamp=zulu_timestamp,
-        epoch_ticks=mktime(then.timetuple()))
+        epoch_ticks=mktime(then.timetuple()) - offset)
 
 
 def make_stream_item(zulu_timestamp, abs_url, version=Versions.v0_3_0):

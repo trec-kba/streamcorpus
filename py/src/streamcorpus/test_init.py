@@ -31,10 +31,46 @@ def test_make_stream_time_2013_ticks():
     assert st.epoch_ticks == 1378320090.333363
     assert st.zulu_timestamp == '2013-09-04T18:41:30.333363Z'
 
+def test_make_stream_time_EDT(monkeypatch):
+    monkeypatch.setenv('TZ', 'EDT')
+    time.tzset()
+    st = make_stream_time(epoch_ticks=1378320090.333363)
+    assert st.epoch_ticks == 1378320090.333363
+    assert st.zulu_timestamp == '2013-09-04T18:41:30.333363Z'
+    monkeypatch.undo()
+    time.tzset()
+
 def test_make_stream_time_2013_string():
     st = make_stream_time('2013-09-04T18:41:30.333363Z')
     assert int(st.epoch_ticks) == int(1378320090.333363)  # strptime loses microseconds
     assert st.zulu_timestamp == '2013-09-04T18:41:30.333363Z'
+
+def test_make_stream_time_2013_string_UTC(monkeypatch):
+    monkeypatch.setenv('TZ', 'UTC')
+    time.tzset()
+    st = make_stream_time('2013-09-04T18:41:30.333363Z')
+    assert int(st.epoch_ticks) == int(1378320090.333363)  # strptime loses microseconds
+    assert st.zulu_timestamp == '2013-09-04T18:41:30.333363Z'
+    monkeypatch.undo()
+    time.tzset()
+
+def test_make_stream_time_2013_string_EST(monkeypatch):
+    monkeypatch.setenv('TZ', 'EST')
+    time.tzset()
+    st = make_stream_time('2013-09-04T18:41:30.333363Z')
+    assert int(st.epoch_ticks) == int(1378320090.333363)  # strptime loses microseconds
+    assert st.zulu_timestamp == '2013-09-04T18:41:30.333363Z'
+    monkeypatch.undo()
+    time.tzset()
+
+def test_make_stream_time_2013_string_PST(monkeypatch):
+    monkeypatch.setenv('TZ', 'US/Pacific')
+    time.tzset()
+    st = make_stream_time('2013-09-04T18:41:30.333363Z')
+    assert int(st.epoch_ticks) == int(1378320090.333363)  # strptime loses microseconds
+    assert st.zulu_timestamp == '2013-09-04T18:41:30.333363Z'
+    monkeypatch.undo()
+    time.tzset()
 
 def test_make_stream_time_2013_string_noDST():
     st = make_stream_time('2013-01-04T18:41:30.333363Z')
