@@ -7,6 +7,8 @@ def test_dump():
     cmd = 'python -m streamcorpus.dump %s --field stream_id --len body.clean_visible --len body.raw' % path
     print cmd
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
-    print p.stdout.read()
+    output = p.stdout.read()
+    assert 'stream_id' in output
+    assert len(output.splitlines()) == 197
 
     
