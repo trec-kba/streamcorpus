@@ -54,6 +54,20 @@ def test_xz():
         assert si.body.clean_visible
     assert count == 197
 
+
+def test_gz():
+    count = 0
+    test_gz_path = '/tmp/test_gz_path.gz'
+    cmd = 'cat %s | xz --decompress | gzip -9 > %s' % (TEST_XZ_PATH, test_gz_path)
+    os.system(cmd)
+    ## hinted by ".gz"
+    for si in Chunk(test_gz_path):
+        count += 1
+        assert si.body.clean_visible
+    assert count == 197
+    os.system('rm %s' % test_gz_path)
+
+
 path = '/tmp/test_chunk-%s.sc' % str(uuid.uuid1())
 
 def test_chunk_path_write():
