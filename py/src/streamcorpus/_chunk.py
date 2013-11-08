@@ -197,6 +197,10 @@ class Chunk(object):
                         stderr=subprocess.PIPE)
                     file_obj = xz_child.stdout
                     ## what to do with stderr
+                elif path.endswith('.gz'):
+                    assert mode == 'rb', 'mode=%r for .gz' % mode
+                    import gzip
+                    file_obj  = gzip.open(path)
                 elif path.endswith('.xz.gpg'):
                     assert mode == 'rb', 'mode=%r for .xz' % mode
                     ## launch xz child
@@ -241,8 +245,14 @@ class Chunk(object):
                 raise Exception('mode=%r but specified "data"' % mode)
 
         elif file_obj is not None and hasattr(file_obj, 'mode'):
-            assert file_obj.mode[0] == mode[0], 'file_obj.mode=%r != %r=mode'\
-                % (file_obj.mode, mode)
+            if isinstance(file_obj.mode, int):
+                ## some tools, like python gzip library, use int modes
+                file_obj_mode = {1: 'r', 2: 'w'}[file_obj.mode]
+            else:
+                file_obj_mode = file_obj.mode
+
+            assert file_obj_mode[0] == mode[0], 'file_obj.mode=%r != %r=mode'\
+                % (file_obj_mode, mode)
             ## use the file object for writing out the data as it
             ## happens, i.e. in streaming mode.
 

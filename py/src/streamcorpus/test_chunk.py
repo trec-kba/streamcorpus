@@ -55,6 +55,18 @@ def test_xz():
         assert si.body.clean_visible
     assert count == 197
 
+def test_gz():
+    count = 0
+    test_gz_path = '/tmp/test_gz_path.gz'
+    cmd = 'cat %s | xz --decompress | gzip -9 > %s' % (TEST_XZ_PATH, test_gz_path)
+    os.system(cmd)
+    ## hinted by ".gz"
+    for si in Chunk(test_gz_path, message=StreamItem_v0_2_0):
+        count += 1
+        assert si.body.clean_visible
+    assert count == 197
+    os.system('rm %s' % test_gz_path)
+
 def test_speed():
     count = 0
     start_time = time.time()
