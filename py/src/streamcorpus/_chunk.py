@@ -367,7 +367,7 @@ class Chunk(object):
             except EOFError:
                 break
 
-def decrypt_and_uncompress(data, gpg_private=None):
+def decrypt_and_uncompress(data, gpg_private=None, tmp_dir='/tmp'):
     '''
     Given a data buffer of bytes, if gpg_key_path is provided, decrypt
     data using gnupg, and uncompress using xz.
@@ -376,9 +376,12 @@ def decrypt_and_uncompress(data, gpg_private=None):
     is a binary string.
     '''
     _errors = []
+    tmp_path = os.path.join(tmp_dir, 'tmp-compress-and-encrypt-path-' + uuid.uuid4().hex)
+    if not os.path.exists(tmp_path):
+        os.makedirs(tmp_path)
     if gpg_private is not None:
         ### setup gpg for decryption
-        gpg_dir = '/tmp/%s' % uuid.uuid1()
+        gpg_dir = os.path.join(tmp_path, 'gpg_dir')
         os.makedirs(gpg_dir)
 
         gpg_child = subprocess.Popen(
@@ -443,7 +446,7 @@ def compress_and_encrypt(data, gpg_public=None, gpg_recipient='trec-kba'):
 
     if gpg_public is not None:
         ### setup gpg for encryption.  
-        gpg_dir = '/tmp/%s' % uuid.uuid1()
+        gpg_dir = os.path.join(tmp_dir, 'tmp-compress-and-encrypt-' + uuid.uuid1().hex)
         os.makedirs(gpg_dir)
 
         ## Load public key.  Could do this just once, but performance
@@ -477,7 +480,7 @@ def compress_and_encrypt(data, gpg_public=None, gpg_recipient='trec-kba'):
 
     return _errors, data
 
-def compress_and_encrypt_path(path, gpg_public=None, gpg_recipient='trec-kba'):
+def compress_and_encrypt_path(path, gpg_public=None, gpg_recipient='trec-kba', tmp_dir='/tmp'):
     '''
     Given a path in the local file system, compress it using xz, if gpg_public
     is provided, encrypt data using gnupg.
@@ -489,9 +492,13 @@ def compress_and_encrypt_path(path, gpg_public=None, gpg_recipient='trec-kba'):
     assert os.path.exists(path), path
     command = 'xz --compress < ' + path
 
+    tmp_path = os.path.join(tmp_dir, 'tmp-compress-and-encrypt-path-' + uuid.uuid4().hex)
+    if not os.path.exists(tmp_path):
+        os.makedirs(tmp_path)
+
     if gpg_public is not None:
         ### setup gpg for encryption.  
-        gpg_dir = '/tmp/%s' % uuid.uuid1()
+        gpg_dir = os.path.join(tmp_path, 'gpg_dir')
         os.makedirs(gpg_dir)
 
         ## Load public key.  Could do this just once, but performance
@@ -513,8 +520,8 @@ def compress_and_encrypt_path(path, gpg_public=None, gpg_recipient='trec-kba'):
 
     ## we want to capture any errors, so do all the work before
     ## returning.  Store the intermediate result in this temp file:
-    o_path = '/tmp/%s' % uuid.uuid1()
-    e_path = '/tmp/%s' % uuid.uuid1()
+    o_path = os.path.join(tmp_path, 'o_path')
+    e_path = os.path.join(tmp_path, 'e_path')
 
     command += ' 1> ' + o_path 
 

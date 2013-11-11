@@ -2,6 +2,7 @@ import os
 import uuid
 import time
 import errno
+import shutil
 import pytest
 import logging
 ## utility for tests that configures logging in roughly the same way
@@ -78,9 +79,16 @@ def test_speed():
     print '%d in %.3f sec --> %.3f per sec' % (count, elapsed, rate)
     assert count == 197
 
-path = '/tmp/test_chunk-%s.sc' % str(uuid.uuid1())
 
-def test_chunk_path_write():
+@pytest.fixture(scope='function')
+def path(request):
+    path = '/tmp/test_chunk-%s.sc' % str(uuid.uuid4())
+    def fin():
+        os.remove(path)
+    request.addfinalizer(fin)
+    return path
+
+def test_chunk_path_write(path):
     ## write to path
     ch = Chunk(path=path, mode='wb')
     si = make_si()
@@ -90,7 +98,12 @@ def test_chunk_path_write():
     print repr(ch)
     assert len(list( Chunk(path=path, mode='rb') )) == 1
 
-def test_chunk_path_append():
+def test_chunk_path_append(path):
+    ch = Chunk(path=path, mode='wb')
+    si = make_si()
+    ch.add( si )
+    ch.close()
+    assert len(ch) == 1
     ## append to path
     ch = Chunk(path=path, mode='ab')
     si = make_si()
@@ -101,7 +114,12 @@ def test_chunk_path_append():
     print repr(ch)
     assert len(list( Chunk(path=path, mode='rb') )) == 2
 
-def test_chunk_path_read():
+def test_chunk_path_read_1(path):
+    ch = Chunk(path=path, mode='wb')
+    ch.add( make_si() )
+    ch.add( make_si() )
+    ch.close()
+    assert len(ch) == 2
     ## read from path
     ch = Chunk(path=path, mode='rb')
     assert len(list(ch)) == 2
@@ -109,13 +127,23 @@ def test_chunk_path_read():
     assert len(ch) == 2
     print repr(ch)
 
-def test_chunk_path_read_version_protection():
+def test_chunk_path_read_version_protection(path):
+    ch = Chunk(path=path, mode='wb')
+    ch.add( make_si() )
+    ch.add( make_si() )
+    ch.close()
+    assert len(ch) == 2
     ## read from path
     with pytest.raises(VersionMismatchError):
         for si in Chunk(path=path, mode='rb', message=StreamItem_v0_2_0):
             pass
 
-def test_chunk_data_read():
+def test_chunk_data_read_2(path):
+    ch = Chunk(path=path, mode='wb')
+    ch.add( make_si() )
+    ch.add( make_si() )
+    ch.close()
+    assert len(ch) == 2
     ## load from data
     data = open(path).read()
     ch = Chunk(data=data, mode='rb')
@@ -124,7 +152,12 @@ def test_chunk_data_read():
     assert len(ch) == 2
     print repr(ch)
 
-def test_chunk_data_append():
+def test_chunk_data_append(path):
+    ch = Chunk(path=path, mode='wb')
+    ch.add( make_si() )
+    ch.add( make_si() )
+    ch.close()
+    assert len(ch) == 2
     ## load from data
     data = open(path).read()
     ch = Chunk(data=data, mode='ab')
@@ -144,14 +177,23 @@ def test_noexists_exception():
         Chunk('path-that-does-not-exist', mode='rb')
     assert excinfo.value.errno == errno.ENOENT
 
-def test_exists_exception():
+def test_exists_exception(path):
+    ch = Chunk(path=path, mode='wb')
+    ch.add( make_si() )
+    ch.add( make_si() )
+    ch.close()
     with pytest.raises(IOError) as excinfo:
         Chunk(path, mode='wb')
     assert excinfo.value.errno == errno.EEXIST
 
-def test_compress_and_encrypt_path():    
+def test_compress_and_encrypt_path(path):
+    ch = Chunk(path=path, mode='wb')
+    ch.add( make_si() )
+    ch.add( make_si() )
+    ch.close()
     originalSize = os.path.getsize(path)
-    errors, o_path = compress_and_encrypt_path(path)
+    tmp_dir = os.path.join('/tmp', uuid.uuid4().hex)
+    errors, o_path = compress_and_encrypt_path(path, tmp_dir=tmp_dir)
     if errors:
         print '\n'.join(errors)
         raise Exception(errors)
@@ -162,13 +204,11 @@ def test_compress_and_encrypt_path():
     assert (newSize % 4) == 0
 
     ## this should go in a "cleanup" method...
-    os.remove(o_path)
-    os.remove(path)
+    shutil.rmtree(tmp_dir)
 
-def test_with():
+def test_with(path):
     with Chunk(path, mode='wb') as ch:
         ch.add(make_si())
         ch.add(make_si())
         ch.add(make_si())
     assert len(list(Chunk(path))) == 3
-    os.remove(path)
