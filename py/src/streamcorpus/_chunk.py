@@ -275,6 +275,7 @@ class Chunk(object):
     def add(self, msg):
         'add message instance to chunk'
         assert self._o_protocol, 'cannot add to a Chunk instantiated with data'
+        assert self._o_chunk_fh is not None, 'cannot Chunk.add after Chunk.close'
         if not (isinstance(msg, self.message) or (type(msg) == self.message)):
             raise VersionMismatchError(
                 'mismatched type: %s != %s' % (type(msg), self.message))
