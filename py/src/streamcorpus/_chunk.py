@@ -56,11 +56,11 @@ def serialize(msg):
     o_transport.seek(0)
     return o_transport.getvalue()
 
-def deserialize(blob):
+def deserialize(blob, message=StreamItem_v0_3_0):
     '''
     Generate a msg from a serialized binary blob for a single msg
     '''
-    chunk = Chunk(data=blob)
+    chunk = Chunk(data=blob, message=message)
     mesgs = list(chunk)
     assert len(mesgs) == 1, 'got %d messages to deserialize instead of one: %r' % (
         len(mesgs), mesgs)
