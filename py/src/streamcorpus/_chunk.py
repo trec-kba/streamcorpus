@@ -30,6 +30,7 @@ except Exception, exc:
     protocol = TBinaryProtocol
 
 
+import gzip
 import os
 import uuid
 import errno
@@ -199,7 +200,6 @@ class Chunk(object):
                     ## what to do with stderr
                 elif path.endswith('.gz'):
                     assert mode == 'rb', 'mode=%r for .gz' % mode
-                    import gzip
                     file_obj  = gzip.open(path)
                 elif path.endswith('.xz.gpg'):
                     assert mode == 'rb', 'mode=%r for .xz' % mode
@@ -221,7 +221,11 @@ class Chunk(object):
                 dirname = os.path.dirname(path)
                 if dirname and not os.path.exists(dirname):
                     os.makedirs(dirname)
-                file_obj = open(path, mode)
+                # TODO: add streaming write to .xz; import backports.lzma
+                if path.endswith('.gz'):
+                    file_obj = gzip.open(path, mode)
+                else:
+                    file_obj = open(path, mode)
 
         ## if created without any arguments, then prepare to add
         ## messages to an in-memory file object
