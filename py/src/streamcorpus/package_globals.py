@@ -133,6 +133,8 @@ def _stream_time_from_number(epoch_ticks):
         epoch_ticks=epoch_ticks)
 
 
+from calendar import timegm
+
 def _stream_time_from_string(zulu_timestamp):
     '''
     Make a StreamTime object for a zulu_timestamp in this format:
@@ -141,16 +143,20 @@ def _stream_time_from_string(zulu_timestamp):
 
     If zulu_timestamp is not specified, it defaults to UTC now.
     '''
+    ## see this reference
+    # http://aboutsimon.com/2013/06/05/datetime-hell-time-zone-aware-to-unix-timestamp/
     if zulu_timestamp is None:
         then = datetime.utcnow()
+        timestamp = timegm(then.timetuple())
     else:
-        then = datetime.strptime(zulu_timestamp, _zulu_timestamp_format)
-    offset = time.timezone
-    if time.daylight:
-        offset = time.altzone
+        then = time.strptime(
+             zulu_timestamp.replace('Z', 'GMT'),
+            _zulu_timestamp_format.replace('Z', '%Z')
+            )
+        timestamp = timegm(then)
     return StreamTime(
         zulu_timestamp=zulu_timestamp,
-        epoch_ticks=mktime(then.timetuple()) - offset)
+        epoch_ticks=timestamp)
 
 
 def make_stream_item(zulu_timestamp, abs_url, version=Versions.v0_3_0):

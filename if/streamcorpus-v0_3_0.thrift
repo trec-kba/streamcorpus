@@ -264,6 +264,9 @@ enum EntityType {
   phone = 14,
   email = 15,
   URL = 16,
+
+  CUSTOM_TYPE = 17,
+
 }
 
 enum MentionType {
@@ -426,6 +429,18 @@ struct Token {
    * Identify the type of mention, e.g. pronoun, description, proper name
    */
   13: optional MentionType mention_type,
+
+  /**
+   * CUSTOM entity type from named entity recognizer (classifier).  If
+   * used, then entity_type should be set to EntityType.CUSTOM_TYPE,
+   * i.e. 17.  
+   *
+   * This is useful when a specialized tagger has a large number of
+   * unique entity types, such as entity:artefact:weapon:blunt Rather
+   * than expand EntityType with many more subtypes, we can escape the
+   * protection of the enum and just use a string here:
+   */
+  14: optional string custom_entity_type,
 }
 
 struct Sentence {

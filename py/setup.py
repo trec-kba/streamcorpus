@@ -133,5 +133,10 @@ setup(
         'Topic :: Utilities',
         'License :: OSI Approved :: MIT License',  ## MIT/X11 license http://opensource.org/licenses/MIT
     ],
+    entry_points={
+        'console_scripts': [
+            'streamcorpus.dump = streamcorpus.dump:main',
+        ]
+    },
     install_requires=install_requires
 )

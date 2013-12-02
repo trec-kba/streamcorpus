@@ -7,20 +7,19 @@ This software is released under an MIT/X11 open source license.
 
 Copyright 2012 Diffeo, Inc.
 '''
-
+from __future__ import absolute_import
 import os
 import sys
 import json
+import logging
 import itertools
 import collections
-from _chunk import Chunk
-from .ttypes import OffsetType
+from streamcorpus._chunk import Chunk
+from streamcorpus.ttypes import OffsetType, Token, EntityType, MentionType
 
-from ttypes import StreamItem as StreamItem_v0_3_0
-from ttypes_v0_1_0 import StreamItem as StreamItem_v0_1_0
-from ttypes_v0_2_0 import StreamItem as StreamItem_v0_2_0
-
-from .ttypes import Token, EntityType, MentionType
+from streamcorpus.ttypes import StreamItem as StreamItem_v0_3_0
+from streamcorpus.ttypes_v0_1_0 import StreamItem as StreamItem_v0_1_0
+from streamcorpus.ttypes_v0_2_0 import StreamItem as StreamItem_v0_2_0
 
 versioned_classes = {
     'v0_3_0': StreamItem_v0_3_0,
@@ -505,6 +504,9 @@ def _stats(fpaths):
 
 
 def main():
+    logger = logging.getLogger('streamcorpus')
+    ch = logging.StreamHandler()
+    logger.addHandler(ch)
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument(

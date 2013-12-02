@@ -74,14 +74,15 @@ def test_make_stream_time_2013_string_PST(monkeypatch):
 
 def test_make_stream_time_2013_string_noDST():
     st = make_stream_time('2013-01-04T18:41:30.333363Z')
-    assert st.epoch_ticks == 1357324890.0  # strptime loses microseconds
+    assert st.epoch_ticks == 1357324890.0, (st.epoch_ticks - 1357324890.0)  # strptime loses microseconds
     assert st.zulu_timestamp == '2013-01-04T18:41:30.333363Z'
 
 def test_make_stream_time_2013_string_noDST_round_trip():
     st = make_stream_time('2013-01-04T18:41:30.000000Z')
-    st2 = make_stream_time(epoch_ticks=st.epoch_ticks)
-    assert st.epoch_ticks == 1357324890.0  # strptime loses microseconds
+    assert st.epoch_ticks == 1357324890.0, (st.epoch_ticks - 1357324890.0)  # strptime loses microseconds
     assert st.zulu_timestamp == '2013-01-04T18:41:30.000000Z'
+
+    st2 = make_stream_time(epoch_ticks=st.epoch_ticks)
     assert st.zulu_timestamp == st2.zulu_timestamp
 
 def test_make_stream_time_number_round_trip():
