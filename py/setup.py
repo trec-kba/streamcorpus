@@ -14,7 +14,7 @@ from setuptools import setup, find_packages
 
 from version import get_git_version
 VERSION, SOURCE_LABEL = get_git_version()
-PROJECT = 'streamcorpus-dev'
+PROJECT = 'streamcorpus'
 URL = 'http://github.com/trec-kba/streamcorpus'
 AUTHOR = 'Diffeo, Inc.'
 AUTHOR_EMAIL = 'support@diffeo.com'
