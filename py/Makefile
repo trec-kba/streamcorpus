@@ -9,20 +9,11 @@ clean:
 build: clean
 	python setup.py build sdist bdist_egg
 
-install:
-	## I think this `clean --all` step removes existing versions
-	## from site-packages that would conflict when we install
-	#python setup.py clean --all
+install: build
 	python setup.py install
 
-test:
+test: install
 	python setup.py test
-
-build_eggs: build
-	python setup.py bdist_egg
-
-build_packages: build_eggs
-	python setup.py bdist_rpm
 
 register: build
 	python setup.py sdist upload
