@@ -267,6 +267,8 @@ enum EntityType {
 
   CUSTOM_TYPE = 17,
 
+  LIST = 18,
+
 }
 
 enum MentionType {
