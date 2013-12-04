@@ -69,6 +69,8 @@ class EntityType(object):
   phone = 14
   email = 15
   URL = 16
+  CUSTOM_TYPE = 17
+  LIST = 18
 
   _VALUES_TO_NAMES = {
     0: "PER",
@@ -86,6 +88,8 @@ class EntityType(object):
     14: "phone",
     15: "email",
     16: "URL",
+    17: "CUSTOM_TYPE",
+    18: "LIST",
   }
 
   _NAMES_TO_VALUES = {
@@ -104,6 +108,8 @@ class EntityType(object):
     "phone": 14,
     "email": 15,
     "URL": 16,
+    "CUSTOM_TYPE": 17,
+    "LIST": 18,
   }
 
 class MentionType(object):
@@ -1102,6 +1108,14 @@ class Token(object):
   definition here and convert it to an enum.
    - labels: Labels attached to this token, defaults to an empty map
    - mention_type: Identify the type of mention, e.g. pronoun, description, proper name
+   - custom_entity_type: CUSTOM entity type from named entity recognizer (classifier).  If
+  used, then entity_type should be set to EntityType.CUSTOM_TYPE,
+  i.e. 17.
+
+  This is useful when a specialized tagger has a large number of
+  unique entity types, such as entity:artefact:weapon:blunt Rather
+  than expand EntityType with many more subtypes, we can escape the
+  protection of the enum and just use a string here:
   """
 
   __slots__ = [ 
@@ -1118,6 +1132,7 @@ class Token(object):
     'dependency_path',
     'labels',
     'mention_type',
+    'custom_entity_type',
    ]
 
   thrift_spec = (
@@ -1137,9 +1152,10 @@ class Token(object):
     (12, TType.MAP, 'labels', (TType.STRING,None,TType.LIST,(TType.STRUCT,(Label, Label.thrift_spec))), {
     }, ), # 12
     (13, TType.I32, 'mention_type', None, None, ), # 13
+    (14, TType.STRING, 'custom_entity_type', None, None, ), # 14
   )
 
-  def __init__(self, token_num=None, token=None, offsets=thrift_spec[3][4], sentence_pos=thrift_spec[4][4], lemma=None, pos=None, entity_type=None, mention_id=thrift_spec[8][4], equiv_id=thrift_spec[9][4], parent_id=thrift_spec[10][4], dependency_path=None, labels=thrift_spec[12][4], mention_type=None,):
+  def __init__(self, token_num=None, token=None, offsets=thrift_spec[3][4], sentence_pos=thrift_spec[4][4], lemma=None, pos=None, entity_type=None, mention_id=thrift_spec[8][4], equiv_id=thrift_spec[9][4], parent_id=thrift_spec[10][4], dependency_path=None, labels=thrift_spec[12][4], mention_type=None, custom_entity_type=None,):
     self.token_num = token_num
     self.token = token
     if offsets is self.thrift_spec[3][4]:
@@ -1161,6 +1177,7 @@ class Token(object):
     }
     self.labels = labels
     self.mention_type = mention_type
+    self.custom_entity_type = custom_entity_type
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -1255,6 +1272,11 @@ class Token(object):
           self.mention_type = iprot.readI32();
         else:
           iprot.skip(ftype)
+      elif fid == 14:
+        if ftype == TType.STRING:
+          self.custom_entity_type = iprot.readString();
+        else:
+          iprot.skip(ftype)
       else:
         iprot.skip(ftype)
       iprot.readFieldEnd()
@@ -1327,6 +1349,10 @@ class Token(object):
     if self.mention_type is not None:
       oprot.writeFieldBegin('mention_type', TType.I32, 13)
       oprot.writeI32(self.mention_type)
+      oprot.writeFieldEnd()
+    if self.custom_entity_type is not None:
+      oprot.writeFieldBegin('custom_entity_type', TType.STRING, 14)
+      oprot.writeString(self.custom_entity_type)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
