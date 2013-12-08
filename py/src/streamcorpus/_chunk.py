@@ -29,6 +29,10 @@ except Exception, exc:
     ## fall back to pure python
     protocol = TBinaryProtocol
 
+try:
+    from backports import lzma
+except:
+    lzma = None
 
 import gzip
 import os
@@ -221,9 +225,12 @@ class Chunk(object):
                 dirname = os.path.dirname(path)
                 if dirname and not os.path.exists(dirname):
                     os.makedirs(dirname)
-                # TODO: add streaming write to .xz; import backports.lzma
                 if path.endswith('.gz'):
                     file_obj = gzip.open(path, mode)
+                elif path.endswith('.xz'):
+                    if lzma is None:
+                        raise Exception('file extension is .xz but backports.lzma is not installed')
+                    file_obj = lzma.open(path, mode)
                 else:
                     file_obj = open(path, mode)
 

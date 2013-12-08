@@ -68,6 +68,16 @@ def test_gz():
     assert count == 197
     os.system('rm %s' % test_gz_path)
 
+def test_xz_write():
+    count = 0
+    test_xz_path = '/tmp/test_path.xz'
+    ## hinted by ".xz"
+    o_chunk = Chunk(test_xz_path, mode='wb')
+    o_chunk.add(make_si())
+    o_chunk.close()
+    assert len(list(Chunk(test_xz_path))) == 1
+    os.system('rm %s' % test_xz_path)
+
 def test_speed():
     count = 0
     start_time = time.time()
