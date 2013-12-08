@@ -20,6 +20,7 @@ from . import make_stream_item, ContentItem, Chunk, serialize, deserialize, comp
 from . import VersionMismatchError
 from . import Versions
 from . import StreamItem_v0_2_0, StreamItem_v0_3_0
+from streamcorpus import _chunk
 
 TEST_XZ_PATH = os.path.join(os.path.dirname(__file__), '../../../test-data/john-smith-tagged-by-lingpipe-0-v0_2_0.sc.xz')
 TEST_SC_PATH = os.path.join(os.path.dirname(__file__), '../../../test-data/john-smith-tagged-by-lingpipe-0-v0_2_0.sc')
@@ -68,6 +69,7 @@ def test_gz():
     assert count == 197
     os.system('rm %s' % test_gz_path)
 
+@pytest.mark.skipif('not _chunk.lzma')
 def test_xz_write():
     count = 0
     test_xz_path = '/tmp/test_path.xz'
