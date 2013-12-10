@@ -134,6 +134,12 @@ def _dump(fpath, args):
                                 else:
                                     print si.stream_id, tok.token.decode('utf8').encode('utf8'), tok.labels
 
+        elif args.print_url:
+            if si.original_url:
+                print si.original_url
+            if si.abs_url and (si.abs_url != si.original_url):
+                print si.abs_url
+
         elif not (args.show_all or args.smart_dump):
             si.body = None
             if getattr(si, 'other_content', None):
@@ -505,7 +511,9 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         'input_path', 
-        help='Path to a single chunk file, or directory of chunks, or "-" for receiving paths over stdin')
+        nargs='*',
+        default=[],
+        help='Paths to a chunk files, or directory of chunks, or "-" for receiving paths over stdin')
     parser.add_argument('--stats', action='store_true', default=False,
                         help='print out the .body.raw of a specific stream_id')
     parser.add_argument('--find', dest='find', metavar='STREAM_ID', help='print out the .body.raw of a specific stream_id')
@@ -547,6 +555,8 @@ def main():
                         default=False, dest='labels_only')
     parser.add_argument('--verify-offsets', action='store_true', 
                         default=False, dest='verify_offsets')
+    parser.add_argument('--print-url', action='store_true',
+                        default=False, dest='print_url')
     args = parser.parse_args()
 
     if args.version not in versioned_classes:
@@ -557,15 +567,17 @@ def main():
     message_class = versioned_classes[args.version]
 
     ## make input_path into an iterable over path strings
-    if args.input_path == '-':
-        args.input_path = itertools.imap(lambda line: line.strip(), sys.stdin)
-
-    elif os.path.isdir(args.input_path):
-        args.input_path = map(lambda fname: os.path.join(args.input_path, fname),
-                                         os.listdir(args.input_path))
-
-    else:
-        args.input_path = [args.input_path]
+    paths = []
+    for ipath in args.input_path:
+        if ipath == '-':
+            paths.extend(itertools.imap(lambda line: line.strip(), sys.stdin))
+        elif os.path.isdir(ipath):
+            paths.extend(
+                map(lambda fname: os.path.join(args.input_path, fname),
+                    os.listdir(args.input_path)))
+        else:
+            paths.append(ipath)
+    args.input_path = paths
 
     ## now actually do whatever was requested
     if args.fields:
