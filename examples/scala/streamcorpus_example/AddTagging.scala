@@ -51,6 +51,8 @@ object AddTagging {
   def main(args: Array[String]) {
     val i_transport: TTransport = new TIOStreamTransport(new FileInputStream("../../test-data/john-smith-tagged-by-lingpipe-0-v0_3_0.sc"))
     val o_transport: TTransport = new TIOStreamTransport(new FileOutputStream("/tmp/john-smith-tagged-by-lingpipe-0-v0_3_0.sc"))
+    //val i_transport: TTransport = new TIOStreamTransport(new FileInputStream(args(0)))
+    //val o_transport: TTransport = new TIOStreamTransport(new FileOutputStream(args(1)))
     val i_protocol: TBinaryProtocol = new TBinaryProtocol(i_transport)
     val o_protocol: TBinaryProtocol = new TBinaryProtocol(o_transport)
     var si_count = 0
@@ -92,20 +94,26 @@ object AddTagging {
             val newSentences = contentItem.sentences + (
               tag -> Seq(
                 Sentence(tokens = Seq(
-                  Token(0, "The", sentencePos = 0),
-                  Token(1, "ten-year-old", sentencePos = 1),
+                  Token(0, "The", sentencePos = 0,
+                    // offsets allow correlation of multiple taggers or other metadata referring to parts of a document.
+                    offsets = Map(OffsetType.Bytes -> Offset(OffsetType.Bytes, 0, 3))),
+                  Token(1, "ten-year-old", sentencePos = 1,
+                    offsets = Map(OffsetType.Bytes -> Offset(OffsetType.Bytes, 4, 12))),
                   Token(2, "cat",
                     entityType = Some(EntityType.Per),
                     mentionType = Some(MentionType.Nom),
                     sentencePos = 2,
                     mentionId = 1,
-                    equivId = 1 // identifier for within-doc coref chain
+                    equivId = 1, // identifier for within-doc coref chain
+                    offsets = Map(OffsetType.Bytes -> Offset(OffsetType.Bytes, 17, 3))
                   ),
                   Token(3, "ate", sentencePos = 3,
                     // part-of-speech names from
                     // http://www.ling.upenn.edu/courses/Fall_2003/ling001/penn_treebank_pos.html
-                    pos = Some("VBD")),
-                  Token(5, "the", sentencePos = 4),
+                    pos = Some("VBD"),
+                    offsets = Map(OffsetType.Bytes -> Offset(OffsetType.Bytes, 21, 3))),
+                  Token(5, "the", sentencePos = 4,
+                    offsets = Map(OffsetType.Bytes -> Offset(OffsetType.Bytes, 25, 3))),
                   Token(6, "bird",
                     entityType = Some(EntityType.Per),
                     mentionType = Some(MentionType.Nom),
@@ -122,20 +130,25 @@ object AddTagging {
 
                     sentencePos = 5,
                     mentionId = 2,
-                    equivId = 2
+                    equivId = 2,
+                    offsets = Map(OffsetType.Bytes -> Offset(OffsetType.Bytes, 29, 4))
                   ),
-                  Token(7, ".") // a tagger can define whatever tokenization and sentence chunking it likes
+                  Token(7, ".",
+                    offsets = Map(OffsetType.Bytes -> Offset(OffsetType.Bytes, 34, 1))) // a tagger can define whatever tokenization and sentence chunking it likes
                 )),
                 Sentence(tokens = Seq(
-                  Token(0, "Bad", sentencePos = 0),
+                  Token(0, "Bad", sentencePos = 0,
+                    offsets = Map(OffsetType.Bytes -> Offset(OffsetType.Bytes, 36, 3))),
                   Token(1, "kitty",
                     entityType = Some(EntityType.Per),
                     mentionType = Some(MentionType.Nom),
                     sentencePos = 1,
                     mentionId = 3,
-                    equivId = 1 // identifier for within-doc coref chain (see above)
+                    equivId = 1, // identifier for within-doc coref chain (see above)
+                    offsets = Map(OffsetType.Bytes -> Offset(OffsetType.Bytes, 40, 5))
                   ),
-                  Token(3, ".")
+                  Token(3, ".",
+                    offsets = Map(OffsetType.Bytes -> Offset(OffsetType.Bytes, 45, 1)))
                 )
                 )
               ))
