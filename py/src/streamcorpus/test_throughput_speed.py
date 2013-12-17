@@ -82,7 +82,7 @@ def deserialize(filehandle, num_objects=1000):
     return test_objects
 
 
-def test_serialize(test_objects, num_loops=10):
+def _test_serialize(test_objects, num_loops=10):
     start_time = time.time()
 
     for step in range(num_loops):
@@ -118,7 +118,7 @@ def test_serialize(test_objects, num_loops=10):
     ## return the in-memory file-like object so we can use it as input to the next test
     return fh
 
-def test_deserialize(string_of_data, num_loops=10, num_objects=1000):
+def _test_deserialize(string_of_data, num_loops=10, num_objects=1000):
     start_time = time.time()
 
     for step in range(num_loops):
@@ -138,6 +138,22 @@ def test_deserialize(string_of_data, num_loops=10, num_objects=1000):
     print '%d in %.3f seconds --> %.1f serializations per second' % (count, elapsed, rate)
 
 
+def test_serialize_deserialize():
+    ## first load test data:
+    fh = AugmentedStringIO( open(os.path.join(os.path.basename(__file__), '../../../test-data/john-smith-tagged-by-lingpipe-0-v0_3_0.sc') ))
+
+    ## get it off of disk, so we can run purely in memory
+    test_objects = deserialize(fh, num_objects=100)
+
+    ## test speed of serializing
+    test_buffer = test_serialize(test_objects)
+
+    ## get a string of the test data
+    string_of_data = test_buffer._fh.getvalue()
+
+    ## test deserializing
+    test_deserialize(string_of_data, num_objects=100)
+
 
 if __name__ == '__main__':
     import argparse
@@ -153,10 +169,10 @@ if __name__ == '__main__':
     test_objects = deserialize(fh, num_objects=args.num_objects)
 
     ## test speed of serializing
-    test_buffer = test_serialize(test_objects)
+    test_buffer = _test_serialize(test_objects)
 
     ## get a string of the test data
     string_of_data = test_buffer._fh.getvalue()
 
     ## test deserializing
-    test_deserialize(string_of_data, num_objects=args.num_objects)
+    _test_deserialize(string_of_data, num_objects=args.num_objects)
