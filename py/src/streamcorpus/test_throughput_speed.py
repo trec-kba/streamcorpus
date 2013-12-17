@@ -1,4 +1,4 @@
-
+import os
 import time
 
 ## this is a python thing that makes a byte-buffer look like a filehandle
@@ -140,19 +140,19 @@ def _test_deserialize(string_of_data, num_loops=10, num_objects=1000):
 
 def test_serialize_deserialize():
     ## first load test data:
-    fh = AugmentedStringIO( open(os.path.join(os.path.basename(__file__), '../../../test-data/john-smith-tagged-by-lingpipe-0-v0_3_0.sc') ))
+    fh = AugmentedStringIO( open(os.path.join(os.path.dirname(__file__), '../../../test-data/john-smith-tagged-by-lingpipe-0-v0_3_0.sc') ))
 
     ## get it off of disk, so we can run purely in memory
     test_objects = deserialize(fh, num_objects=100)
 
     ## test speed of serializing
-    test_buffer = test_serialize(test_objects)
+    test_buffer = _test_serialize(test_objects)
 
     ## get a string of the test data
     string_of_data = test_buffer._fh.getvalue()
 
     ## test deserializing
-    test_deserialize(string_of_data, num_objects=100)
+    _test_deserialize(string_of_data, num_objects=100)
 
 
 if __name__ == '__main__':
