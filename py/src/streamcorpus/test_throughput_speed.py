@@ -149,10 +149,14 @@ if __name__ == '__main__':
     ## first load test data:
     fh = AugmentedStringIO( open(args.input) )
 
+    ## get it off of disk, so we can run purely in memory
     test_objects = deserialize(fh, num_objects=args.num_objects)
 
+    ## test speed of serializing
     test_buffer = test_serialize(test_objects)
 
+    ## get a string of the test data
     string_of_data = test_buffer._fh.getvalue()
 
+    ## test deserializing
     test_deserialize(string_of_data, num_objects=args.num_objects)
