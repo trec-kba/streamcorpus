@@ -129,9 +129,10 @@ class Chunk(object):
     reader/writer for batches of Thrift messages stored in flat files.
     '''
     def __init__(self, path=None, data=None, file_obj=None, mode='rb',
-                 message=StreamItem_v0_3_0):
-        '''
-        Load a chunk from an existing file handle or buffer of data.
+                 message=StreamItem_v0_3_0,
+                 read_wrapper=None, write_wrapper=None,
+        ):
+        '''Load a chunk from an existing file handle or buffer of data.
         If no data is passed in, then chunk starts as empty and
         chunk.add(message) can be called to append to it.
 
@@ -153,6 +154,14 @@ class Chunk(object):
 
         :param message: defaults to StreamItem_v0_3_0; you can specify
         your own Thrift-generated class here.
+
+        :param read_wrapper: a function that takes a deserialized
+        message as input and returns a new object to yield from
+        __iter__
+
+        :param write_wrapper: a function used in Chunk.add(obj) that
+        takes the added object as input and returns another object
+        that is a thrift class that can be serialized.
         '''
         if not fastbinary_import_failure:
             logger.debug('using TBinaryProtocolAccelerated (fastbinary)')
@@ -160,6 +169,9 @@ class Chunk(object):
         else:
             logger.warn('import fastbinary failed; falling back to 15x slower TBinaryProtocol: %r'\
                             % fastbinary_import_failure)
+
+        self.read_wrapper = read_wrapper
+        self.write_wrapper = write_wrapper
 
         allowed_modes = ['wb', 'ab', 'rb']
         assert mode in allowed_modes, 'mode=%r not in %r' % (mode, allowed_modes)
@@ -287,6 +299,8 @@ class Chunk(object):
         'add message instance to chunk'
         assert self._o_protocol, 'cannot add to a Chunk instantiated with data'
         assert self._o_chunk_fh is not None, 'cannot Chunk.add after Chunk.close'
+        if self.write_wrapper is not None:
+            msg = self.write_wrapper(msg)
         if not (isinstance(msg, self.message) or (type(msg) == self.message)):
             raise VersionMismatchError(
                 'mismatched type: %s != %s' % (type(msg), self.message))
@@ -374,6 +388,9 @@ class Chunk(object):
                 
                 ## yield is python primitive for iteration
                 self._count += 1
+
+                if self.read_wrapper is not None:
+                    msg = self.read_wrapper(msg)
                 yield msg
 
             except EOFError:

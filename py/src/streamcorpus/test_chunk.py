@@ -4,6 +4,7 @@ import time
 import errno
 import shutil
 import pytest
+from cStringIO import StringIO
 import logging
 ## utility for tests that configures logging in roughly the same way
 ## that a program calling bigtree should setup logging
@@ -49,6 +50,23 @@ def test_chunk():
     si = make_si()
     ch.add( si )
     assert len(ch) == 1
+
+def test_chunk_wrapper():
+    ## write in-memory
+    fh = StringIO()
+    ch = Chunk(file_obj=fh, write_wrapper=lambda x: x['dog'], mode='wb')
+    assert ch.mode == 'wb'
+    si = make_si()
+    si = dict(dog=si)
+    ch.add( si )
+    assert len(ch) == 1
+    ch.flush()
+    blob = fh.getvalue()
+    assert blob
+    fh = StringIO(blob)
+    ch = Chunk(file_obj=fh, read_wrapper=lambda x: dict(dog=x), mode='rb')
+    si2 = list(ch)[0]
+    assert si2 == si
 
 def test_xz():
     count = 0
