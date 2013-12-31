@@ -58,7 +58,7 @@ _better_repr_functions = [
 ]
 
 
-def smart_repr_trim(ob, limit=50, newlineSplitFields=False, indent=1):
+def smart_repr_trim(ob, limit=50, newlineSplitFields=False, indent=1, print_id=False):
     '''
     returns repr(ob), unless ob is a string that is too long
     '''
@@ -66,11 +66,14 @@ def smart_repr_trim(ob, limit=50, newlineSplitFields=False, indent=1):
         if len(ob) > limit:
             suffix = '...len(%d)' % len(ob)
             prefix = ob[0:limit-len(suffix)]
-            return repr(prefix) + suffix
-    return smart_repr(ob, limit=limit, newlineSplitFields=newlineSplitFields, indent=indent)
+            if print_id:
+                return '({0:x}){1}'.format(id(ob), repr(prefix) + suffix)
+            else:
+                return repr(prefix) + suffix
+    return smart_repr(ob, limit=limit, newlineSplitFields=newlineSplitFields, indent=indent, print_id=print_id)
 
 
-def smart_repr(x, limit=50, newlineSplitFields=False, indent=1):
+def smart_repr(x, limit=50, newlineSplitFields=False, indent=1, print_id=False):
     '''
     In case of long fields, print: fieldName='blahblahblhah...'len(9999)
     '''
@@ -84,18 +87,24 @@ def smart_repr(x, limit=50, newlineSplitFields=False, indent=1):
             return xrepr(x, limit=limit, newlineSplitFields=newlineSplitFields, indent=indent, splitter=splitter)
 
     if hasattr(x, '__slots__'):
-        vals = ['%s=%s' % (key, smart_repr_trim(getattr(x,key), limit=limit, newlineSplitFields=newlineSplitFields, indent=indent+1)) for key in x.__slots__]
+        vals = ['%s=%s' % (key, smart_repr_trim(getattr(x,key), limit=limit, newlineSplitFields=newlineSplitFields, indent=indent+1, print_id=print_id)) for key in x.__slots__]
     elif isinstance(x, list):
-        return '[%s]' % splitter.join(map(lambda y: smart_repr(y, limit, newlineSplitFields, indent+1), x))
+        return '[%s]' % splitter.join(map(lambda y: smart_repr(y, limit, newlineSplitFields, indent+1, print_id=print_id), x))
     elif isinstance(x, dict):
-        vals = ['%s: %s' % (repr(k),smart_repr(v,limit,newlineSplitFields,indent+1)) for k,v in x.iteritems()]
+        vals = ['%s: %s' % (repr(k),smart_repr(v,limit,newlineSplitFields,indent+1, print_id=print_id)) for k,v in x.iteritems()]
         return '{' + splitter.join(vals) + '}'
     else:
         # Right now this is how we split on primitives vs other objects.
         # Thrift objects all helpfully generate __slots__, but it might be useful to
         # extend smart_repr to other non-thrift non-primitive objects.
-        return repr(x)
-    return '%s(%s)' % (x.__class__.__name__, splitter.join(vals))
+        if print_id:
+            return '({0:x}){1!r}'.format(id(x), x)
+        else:
+            return repr(x)
+    if print_id:
+        return '%s(%x)(%s)' % (x.__class__.__name__, id(x), splitter.join(vals))
+    else:
+        return '%s(%s)' % (x.__class__.__name__, splitter.join(vals))
 
 def _dump(fpath, args):
     '''
@@ -154,7 +163,7 @@ def _dump(fpath, args):
 
             vals = []
             for fieldName in si.__slots__:
-                vals.append(fieldName + '=' + smart_repr(getattr(si,fieldName), newlineSplitFields=True, indent=2))
+                vals.append(fieldName + '=' + smart_repr(getattr(si,fieldName), newlineSplitFields=True, indent=2, limit=100))
             print '%s(%s)' % (si.__class__.__name__, ',\n  '.join(vals))
 
         else:
@@ -503,6 +512,23 @@ def _stats(fpaths):
         sys.stdout.flush()
 
 
+def _copy(args):
+    count = 0
+    ochunk = Chunk(file_obj=sys.stdout, mode='wb')
+    for fpath in args.input_path:
+        ichunk = Chunk(path=fpath, mode='rb', message=message_class)
+        for si in ichunk:
+            count += 1
+            ochunk.add(si)
+            if (args.limit is not None) and (count >= args.limit):
+                break
+        ichunk.close()
+        if (args.limit is not None) and (count >= args.limit):
+            break
+    ochunk.close()
+    sys.stderr.write('wrote {0} items\n'.format(count))
+
+
 def main():
     logger = logging.getLogger('streamcorpus')
     ch = logging.StreamHandler()
@@ -557,6 +583,7 @@ def main():
                         default=False, dest='verify_offsets')
     parser.add_argument('--print-url', action='store_true',
                         default=False, dest='print_url')
+    parser.add_argument('--copy', action='store_true', default=False, help='copy items to stdout, useful with --limit')
     args = parser.parse_args()
 
     if args.version not in versioned_classes:
@@ -603,6 +630,9 @@ def main():
         _dump_ratings(args.input_path, 
                       annotator_ids=args.annotator_ids,
                       include_header=args.include_header)
+
+    elif args.copy:
+        _copy(args)
 
     else:
         for fpath in args.input_path:
