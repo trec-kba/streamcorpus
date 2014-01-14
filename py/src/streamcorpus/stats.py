@@ -39,14 +39,17 @@ OUTPUT_MSGS = {
     'count' : '\t\t{filter_by} {filter_value} {count}',
 }
 
-def _process_filters(fpath, all_filters, message_class):
+def _process_filters(fpath, all_filters, message_class, tagger_ids):
     """
     takes in
     fpath - streamitem chunk file to read from
     all_filters - dictionary of {
-        attribute to filter by (entity_type, custom_entity_type, etc.) : list of values to filter against
+        attribute to filter by (entity_type, custom_entity_type, etc.) : list
+            of values to filter against
     }
     message_class - StreamItem version to use
+    tagger_ids - list of tagger ids to dump streamitems for. If none, then all
+        tagger ids are dumped
 
     outputs to stdout, with full count of file at tail
     counting for StreamItem #
@@ -59,19 +62,27 @@ def _process_filters(fpath, all_filters, message_class):
         print OUTPUT_MSGS['si'].format(num=num)
         if si.body.sentences:
             for tagger_id, sentences in si.body.sentences.iteritems():
-                print OUTPUT_MSGS['tagger_id'].format(tagger_id=tagger_id)
-                for filter_by, filter_values in all_filters.iteritems():
-                    sentences_counter = collections.Counter(_filter_token_attr(sentences, filter_by, filter_values))
-                    all_counter[tagger_id].update(sentences_counter)
-                    _print_filter_counts(sentences_counter, filter_by, filter_values)
+                if tagger_ids is None or tagger_id in tagger_ids:
+                    print OUTPUT_MSGS['tagger_id'].format(tagger_id=tagger_id)
+                    for filter_by, filter_values in all_filters.iteritems():
+                        sentences_counter = collections.Counter(
+                            _filter_token_attr(sentences, filter_by, filter_values)
+                        )
+                        all_counter[tagger_id].update(sentences_counter)
+                        _print_filter_counts(sentences_counter, filter_by, filter_values)
 
     print OUTPUT_MSGS['si'].format(num='all')
     for tagger_id, counter in all_counter.items():
-        print OUTPUT_MSGS['tagger_id'].format(tagger_id=tagger_id)
-        for filter_by, filter_values in all_filters.iteritems():
-            _print_filter_counts(counter, filter_by, filter_values)
+        if tagger_ids is None or tagger_id in tagger_ids:
+            print OUTPUT_MSGS['tagger_id'].format(tagger_id=tagger_id)
+            for filter_by, filter_values in all_filters.iteritems():
+                _print_filter_counts(counter, filter_by, filter_values)
 
 def _filter_token_attr(sentences, attr, filter_types):
+    """
+    generator to return the value of a specified attribute of 
+    all tokens in a group of sentences
+    """
     for sentence in sentences:
         for tok in sentence.tokens:
             value = getattr(tok, attr)
@@ -79,6 +90,11 @@ def _filter_token_attr(sentences, attr, filter_types):
                 yield getattr(tok, attr)
 
 def _print_filter_counts(counter, filter_by, filter_values):
+    """
+    given a counter, an attribute to filter by, and the values to filter
+    against, print a line with counts of the specified filter_values, formatted
+    by OUTPUT_MSGS['count']
+    """
     for filter_value in filter_values:
         if filter_by in FILTER_CLASSES:
             formatted_filter_value = FILTER_CLASSES[filter_by]._VALUES_TO_NAMES[filter_value]
@@ -119,6 +135,12 @@ def main():
         nargs='*',
         help='Return count of all tokens of specified mention types. Default is all mention types'
     )
+    parser.add_argument(
+        '--tagger-ids',
+        dest='tagger_ids',
+        nargs='+',
+        help='Return results for specified tagger ids. Must specify at least one if used. Default is all tagger ids'
+    )
     args = parser.parse_args()
 
     if args.version not in versioned_classes:
@@ -140,6 +162,8 @@ def main():
             paths.append(ipath)
     args.input_path = paths
     
+    # parse out user-specified filters and filter values (Ex: --entity-type PER)
+    # or use defaults
     all_filters = {}
     for filter_class in FILTER_CLASSES:
         arg = getattr(args, filter_class)
@@ -155,7 +179,7 @@ def main():
         all_filters['custom_entity_type'] = custom_entity_filters
 
     for fpath in args.input_path:
-        _process_filters(fpath, all_filters, message_class)
+        _process_filters(fpath, all_filters, message_class, args.tagger_ids)
 
 
 if __name__ == '__main__':
