@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 '''
+Command is $ streamcorpus_stats
 A command line utility for printing out information from
-streamcorpus.Chunk files.
+streamcorpus.Chunk files. This command prints out stats about the tokens,
+including counts of different token types
 
 This software is released under an MIT/X11 open source license.
 
@@ -15,7 +17,7 @@ import logging
 import itertools
 import collections
 from streamcorpus._chunk import Chunk
-from streamcorpus.ttypes import OffsetType, Token, EntityType, MentionType
+from streamcorpus.ttypes import Token, EntityType, MentionType
 
 from streamcorpus.ttypes import StreamItem as StreamItem_v0_3_0
 from streamcorpus.ttypes_v0_1_0 import StreamItem as StreamItem_v0_1_0
