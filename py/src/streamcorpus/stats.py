@@ -29,36 +29,64 @@ versioned_classes = {
     'v0_1_0': StreamItem_v0_1_0,
     }
 
-filter_classes = {
+FILTER_CLASSES = {
     'entity_type' : EntityType,
     'mention_type' : MentionType,
 }
+OUTPUT_MSGS = {
+    'si' : '\ncounting for StreamItem {num}',
+    'tagger_id' : '\tcounting for tagger id {tagger_id}',
+    'count' : '\t\t{filter_by} {filter_value} {count}',
+}
 
-def _count_filter_types(fpath, filter_by, filter_values, message_class):
+def _process_filters(fpath, all_filters, message_class):
+    """
+    takes in
+    fpath - streamitem chunk file to read from
+    all_filters - dictionary of {
+        attribute to filter by (entity_type, custom_entity_type, etc.) : list of values to filter against
+    }
+    message_class - StreamItem version to use
+
+    outputs to stdout, with full count of file at tail
+    counting for StreamItem #
+        counting for tagger id <tagger id>
+            <attribute to filter by> <filter value> <count>
+    """
     all_counter = collections.defaultdict(collections.Counter)
 
     for num, si in enumerate(Chunk(path=fpath, mode='rb', message=message_class)):
-        print 'counting entity types for StreamItem', num
+        print OUTPUT_MSGS['si'].format(num=num)
         if si.body.sentences:
-            for tagger_id, sentences in si.body.sentences.items():
-                sentences_counter = collections.Counter(_filter_token_attr(sentences, filter_by, filter_values))
-                all_counter[tagger_id].update(sentences_counter)
-                print '\t counting entity types for tagger id', tagger_id
-                for filter_value in filter_values:
-                    print '\t\t', filter_classes[filter_by]._VALUES_TO_NAMES[filter_value], sentences_counter[filter_value]
+            for tagger_id, sentences in si.body.sentences.iteritems():
+                print OUTPUT_MSGS['tagger_id'].format(tagger_id=tagger_id)
+                for filter_by, filter_values in all_filters.iteritems():
+                    sentences_counter = collections.Counter(_filter_token_attr(sentences, filter_by, filter_values))
+                    all_counter[tagger_id].update(sentences_counter)
+                    _print_filter_counts(sentences_counter, filter_by, filter_values)
 
-    print 'counting entity types for all StreamItems'
+    print OUTPUT_MSGS['si'].format(num='all')
     for tagger_id, counter in all_counter.items():
-        print '\t', tagger_id
-        for filter_value in filter_values:
-            print '\t\t', filter_classes[filter_by]._VALUES_TO_NAMES[filter_value], counter[filter_value]
+        print OUTPUT_MSGS['tagger_id'].format(tagger_id=tagger_id)
+        for filter_by, filter_values in all_filters.iteritems():
+            _print_filter_counts(counter, filter_by, filter_values)
 
 def _filter_token_attr(sentences, attr, filter_types):
     for sentence in sentences:
         for tok in sentence.tokens:
             value = getattr(tok, attr)
-            if value:
+            if value in filter_types:
                 yield getattr(tok, attr)
+
+def _print_filter_counts(counter, filter_by, filter_values):
+    for filter_value in filter_values:
+        if filter_by in FILTER_CLASSES:
+            formatted_filter_value = FILTER_CLASSES[filter_by]._VALUES_TO_NAMES[filter_value]
+        else:
+            formatted_filter_value = filter_value
+        print OUTPUT_MSGS['count'].format(filter_by=filter_by, 
+                filter_value=formatted_filter_value, 
+                count=counter[filter_value])
 
 def main():
     logger = logging.getLogger('streamcorpus')
@@ -78,6 +106,12 @@ def main():
         dest='entity_type',
         nargs='*',
         help='Return count of all tokens of specified types. Default is all types'
+    )
+    parser.add_argument(
+        '--custom-entity-type',
+        dest='custom_entity_type',
+        nargs='+',
+        help='Return counts of all tokens of specified custom entity types. Must specify at least one.'
     )
     parser.add_argument(
         '--mention-type',
@@ -106,15 +140,23 @@ def main():
             paths.append(ipath)
     args.input_path = paths
     
-    for filter_class in filter_classes:
+    all_filters = {}
+    for filter_class in FILTER_CLASSES:
         arg = getattr(args, filter_class)
         if arg is not None:
             if len(arg) == 0:
-                filter_values = filter_classes[filter_class]._VALUES_TO_NAMES.keys()
+                filter_values = FILTER_CLASSES[filter_class]._VALUES_TO_NAMES.keys()
             else:
-                filter_values = [filter_classes[filter_class]._NAMES_TO_VALUES[name] for name in arg]
-            for fpath in args.input_path:
-                _count_filter_types(fpath, filter_class, filter_values, message_class)
+                filter_values = [FILTER_CLASSES[filter_class]._NAMES_TO_VALUES[name] for name in arg]
+            all_filters[filter_class] = filter_values
+
+    custom_entity_filters = args.custom_entity_type
+    if custom_entity_filters:
+        all_filters['custom_entity_type'] = custom_entity_filters
+
+    for fpath in args.input_path:
+        _process_filters(fpath, all_filters, message_class)
+
 
 if __name__ == '__main__':
     main()
