@@ -14,7 +14,7 @@ import json
 import logging
 import itertools
 import collections
-from streamcorpus._chunk import Chunk
+from streamcorpus._chunk import Chunk as _Chunk
 from streamcorpus.ttypes import OffsetType, Token, EntityType, MentionType
 
 from streamcorpus.ttypes import StreamItem as StreamItem_v0_3_0
@@ -26,6 +26,16 @@ versioned_classes = {
     'v0_2_0': StreamItem_v0_2_0,
     'v0_1_0': StreamItem_v0_1_0,
     }
+
+
+message_class = StreamItem_v0_3_0
+
+
+# Wrap the Chunk file constructor locally so we can honor version
+# setting more easily.
+def Chunk(*args, **kwargs):
+    kwargs['message'] = message_class
+    return _Chunk(*args, **kwargs)
 
 
 def Token_repr(tok, limit=50, newlineSplitFields=False, indent=1, splitter=', '):
@@ -119,8 +129,7 @@ def _dump(fpath, args):
     if args.stats:
         stats = {}
 
-    global message_class
-    for num, si in enumerate(Chunk(path=fpath, mode='rb', message=message_class)):
+    for num, si in enumerate(Chunk(path=fpath, mode='rb')):
         if args.limit and num >= args.limit:
             break
 
@@ -194,13 +203,15 @@ def _dump_ratings(fpaths, annotator_ids=[], include_header=False):
                 for rating in ratings:
                     assert rating.annotator.annotator_id == annotator_id, \
                         (rating.annotator.annotator_id, annotator_id)
-                    print '\t'.join([
-                            annotator_id,
-                            rating.target.target_id,
-                            si.stream_id,
-                            str(len(rating.mentions)),
-                            json.dumps(rating.mentions),                            
-                            ])
+                    columns = [
+                        annotator_id,
+                        rating.target.target_id,
+                        si.stream_id,
+                    ]
+                    if rating.mentions:
+                        columns.append(str(len(rating.mentions)))
+                        columns.append(json.dumps(rating.mentions))
+                    print '\t'.join(columns)
 
 
 
@@ -229,10 +240,9 @@ def _dump_tokens(fpaths, annotator_ids=[], filter_tagger_ids=[]):
     :paramm annotator_ids: if present, only print tokens with labels
     from one of these annotators
     '''
-    global message_class
     print '\t'.join(token_attrs + ['stream_id', 'labels'])
     for fpath in fpaths:
-        for si in Chunk(path=fpath, mode='rb', message=message_class):
+        for si in Chunk(path=fpath, mode='rb'):
             if not si.body:
                 print 'no body: %s' % si.stream_id
                 continue
@@ -279,13 +289,12 @@ def verify_offsets(fpaths):
 
     :param fpaths: iterator over file paths to Chunks
     '''
-    global message_class
     for fpath in fpaths:
         print fpath
         num_valid_line_offsets = 0
         num_valid_byte_offsets = 0
         num_valid_label_offsets = 0
-        for si in Chunk(path=fpath, mode='rb', message=message_class):
+        for si in Chunk(path=fpath, mode='rb'):
             if not si.body:
                 print 'no body: %s' % si.stream_id
                 continue
@@ -363,10 +372,9 @@ def _find(fpaths, stream_id, dump_binary_stream_item=False):
     Read in a streamcorpus.Chunk file and if any of its stream_ids
     match stream_id, then print stream_item.body.raw to stdout
     '''
-    global message_class
     sys.stderr.write('hunting for %r\n' % stream_id)
     for fpath in fpaths:
-        for si in Chunk(path=fpath, mode='rb', message=message_class):
+        for si in Chunk(path=fpath, mode='rb'):
             if si.stream_id == stream_id:
                 if dump_binary_stream_item:
                     o_chunk = Chunk(file_obj=sys.stdout, mode='wb')
@@ -385,9 +393,8 @@ def _show_fields(fpaths, fields, len_fields):
     '''
     streamcorpus.Chunk files and display each field specified in 'fields'
     '''
-    global message_class
     for fpath in fpaths:
-        for si in Chunk(path=fpath, mode='rb', message=message_class):
+        for si in Chunk(path=fpath, mode='rb'):
             output = []
             for field in fields:
                 prop = si
@@ -415,9 +422,8 @@ def _find_missing_labels(fpaths, annotator_ids, component):
     Read in a streamcorpus.Chunk file and if any of its stream_ids
     match stream_id, then print stream_item.body.raw to stdout
     '''
-    global message_class
     for fpath in fpaths:
-        for si in Chunk(path=fpath, mode='rb', message=message_class):
+        for si in Chunk(path=fpath, mode='rb'):
             if not si.body:
                 print 'no body on %s %r' % (si.stream_id, si.abs_url)
                 continue
@@ -453,7 +459,6 @@ def _stats(fpaths):
     '''
     Read streamcorpus.Chunk files and print their stats
     '''
-    global message_class
     keys = ['stream_ids', 'num_targets_from_google', 'raw', 'raw_has_targs', 'raw_has_wp', 'media_type', 'clean_html', 'clean_has_targs', 'clean_has_wp',
             'clean_visible', 'labelsets', 'labels', 'labels_has_targs', 'sentences', 'tokens', 'at_least_one_label']
     for fpath in fpaths:
@@ -461,7 +466,7 @@ def _stats(fpaths):
         sys.stdout.flush()
         c = collections.Counter()
         labels = collections.Counter()
-        for num, si in enumerate( Chunk(path=fpath, mode='rb', message=message_class) ):
+        for num, si in enumerate( Chunk(path=fpath, mode='rb') ):
             #print si.stream_id
             sys.stdout.flush()
             c['stream_ids'] += 1
@@ -514,9 +519,10 @@ def _stats(fpaths):
 
 def _copy(args):
     count = 0
+    # TODO: separately set --out-version
     ochunk = Chunk(file_obj=sys.stdout, mode='wb')
     for fpath in args.input_path:
-        ichunk = Chunk(path=fpath, mode='rb', message=message_class)
+        ichunk = Chunk(path=fpath, mode='rb')
         for si in ichunk:
             count += 1
             ochunk.add(si)
@@ -530,16 +536,13 @@ def _copy(args):
 
 
 def main():
-    logger = logging.getLogger('streamcorpus')
-    ch = logging.StreamHandler()
-    logger.addHandler(ch)
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument(
         'input_path', 
         nargs='*',
         default=[],
-        help='Paths to a chunk files, or directory of chunks, or "-" for receiving paths over stdin')
+        help='Paths to a chunk files, or directory of chunks, Note: "-" denotes stdin has a list of paths, NOT streamcorpus data')
     parser.add_argument('--stats', action='store_true', default=False,
                         help='print out the .body.raw of a specific stream_id')
     parser.add_argument('--find', dest='find', metavar='STREAM_ID', help='print out the .body.raw of a specific stream_id')
@@ -584,7 +587,19 @@ def main():
     parser.add_argument('--print-url', action='store_true',
                         default=False, dest='print_url')
     parser.add_argument('--copy', action='store_true', default=False, help='copy items to stdout, useful with --limit')
+    parser.add_argument('--verbose', action='store_true', default=False)
+    # TODO: there appears to be no way to have streamcorpus_dump
+    # receive data on stdin. All of the subcommands want
+    # paths. Several of the subcommands could easily have Chunk()
+    # opening lifted and receive chunks instead of paths.
+    #
+    # parser.add_argument('--stdin', action='store_true', default=False)
     args = parser.parse_args()
+
+    if args.verbose:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.INFO)
 
     if args.version not in versioned_classes:
         sys.exit('--version=%r is not in "%s"' \
@@ -597,6 +612,7 @@ def main():
     paths = []
     for ipath in args.input_path:
         if ipath == '-':
+            # read stdin as a list of paths
             paths.extend(itertools.imap(lambda line: line.strip(), sys.stdin))
         elif os.path.isdir(ipath):
             paths.extend(
