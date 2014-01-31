@@ -1,9 +1,16 @@
 #!/usr/bin/env python
 '''
 Command is $ streamcorpus_stats
-A command line utility for printing out information from
+
+Purpose: A command line utility for printing out information from
 streamcorpus.Chunk files. This command prints out stats about the tokens,
 including counts of different token types
+
+TODOs: 
+-Remove '--custom-entity-type' option and treat entity type and custom
+entity type the same way. Can be done once there are global getters and setters
+for token.entity_type 
+-add more token attributes/other features to count
 
 This software is released under an MIT/X11 open source license.
 
@@ -39,7 +46,7 @@ OUTPUT_MSGS = {
     'count' : '\t\t{filter_by} {filter_value} {count}',
 }
 
-def _process_filters(fpath, all_filters, message_class, tagger_ids):
+def _process_filters(fpath, all_filters, message_class, tagger_ids, show_all=False):
     """
     takes in
     fpath - streamitem chunk file to read from
@@ -50,33 +57,51 @@ def _process_filters(fpath, all_filters, message_class, tagger_ids):
     message_class - StreamItem version to use
     tagger_ids - list of tagger ids to dump streamitems for. If none, then all
         tagger ids are dumped
+    show_all - whether to print counts for streamitems in chunk, or just total
+        chunk counts
 
     outputs to stdout, with full count of file at tail
     counting for StreamItem #
         counting for tagger id <tagger id>
             <attribute to filter by> <filter value> <count>
     """
+    ## keep a total count for the filters for all streamitems in the chunk
     all_counter = collections.defaultdict(collections.Counter)
 
     for num, si in enumerate(Chunk(path=fpath, mode='rb', message=message_class)):
-        print OUTPUT_MSGS['si'].format(num=num)
-        if si.body.sentences:
-            for tagger_id, sentences in si.body.sentences.iteritems():
-                if tagger_ids is None or tagger_id in tagger_ids:
-                    print OUTPUT_MSGS['tagger_id'].format(tagger_id=tagger_id)
-                    for filter_by, filter_values in all_filters.iteritems():
-                        sentences_counter = collections.Counter(
-                            _filter_token_attr(sentences, filter_by, filter_values)
-                        )
-                        all_counter[tagger_id].update(sentences_counter)
-                        _print_filter_counts(sentences_counter, filter_by, filter_values)
+        if show_all:
+            print OUTPUT_MSGS['si'].format(num=num)
 
+        if not si.body.sentences:
+            continue
+
+        for tagger_id, sentences in si.body.sentences.iteritems():
+            if tagger_ids is not None and tagger_id not in tagger_ids:
+                continue
+
+            if show_all:
+                print OUTPUT_MSGS['tagger_id'].format(tagger_id=tagger_id)
+
+            for filter_by, filter_values in all_filters.iteritems():
+                ## reset the sentences counter for each new streamitem.body.sentences
+                sentences_counter = collections.Counter(
+                    _filter_token_attr(sentences, filter_by, filter_values)
+                )
+                ## update the total count for this chunk of streamitems
+                all_counter[tagger_id].update(sentences_counter)
+
+                if show_all:
+                    _print_filter_counts(sentences_counter, filter_by, filter_values)
+
+    ## print the total counts for this chunk of streamitems
     print OUTPUT_MSGS['si'].format(num='all')
     for tagger_id, counter in all_counter.items():
-        if tagger_ids is None or tagger_id in tagger_ids:
-            print OUTPUT_MSGS['tagger_id'].format(tagger_id=tagger_id)
-            for filter_by, filter_values in all_filters.iteritems():
-                _print_filter_counts(counter, filter_by, filter_values)
+        if tagger_ids is not None and tagger_id not in tagger_ids:
+            continue
+
+        print OUTPUT_MSGS['tagger_id'].format(tagger_id=tagger_id)
+        for filter_by, filter_values in all_filters.iteritems():
+            _print_filter_counts(counter, filter_by, filter_values)
 
 def _filter_token_attr(sentences, attr, filter_types):
     """
@@ -100,6 +125,7 @@ def _print_filter_counts(counter, filter_by, filter_values):
             formatted_filter_value = FILTER_CLASSES[filter_by]._VALUES_TO_NAMES[filter_value]
         else:
             formatted_filter_value = filter_value
+
         print OUTPUT_MSGS['count'].format(filter_by=filter_by, 
                 filter_value=formatted_filter_value, 
                 count=counter[filter_value])
@@ -108,6 +134,7 @@ def main():
     logger = logging.getLogger('streamcorpus')
     ch = logging.StreamHandler()
     logger.addHandler(ch)
+
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -117,6 +144,14 @@ def main():
         help='Paths to a chunk files, or directory of chunks, or "-" for receiving paths over stdin'
     )
     parser.add_argument('--version', default='v0_3_0')
+    parser.add_argument(
+        '--show-all',
+        dest='show_all',
+        type=bool,
+        default=False,
+        help='Show counts for all documents in streamitem chunk. \
+        Defaults to showing only the full chunk counts'
+    )
     parser.add_argument(
         '--entity-type',
         dest='entity_type',
@@ -179,7 +214,7 @@ def main():
         all_filters['custom_entity_type'] = custom_entity_filters
 
     for fpath in args.input_path:
-        _process_filters(fpath, all_filters, message_class, args.tagger_ids)
+        _process_filters(fpath, all_filters, message_class, args.tagger_ids, args.show_all)
 
 
 if __name__ == '__main__':
