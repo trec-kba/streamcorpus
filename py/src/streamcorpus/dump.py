@@ -132,6 +132,8 @@ def _dump(fpath, args):
         if args.labels_only:
             if si.body.sentences:
                 for tagger_id in si.body.sentences:
+                    if tagger_id not in args.tagger_ids:
+                        continue
                     for sent in si.body.sentences[tagger_id]:
                         if args.count and si.stream_id in num_labeled_stream_items:
                             break
