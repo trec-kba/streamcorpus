@@ -118,6 +118,14 @@ def path(request):
     request.addfinalizer(fin)
     return path
 
+@pytest.fixture(scope='function')
+def path_xz(request):
+    path = '/tmp/test_chunk-%s.sc.xz' % str(uuid.uuid4())
+    def fin():
+        os.remove(path)
+    request.addfinalizer(fin)
+    return path
+
 def test_chunk_path_write(path):
     ## write to path
     ch = Chunk(path=path, mode='wb')
@@ -143,6 +151,23 @@ def test_chunk_path_append(path):
     assert len(ch) == 1
     print repr(ch)
     assert len(list( Chunk(path=path, mode='rb') )) == 2
+
+@pytest.mark.skipif('not _chunk.lzma')
+def test_chunk_path_append_xz(path_xz):
+    ch = Chunk(path=path_xz, mode='wb')
+    si = make_si()
+    ch.add( si )
+    ch.close()
+    assert len(ch) == 1
+    ## append to path
+    ch = Chunk(path=path_xz, mode='ab')
+    si = make_si()
+    ch.add( si )
+    ch.close()
+    ## count is only for those added
+    assert len(ch) == 1
+    print repr(ch)
+    assert len(list( Chunk(path=path_xz, mode='rb') )) == 2
 
 def test_chunk_path_read_1(path):
     ch = Chunk(path=path, mode='wb')

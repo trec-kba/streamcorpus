@@ -206,14 +206,19 @@ class Chunk(object):
                     exc.errno = errno.EEXIST
                     raise exc
                 if path.endswith('.xz'):
-                    assert mode == 'rb', 'mode=%r for .xz' % mode
-                    ## launch xz child
-                    xz_child = subprocess.Popen(
-                        ['xzcat', path],
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE)
-                    file_obj = xz_child.stdout
-                    ## what to do with stderr
+                    if lzma is None:
+                        if mode != 'rb':
+                            raise Exception('backports.lzma is not installed and mode=%r but only "rb" is allowed without backports.lzma' % mode)
+                        ## launch xz child
+                        xz_child = subprocess.Popen(
+                            ['xzcat', path],
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
+                        file_obj = xz_child.stdout
+                        ## what to do with stderr
+                    else:
+                        file_obj = lzma.open(path, mode)
+                        
                 elif path.endswith('.gz'):
                     assert mode == 'rb', 'mode=%r for .gz' % mode
                     file_obj  = gzip.open(path)
