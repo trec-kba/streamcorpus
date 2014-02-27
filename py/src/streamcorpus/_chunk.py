@@ -446,17 +446,21 @@ def decrypt_and_uncompress(data, gpg_private=None, tmp_dir='/tmp'):
         ## remove the gpg_dir
         shutil.rmtree(gpg_dir, ignore_errors=True)
 
-    ## launch xz child
-    xz_child = subprocess.Popen(
-        ['xz', '--decompress'],
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE)
-    ## use communicate to pass the data incrementally to the child
-    ## while reading the output, to avoid blocking 
-    data, errors = xz_child.communicate(data)
+    if lzma is not None:
+        data = lzma.decompress(data)
 
-    assert not errors, errors
+    else:
+        ## launch xz child
+        xz_child = subprocess.Popen(
+            ['xz', '--decompress'],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE)
+        ## use communicate to pass the data incrementally to the child
+        ## while reading the output, to avoid blocking 
+        data, errors = xz_child.communicate(data)
+
+        assert not errors, errors
 
     return _errors, data
 
