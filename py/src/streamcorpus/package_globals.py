@@ -31,7 +31,7 @@ in streamcorpus.thrift
 
 This software is released under an MIT/X11 open source license.
 
-Copyright 2012 Diffeo, Inc.
+Copyright 2012-2014 Diffeo, Inc.
 '''
 
 import re
@@ -66,6 +66,7 @@ __all__ = ['Chunk', 'decrypt_and_uncompress', 'compress_and_encrypt',
            'compress_and_encrypt_path', 
            'serialize', 'deserialize',
            'make_stream_time', 'make_stream_item',
+           'get_entity_type',
            'get_date_hour',
            'add_annotation',
            'StreamItem', 'ContentItem', 'Label', 'StreamTime', 
@@ -213,3 +214,18 @@ def add_annotation(data_item, *annotations):
         else:
             raise Exception('programmer error: attempted add_annotation(%s...)' % type(data_item))
 
+def get_entity_type(tok):
+    '''
+    returns the string name of the EntityType on this token, or None
+    if it is not set.  If Token.entity_type == CUSTOM_TYPE, then this
+    returns the Token.custom_entity_type string instead of
+    streamcorpus.EntityType._VALUES_TO_NAMES
+    '''
+    if tok.entity_type is None:
+        return None
+    elif tok.entity_type == EntityType.CUSTOM_TYPE:
+        if tok.custom_entity_type is None:
+            logger.critical('Token.entity_type == CUSTOM_TYPE but Token.custom_entity_type is None!')
+        return tok.custom_entity_type
+    else:
+        return EntityType._VALUES_TO_NAMES[tok.entity_type]
