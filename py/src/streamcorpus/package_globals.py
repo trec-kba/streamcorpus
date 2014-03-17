@@ -47,7 +47,7 @@ from ttypes import StreamItem, ContentItem, Label, StreamTime, \
     Tagging, OffsetType, Target, \
     Language, \
     MentionType, AttributeType, Attribute, Gender, \
-    RelationType
+    RelationType, FlagType
 
 ## unambiguous name for the current one
 StreamItem_v0_3_0 = StreamItem
@@ -62,23 +62,23 @@ from _chunk import Chunk, decrypt_and_uncompress, compress_and_encrypt, \
     serialize, deserialize, \
     VersionMismatchError
 
-__all__ = ['Chunk', 'decrypt_and_uncompress', 'compress_and_encrypt', 
-           'compress_and_encrypt_path', 
+__all__ = ['Chunk', 'decrypt_and_uncompress', 'compress_and_encrypt',
+           'compress_and_encrypt_path',
            'serialize', 'deserialize',
            'make_stream_time', 'make_stream_item',
            'get_entity_type',
            'get_date_hour',
            'add_annotation',
-           'StreamItem', 'ContentItem', 'Label', 'StreamTime', 
-           'Offset', 'Rating', 'Annotator', 'Versions', 'Token', 'Sentence', 'EntityType', 
+           'StreamItem', 'ContentItem', 'Label', 'StreamTime',
+           'Offset', 'Rating', 'Annotator', 'Versions', 'Token', 'Sentence', 'EntityType',
            'Target',
-           'Tagging', 'OffsetType', 
+           'Tagging', 'OffsetType',
            'Language',
            'MentionType',
            'Attribute',
            'AttributeType',
 #           'Relation',
-           'RelationType',
+           'RelationType', 'FlagType',
            'Gender',
            'StreamItem_v0_1_0',
            'StreamItem_v0_2_0',

@@ -703,6 +703,14 @@ struct ContentItem {
   14: optional map<TaggerID, map<MentionID, string>> external_ids = {},
 }
 
+/*
+ * General purpose flags. These flags can be used to mark documents as meeting an
+ * extensible set of criteria.
+ */
+enum FlagType {
+  PROFILE = 0,
+}
+
 /**
  * Ratings are buman generated assertions about a entire document's
  * utility for a particular topic or entity in a reference KB.
@@ -745,6 +753,13 @@ struct Rating {
    * Record strings that are "mentions" of the target in this text
    */
   6: optional list<string> mentions,
+
+  /**
+   * General purpose flags. These flags can be used to mark documents as meeting an
+   * extensible set of criteria.
+   * 
+   */
+  7: optional list<FlagType> flags,
 }
 
 /**
