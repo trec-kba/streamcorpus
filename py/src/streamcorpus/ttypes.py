@@ -43,6 +43,21 @@ class OffsetType(object):
     "CHARS": 2,
   }
 
+class FlagType(object):
+  """
+  General purpose flags. These flags can be used to mark documents as
+  meeting an extensible set of criteria.
+  """
+  PROFILE = 0
+
+  _VALUES_TO_NAMES = {
+    0: "PROFILE",
+  }
+
+  _NAMES_TO_VALUES = {
+    "PROFILE": 0,
+  }
+
 class EntityType(object):
   """
   Different tagging tools have different strings for labeling the
@@ -323,17 +338,6 @@ class RelationType(object):
     "Personnel_StartPosition": 48,
     "Transaction_TransferMoney": 49,
     "Transaction_TransferOwnership": 50,
-  }
-
-class FlagType(object):
-  PROFILE = 0
-
-  _VALUES_TO_NAMES = {
-    0: "PROFILE",
-  }
-
-  _NAMES_TO_VALUES = {
-    "PROFILE": 0,
   }
 
 class Versions(object):
@@ -826,6 +830,23 @@ class Label(object):
   the target_id.  It is sometimes useful to collect negative
   assertions that a token is NOT the target_id, which can be
   indicated by setting Label.positive to False
+   - comments: Save notes from Annotator about this Rating
+   - mentions: Record strings that are "mentions" of the target in this text.
+
+  Note: there used to be a field 'contains mention' which would
+  allow for a document to be labeled as about a thing without
+  containing a string naming the thing. That hardly ever actually
+  happened, but maybe someday it could be added back if needed.
+   - relevance: numerical score assigned by annotator to "judge" or "rate" the
+  utility of this StreamItem to addressing the target information
+  need.  The range and interpretation of relevance numbers depends
+  on the annotator.  relevance can represent a rank ordering or an
+  enumeration such as -1=Garbage, 0=Neutral, 1=Useful, 2=Vital
+   - stream_id: Stream ID for this label.  This is the stream_id for the source
+  StreamItem, if a label is stored independently from its original
+  data.
+   - flags: General purpose flags. These flags can be used to mark documents
+  as meeting an extensible set of criteria.
   """
 
   __slots__ = [ 
@@ -833,6 +854,11 @@ class Label(object):
     'target',
     'offsets',
     'positive',
+    'comments',
+    'mentions',
+    'relevance',
+    'stream_id',
+    'flags',
    ]
 
   thrift_spec = (
@@ -842,9 +868,14 @@ class Label(object):
     (3, TType.MAP, 'offsets', (TType.I32,None,TType.STRUCT,(Offset, Offset.thrift_spec)), {
     }, ), # 3
     (4, TType.BOOL, 'positive', None, True, ), # 4
+    (5, TType.STRING, 'comments', None, None, ), # 5
+    (6, TType.LIST, 'mentions', (TType.STRING,None), None, ), # 6
+    (7, TType.I16, 'relevance', None, None, ), # 7
+    (8, TType.STRING, 'stream_id', None, None, ), # 8
+    (9, TType.LIST, 'flags', (TType.I32,None), None, ), # 9
   )
 
-  def __init__(self, annotator=None, target=None, offsets=thrift_spec[3][4], positive=thrift_spec[4][4],):
+  def __init__(self, annotator=None, target=None, offsets=thrift_spec[3][4], positive=thrift_spec[4][4], comments=None, mentions=None, relevance=None, stream_id=None, flags=None,):
     self.annotator = annotator
     self.target = target
     if offsets is self.thrift_spec[3][4]:
@@ -852,6 +883,11 @@ class Label(object):
     }
     self.offsets = offsets
     self.positive = positive
+    self.comments = comments
+    self.mentions = mentions
+    self.relevance = relevance
+    self.stream_id = stream_id
+    self.flags = flags
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -891,6 +927,41 @@ class Label(object):
           self.positive = iprot.readBool();
         else:
           iprot.skip(ftype)
+      elif fid == 5:
+        if ftype == TType.STRING:
+          self.comments = iprot.readString();
+        else:
+          iprot.skip(ftype)
+      elif fid == 6:
+        if ftype == TType.LIST:
+          self.mentions = []
+          (_etype10, _size7) = iprot.readListBegin()
+          for _i11 in xrange(_size7):
+            _elem12 = iprot.readString();
+            self.mentions.append(_elem12)
+          iprot.readListEnd()
+        else:
+          iprot.skip(ftype)
+      elif fid == 7:
+        if ftype == TType.I16:
+          self.relevance = iprot.readI16();
+        else:
+          iprot.skip(ftype)
+      elif fid == 8:
+        if ftype == TType.STRING:
+          self.stream_id = iprot.readString();
+        else:
+          iprot.skip(ftype)
+      elif fid == 9:
+        if ftype == TType.LIST:
+          self.flags = []
+          (_etype16, _size13) = iprot.readListBegin()
+          for _i17 in xrange(_size13):
+            _elem18 = iprot.readI32();
+            self.flags.append(_elem18)
+          iprot.readListEnd()
+        else:
+          iprot.skip(ftype)
       else:
         iprot.skip(ftype)
       iprot.readFieldEnd()
@@ -912,14 +983,40 @@ class Label(object):
     if self.offsets is not None:
       oprot.writeFieldBegin('offsets', TType.MAP, 3)
       oprot.writeMapBegin(TType.I32, TType.STRUCT, len(self.offsets))
-      for kiter7,viter8 in self.offsets.items():
-        oprot.writeI32(kiter7)
-        viter8.write(oprot)
+      for kiter19,viter20 in self.offsets.items():
+        oprot.writeI32(kiter19)
+        viter20.write(oprot)
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.positive is not None:
       oprot.writeFieldBegin('positive', TType.BOOL, 4)
       oprot.writeBool(self.positive)
+      oprot.writeFieldEnd()
+    if self.comments is not None:
+      oprot.writeFieldBegin('comments', TType.STRING, 5)
+      oprot.writeString(self.comments)
+      oprot.writeFieldEnd()
+    if self.mentions is not None:
+      oprot.writeFieldBegin('mentions', TType.LIST, 6)
+      oprot.writeListBegin(TType.STRING, len(self.mentions))
+      for iter21 in self.mentions:
+        oprot.writeString(iter21)
+      oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    if self.relevance is not None:
+      oprot.writeFieldBegin('relevance', TType.I16, 7)
+      oprot.writeI16(self.relevance)
+      oprot.writeFieldEnd()
+    if self.stream_id is not None:
+      oprot.writeFieldBegin('stream_id', TType.STRING, 8)
+      oprot.writeString(self.stream_id)
+      oprot.writeFieldEnd()
+    if self.flags is not None:
+      oprot.writeFieldBegin('flags', TType.LIST, 9)
+      oprot.writeListBegin(TType.I32, len(self.flags))
+      for iter22 in self.flags:
+        oprot.writeI32(iter22)
+      oprot.writeListEnd()
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
@@ -1212,12 +1309,12 @@ class Token(object):
       elif fid == 3:
         if ftype == TType.MAP:
           self.offsets = {}
-          (_ktype10, _vtype11, _size9 ) = iprot.readMapBegin() 
-          for _i13 in xrange(_size9):
-            _key14 = iprot.readI32();
-            _val15 = Offset()
-            _val15.read(iprot)
-            self.offsets[_key14] = _val15
+          (_ktype24, _vtype25, _size23 ) = iprot.readMapBegin() 
+          for _i27 in xrange(_size23):
+            _key28 = iprot.readI32();
+            _val29 = Offset()
+            _val29.read(iprot)
+            self.offsets[_key28] = _val29
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
@@ -1264,17 +1361,17 @@ class Token(object):
       elif fid == 12:
         if ftype == TType.MAP:
           self.labels = {}
-          (_ktype17, _vtype18, _size16 ) = iprot.readMapBegin() 
-          for _i20 in xrange(_size16):
-            _key21 = iprot.readString();
-            _val22 = []
-            (_etype26, _size23) = iprot.readListBegin()
-            for _i27 in xrange(_size23):
-              _elem28 = Label()
-              _elem28.read(iprot)
-              _val22.append(_elem28)
+          (_ktype31, _vtype32, _size30 ) = iprot.readMapBegin() 
+          for _i34 in xrange(_size30):
+            _key35 = iprot.readString();
+            _val36 = []
+            (_etype40, _size37) = iprot.readListBegin()
+            for _i41 in xrange(_size37):
+              _elem42 = Label()
+              _elem42.read(iprot)
+              _val36.append(_elem42)
             iprot.readListEnd()
-            self.labels[_key21] = _val22
+            self.labels[_key35] = _val36
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
@@ -1309,9 +1406,9 @@ class Token(object):
     if self.offsets is not None:
       oprot.writeFieldBegin('offsets', TType.MAP, 3)
       oprot.writeMapBegin(TType.I32, TType.STRUCT, len(self.offsets))
-      for kiter29,viter30 in self.offsets.items():
-        oprot.writeI32(kiter29)
-        viter30.write(oprot)
+      for kiter43,viter44 in self.offsets.items():
+        oprot.writeI32(kiter43)
+        viter44.write(oprot)
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.sentence_pos is not None:
@@ -1349,11 +1446,11 @@ class Token(object):
     if self.labels is not None:
       oprot.writeFieldBegin('labels', TType.MAP, 12)
       oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.labels))
-      for kiter31,viter32 in self.labels.items():
-        oprot.writeString(kiter31)
-        oprot.writeListBegin(TType.STRUCT, len(viter32))
-        for iter33 in viter32:
-          iter33.write(oprot)
+      for kiter45,viter46 in self.labels.items():
+        oprot.writeString(kiter45)
+        oprot.writeListBegin(TType.STRUCT, len(viter46))
+        for iter47 in viter46:
+          iter47.write(oprot)
         oprot.writeListEnd()
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
@@ -1434,28 +1531,28 @@ class Sentence(object):
       if fid == 1:
         if ftype == TType.LIST:
           self.tokens = []
-          (_etype37, _size34) = iprot.readListBegin()
-          for _i38 in xrange(_size34):
-            _elem39 = Token()
-            _elem39.read(iprot)
-            self.tokens.append(_elem39)
+          (_etype51, _size48) = iprot.readListBegin()
+          for _i52 in xrange(_size48):
+            _elem53 = Token()
+            _elem53.read(iprot)
+            self.tokens.append(_elem53)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
       elif fid == 2:
         if ftype == TType.MAP:
           self.labels = {}
-          (_ktype41, _vtype42, _size40 ) = iprot.readMapBegin() 
-          for _i44 in xrange(_size40):
-            _key45 = iprot.readString();
-            _val46 = []
-            (_etype50, _size47) = iprot.readListBegin()
-            for _i51 in xrange(_size47):
-              _elem52 = Label()
-              _elem52.read(iprot)
-              _val46.append(_elem52)
+          (_ktype55, _vtype56, _size54 ) = iprot.readMapBegin() 
+          for _i58 in xrange(_size54):
+            _key59 = iprot.readString();
+            _val60 = []
+            (_etype64, _size61) = iprot.readListBegin()
+            for _i65 in xrange(_size61):
+              _elem66 = Label()
+              _elem66.read(iprot)
+              _val60.append(_elem66)
             iprot.readListEnd()
-            self.labels[_key45] = _val46
+            self.labels[_key59] = _val60
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
@@ -1472,18 +1569,18 @@ class Sentence(object):
     if self.tokens is not None:
       oprot.writeFieldBegin('tokens', TType.LIST, 1)
       oprot.writeListBegin(TType.STRUCT, len(self.tokens))
-      for iter53 in self.tokens:
-        iter53.write(oprot)
+      for iter67 in self.tokens:
+        iter67.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.labels is not None:
       oprot.writeFieldBegin('labels', TType.MAP, 2)
       oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.labels))
-      for kiter54,viter55 in self.labels.items():
-        oprot.writeString(kiter54)
-        oprot.writeListBegin(TType.STRUCT, len(viter55))
-        for iter56 in viter55:
-          iter56.write(oprot)
+      for kiter68,viter69 in self.labels.items():
+        oprot.writeString(kiter68)
+        oprot.writeListBegin(TType.STRUCT, len(viter69))
+        for iter70 in viter69:
+          iter70.write(oprot)
         oprot.writeListEnd()
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
@@ -2026,67 +2123,67 @@ class ContentItem(object):
       elif fid == 6:
         if ftype == TType.LIST:
           self.logs = []
-          (_etype60, _size57) = iprot.readListBegin()
-          for _i61 in xrange(_size57):
-            _elem62 = iprot.readString();
-            self.logs.append(_elem62)
+          (_etype74, _size71) = iprot.readListBegin()
+          for _i75 in xrange(_size71):
+            _elem76 = iprot.readString();
+            self.logs.append(_elem76)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
       elif fid == 7:
         if ftype == TType.MAP:
           self.taggings = {}
-          (_ktype64, _vtype65, _size63 ) = iprot.readMapBegin() 
-          for _i67 in xrange(_size63):
-            _key68 = iprot.readString();
-            _val69 = Tagging()
-            _val69.read(iprot)
-            self.taggings[_key68] = _val69
+          (_ktype78, _vtype79, _size77 ) = iprot.readMapBegin() 
+          for _i81 in xrange(_size77):
+            _key82 = iprot.readString();
+            _val83 = Tagging()
+            _val83.read(iprot)
+            self.taggings[_key82] = _val83
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
       elif fid == 8:
         if ftype == TType.MAP:
           self.labels = {}
-          (_ktype71, _vtype72, _size70 ) = iprot.readMapBegin() 
-          for _i74 in xrange(_size70):
-            _key75 = iprot.readString();
-            _val76 = []
-            (_etype80, _size77) = iprot.readListBegin()
-            for _i81 in xrange(_size77):
-              _elem82 = Label()
-              _elem82.read(iprot)
-              _val76.append(_elem82)
+          (_ktype85, _vtype86, _size84 ) = iprot.readMapBegin() 
+          for _i88 in xrange(_size84):
+            _key89 = iprot.readString();
+            _val90 = []
+            (_etype94, _size91) = iprot.readListBegin()
+            for _i95 in xrange(_size91):
+              _elem96 = Label()
+              _elem96.read(iprot)
+              _val90.append(_elem96)
             iprot.readListEnd()
-            self.labels[_key75] = _val76
+            self.labels[_key89] = _val90
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
       elif fid == 9:
         if ftype == TType.MAP:
           self.sentences = {}
-          (_ktype84, _vtype85, _size83 ) = iprot.readMapBegin() 
-          for _i87 in xrange(_size83):
-            _key88 = iprot.readString();
-            _val89 = []
-            (_etype93, _size90) = iprot.readListBegin()
-            for _i94 in xrange(_size90):
-              _elem95 = Sentence()
-              _elem95.read(iprot)
-              _val89.append(_elem95)
+          (_ktype98, _vtype99, _size97 ) = iprot.readMapBegin() 
+          for _i101 in xrange(_size97):
+            _key102 = iprot.readString();
+            _val103 = []
+            (_etype107, _size104) = iprot.readListBegin()
+            for _i108 in xrange(_size104):
+              _elem109 = Sentence()
+              _elem109.read(iprot)
+              _val103.append(_elem109)
             iprot.readListEnd()
-            self.sentences[_key88] = _val89
+            self.sentences[_key102] = _val103
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
       elif fid == 10:
         if ftype == TType.MAP:
           self.sentence_blobs = {}
-          (_ktype97, _vtype98, _size96 ) = iprot.readMapBegin() 
-          for _i100 in xrange(_size96):
-            _key101 = iprot.readString();
-            _val102 = iprot.readString();
-            self.sentence_blobs[_key101] = _val102
+          (_ktype111, _vtype112, _size110 ) = iprot.readMapBegin() 
+          for _i114 in xrange(_size110):
+            _key115 = iprot.readString();
+            _val116 = iprot.readString();
+            self.sentence_blobs[_key115] = _val116
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
@@ -2099,51 +2196,51 @@ class ContentItem(object):
       elif fid == 12:
         if ftype == TType.MAP:
           self.relations = {}
-          (_ktype104, _vtype105, _size103 ) = iprot.readMapBegin() 
-          for _i107 in xrange(_size103):
-            _key108 = iprot.readString();
-            _val109 = []
-            (_etype113, _size110) = iprot.readListBegin()
-            for _i114 in xrange(_size110):
-              _elem115 = Relation()
-              _elem115.read(iprot)
-              _val109.append(_elem115)
+          (_ktype118, _vtype119, _size117 ) = iprot.readMapBegin() 
+          for _i121 in xrange(_size117):
+            _key122 = iprot.readString();
+            _val123 = []
+            (_etype127, _size124) = iprot.readListBegin()
+            for _i128 in xrange(_size124):
+              _elem129 = Relation()
+              _elem129.read(iprot)
+              _val123.append(_elem129)
             iprot.readListEnd()
-            self.relations[_key108] = _val109
+            self.relations[_key122] = _val123
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
       elif fid == 13:
         if ftype == TType.MAP:
           self.attributes = {}
-          (_ktype117, _vtype118, _size116 ) = iprot.readMapBegin() 
-          for _i120 in xrange(_size116):
-            _key121 = iprot.readString();
-            _val122 = []
-            (_etype126, _size123) = iprot.readListBegin()
-            for _i127 in xrange(_size123):
-              _elem128 = Attribute()
-              _elem128.read(iprot)
-              _val122.append(_elem128)
+          (_ktype131, _vtype132, _size130 ) = iprot.readMapBegin() 
+          for _i134 in xrange(_size130):
+            _key135 = iprot.readString();
+            _val136 = []
+            (_etype140, _size137) = iprot.readListBegin()
+            for _i141 in xrange(_size137):
+              _elem142 = Attribute()
+              _elem142.read(iprot)
+              _val136.append(_elem142)
             iprot.readListEnd()
-            self.attributes[_key121] = _val122
+            self.attributes[_key135] = _val136
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
       elif fid == 14:
         if ftype == TType.MAP:
           self.external_ids = {}
-          (_ktype130, _vtype131, _size129 ) = iprot.readMapBegin() 
-          for _i133 in xrange(_size129):
-            _key134 = iprot.readString();
-            _val135 = {}
-            (_ktype137, _vtype138, _size136 ) = iprot.readMapBegin() 
-            for _i140 in xrange(_size136):
-              _key141 = iprot.readI32();
-              _val142 = iprot.readString();
-              _val135[_key141] = _val142
+          (_ktype144, _vtype145, _size143 ) = iprot.readMapBegin() 
+          for _i147 in xrange(_size143):
+            _key148 = iprot.readString();
+            _val149 = {}
+            (_ktype151, _vtype152, _size150 ) = iprot.readMapBegin() 
+            for _i154 in xrange(_size150):
+              _key155 = iprot.readI32();
+              _val156 = iprot.readString();
+              _val149[_key155] = _val156
             iprot.readMapEnd()
-            self.external_ids[_key134] = _val135
+            self.external_ids[_key148] = _val149
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
@@ -2180,46 +2277,46 @@ class ContentItem(object):
     if self.logs is not None:
       oprot.writeFieldBegin('logs', TType.LIST, 6)
       oprot.writeListBegin(TType.STRING, len(self.logs))
-      for iter143 in self.logs:
-        oprot.writeString(iter143)
+      for iter157 in self.logs:
+        oprot.writeString(iter157)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.taggings is not None:
       oprot.writeFieldBegin('taggings', TType.MAP, 7)
       oprot.writeMapBegin(TType.STRING, TType.STRUCT, len(self.taggings))
-      for kiter144,viter145 in self.taggings.items():
-        oprot.writeString(kiter144)
-        viter145.write(oprot)
+      for kiter158,viter159 in self.taggings.items():
+        oprot.writeString(kiter158)
+        viter159.write(oprot)
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.labels is not None:
       oprot.writeFieldBegin('labels', TType.MAP, 8)
       oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.labels))
-      for kiter146,viter147 in self.labels.items():
-        oprot.writeString(kiter146)
-        oprot.writeListBegin(TType.STRUCT, len(viter147))
-        for iter148 in viter147:
-          iter148.write(oprot)
+      for kiter160,viter161 in self.labels.items():
+        oprot.writeString(kiter160)
+        oprot.writeListBegin(TType.STRUCT, len(viter161))
+        for iter162 in viter161:
+          iter162.write(oprot)
         oprot.writeListEnd()
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.sentences is not None:
       oprot.writeFieldBegin('sentences', TType.MAP, 9)
       oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.sentences))
-      for kiter149,viter150 in self.sentences.items():
-        oprot.writeString(kiter149)
-        oprot.writeListBegin(TType.STRUCT, len(viter150))
-        for iter151 in viter150:
-          iter151.write(oprot)
+      for kiter163,viter164 in self.sentences.items():
+        oprot.writeString(kiter163)
+        oprot.writeListBegin(TType.STRUCT, len(viter164))
+        for iter165 in viter164:
+          iter165.write(oprot)
         oprot.writeListEnd()
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.sentence_blobs is not None:
       oprot.writeFieldBegin('sentence_blobs', TType.MAP, 10)
       oprot.writeMapBegin(TType.STRING, TType.STRING, len(self.sentence_blobs))
-      for kiter152,viter153 in self.sentence_blobs.items():
-        oprot.writeString(kiter152)
-        oprot.writeString(viter153)
+      for kiter166,viter167 in self.sentence_blobs.items():
+        oprot.writeString(kiter166)
+        oprot.writeString(viter167)
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.language is not None:
@@ -2229,34 +2326,34 @@ class ContentItem(object):
     if self.relations is not None:
       oprot.writeFieldBegin('relations', TType.MAP, 12)
       oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.relations))
-      for kiter154,viter155 in self.relations.items():
-        oprot.writeString(kiter154)
-        oprot.writeListBegin(TType.STRUCT, len(viter155))
-        for iter156 in viter155:
-          iter156.write(oprot)
+      for kiter168,viter169 in self.relations.items():
+        oprot.writeString(kiter168)
+        oprot.writeListBegin(TType.STRUCT, len(viter169))
+        for iter170 in viter169:
+          iter170.write(oprot)
         oprot.writeListEnd()
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.attributes is not None:
       oprot.writeFieldBegin('attributes', TType.MAP, 13)
       oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.attributes))
-      for kiter157,viter158 in self.attributes.items():
-        oprot.writeString(kiter157)
-        oprot.writeListBegin(TType.STRUCT, len(viter158))
-        for iter159 in viter158:
-          iter159.write(oprot)
+      for kiter171,viter172 in self.attributes.items():
+        oprot.writeString(kiter171)
+        oprot.writeListBegin(TType.STRUCT, len(viter172))
+        for iter173 in viter172:
+          iter173.write(oprot)
         oprot.writeListEnd()
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.external_ids is not None:
       oprot.writeFieldBegin('external_ids', TType.MAP, 14)
       oprot.writeMapBegin(TType.STRING, TType.MAP, len(self.external_ids))
-      for kiter160,viter161 in self.external_ids.items():
-        oprot.writeString(kiter160)
-        oprot.writeMapBegin(TType.I32, TType.STRING, len(viter161))
-        for kiter162,viter163 in viter161.items():
-          oprot.writeI32(kiter162)
-          oprot.writeString(viter163)
+      for kiter174,viter175 in self.external_ids.items():
+        oprot.writeString(kiter174)
+        oprot.writeMapBegin(TType.I32, TType.STRING, len(viter175))
+        for kiter176,viter177 in viter175.items():
+          oprot.writeI32(kiter176)
+          oprot.writeString(viter177)
         oprot.writeMapEnd()
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
@@ -2305,9 +2402,8 @@ class Rating(object):
   on the side such that it is a Garbage-rated text for that entity.
    - comments: Save notes from Annotator about this Rating
    - mentions: Record strings that are "mentions" of the target in this text
-   - flags: General purpose flags. These flags can be used to mark documents as meeting an
-  extensible set of criteria.
-
+   - flags: General purpose flags. These flags can be used to mark documents
+  as meeting an extensible set of criteria.
   """
 
   __slots__ = [ 
@@ -2379,20 +2475,20 @@ class Rating(object):
       elif fid == 6:
         if ftype == TType.LIST:
           self.mentions = []
-          (_etype167, _size164) = iprot.readListBegin()
-          for _i168 in xrange(_size164):
-            _elem169 = iprot.readString();
-            self.mentions.append(_elem169)
+          (_etype181, _size178) = iprot.readListBegin()
+          for _i182 in xrange(_size178):
+            _elem183 = iprot.readString();
+            self.mentions.append(_elem183)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
       elif fid == 7:
         if ftype == TType.LIST:
           self.flags = []
-          (_etype173, _size170) = iprot.readListBegin()
-          for _i174 in xrange(_size170):
-            _elem175 = iprot.readI32();
-            self.flags.append(_elem175)
+          (_etype187, _size184) = iprot.readListBegin()
+          for _i188 in xrange(_size184):
+            _elem189 = iprot.readI32();
+            self.flags.append(_elem189)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -2429,15 +2525,15 @@ class Rating(object):
     if self.mentions is not None:
       oprot.writeFieldBegin('mentions', TType.LIST, 6)
       oprot.writeListBegin(TType.STRING, len(self.mentions))
-      for iter176 in self.mentions:
-        oprot.writeString(iter176)
+      for iter190 in self.mentions:
+        oprot.writeString(iter190)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.flags is not None:
       oprot.writeFieldBegin('flags', TType.LIST, 7)
       oprot.writeListBegin(TType.I32, len(self.flags))
-      for iter177 in self.flags:
-        oprot.writeI32(iter177)
+      for iter191 in self.flags:
+        oprot.writeI32(iter191)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
@@ -2627,11 +2723,11 @@ class StreamItem(object):
       elif fid == 8:
         if ftype == TType.MAP:
           self.source_metadata = {}
-          (_ktype179, _vtype180, _size178 ) = iprot.readMapBegin() 
-          for _i182 in xrange(_size178):
-            _key183 = iprot.readString();
-            _val184 = iprot.readString();
-            self.source_metadata[_key183] = _val184
+          (_ktype193, _vtype194, _size192 ) = iprot.readMapBegin() 
+          for _i196 in xrange(_size192):
+            _key197 = iprot.readString();
+            _val198 = iprot.readString();
+            self.source_metadata[_key197] = _val198
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
@@ -2649,46 +2745,46 @@ class StreamItem(object):
       elif fid == 11:
         if ftype == TType.MAP:
           self.other_content = {}
-          (_ktype186, _vtype187, _size185 ) = iprot.readMapBegin() 
-          for _i189 in xrange(_size185):
-            _key190 = iprot.readString();
-            _val191 = ContentItem()
-            _val191.read(iprot)
-            self.other_content[_key190] = _val191
+          (_ktype200, _vtype201, _size199 ) = iprot.readMapBegin() 
+          for _i203 in xrange(_size199):
+            _key204 = iprot.readString();
+            _val205 = ContentItem()
+            _val205.read(iprot)
+            self.other_content[_key204] = _val205
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
       elif fid == 12:
         if ftype == TType.MAP:
           self.ratings = {}
-          (_ktype193, _vtype194, _size192 ) = iprot.readMapBegin() 
-          for _i196 in xrange(_size192):
-            _key197 = iprot.readString();
-            _val198 = []
-            (_etype202, _size199) = iprot.readListBegin()
-            for _i203 in xrange(_size199):
-              _elem204 = Rating()
-              _elem204.read(iprot)
-              _val198.append(_elem204)
+          (_ktype207, _vtype208, _size206 ) = iprot.readMapBegin() 
+          for _i210 in xrange(_size206):
+            _key211 = iprot.readString();
+            _val212 = []
+            (_etype216, _size213) = iprot.readListBegin()
+            for _i217 in xrange(_size213):
+              _elem218 = Rating()
+              _elem218.read(iprot)
+              _val212.append(_elem218)
             iprot.readListEnd()
-            self.ratings[_key197] = _val198
+            self.ratings[_key211] = _val212
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
       elif fid == 14:
         if ftype == TType.MAP:
           self.external_ids = {}
-          (_ktype206, _vtype207, _size205 ) = iprot.readMapBegin() 
-          for _i209 in xrange(_size205):
-            _key210 = iprot.readString();
-            _val211 = {}
-            (_ktype213, _vtype214, _size212 ) = iprot.readMapBegin() 
-            for _i216 in xrange(_size212):
-              _key217 = iprot.readString();
-              _val218 = iprot.readString();
-              _val211[_key217] = _val218
+          (_ktype220, _vtype221, _size219 ) = iprot.readMapBegin() 
+          for _i223 in xrange(_size219):
+            _key224 = iprot.readString();
+            _val225 = {}
+            (_ktype227, _vtype228, _size226 ) = iprot.readMapBegin() 
+            for _i230 in xrange(_size226):
+              _key231 = iprot.readString();
+              _val232 = iprot.readString();
+              _val225[_key231] = _val232
             iprot.readMapEnd()
-            self.external_ids[_key210] = _val211
+            self.external_ids[_key224] = _val225
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
@@ -2733,9 +2829,9 @@ class StreamItem(object):
     if self.source_metadata is not None:
       oprot.writeFieldBegin('source_metadata', TType.MAP, 8)
       oprot.writeMapBegin(TType.STRING, TType.STRING, len(self.source_metadata))
-      for kiter219,viter220 in self.source_metadata.items():
-        oprot.writeString(kiter219)
-        oprot.writeString(viter220)
+      for kiter233,viter234 in self.source_metadata.items():
+        oprot.writeString(kiter233)
+        oprot.writeString(viter234)
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.stream_id is not None:
@@ -2749,31 +2845,31 @@ class StreamItem(object):
     if self.other_content is not None:
       oprot.writeFieldBegin('other_content', TType.MAP, 11)
       oprot.writeMapBegin(TType.STRING, TType.STRUCT, len(self.other_content))
-      for kiter221,viter222 in self.other_content.items():
-        oprot.writeString(kiter221)
-        viter222.write(oprot)
+      for kiter235,viter236 in self.other_content.items():
+        oprot.writeString(kiter235)
+        viter236.write(oprot)
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.ratings is not None:
       oprot.writeFieldBegin('ratings', TType.MAP, 12)
       oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.ratings))
-      for kiter223,viter224 in self.ratings.items():
-        oprot.writeString(kiter223)
-        oprot.writeListBegin(TType.STRUCT, len(viter224))
-        for iter225 in viter224:
-          iter225.write(oprot)
+      for kiter237,viter238 in self.ratings.items():
+        oprot.writeString(kiter237)
+        oprot.writeListBegin(TType.STRUCT, len(viter238))
+        for iter239 in viter238:
+          iter239.write(oprot)
         oprot.writeListEnd()
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.external_ids is not None:
       oprot.writeFieldBegin('external_ids', TType.MAP, 14)
       oprot.writeMapBegin(TType.STRING, TType.MAP, len(self.external_ids))
-      for kiter226,viter227 in self.external_ids.items():
-        oprot.writeString(kiter226)
-        oprot.writeMapBegin(TType.STRING, TType.STRING, len(viter227))
-        for kiter228,viter229 in viter227.items():
-          oprot.writeString(kiter228)
-          oprot.writeString(viter229)
+      for kiter240,viter241 in self.external_ids.items():
+        oprot.writeString(kiter240)
+        oprot.writeMapBegin(TType.STRING, TType.STRING, len(viter241))
+        for kiter242,viter243 in viter241.items():
+          oprot.writeString(kiter242)
+          oprot.writeString(viter243)
         oprot.writeMapEnd()
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
