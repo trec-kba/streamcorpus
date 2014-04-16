@@ -12,10 +12,10 @@
 # To use this script, simply import it your setup.py file, and use the
 # results of get_git_version() as your package version:
 #
-# from version import *
+# from version import get_git_version
 #
 # setup(
-#     version=get_git_version(),
+#     version=get_git_version()[0],
 #     .
 #     .
 #     .
@@ -44,7 +44,8 @@ def call_git_describe(abbrev=4):
     p = None
     try:
         p = Popen(['git', 'describe', '--abbrev=%d' % abbrev],
-                  stdout=PIPE, stderr=PIPE)
+                  stdout=PIPE, stderr=PIPE, 
+                  cwd=os.path.dirname(__file__))
         p.stderr.close()
         describe_line = p.stdout.readlines()[0].strip()
 
@@ -124,7 +125,7 @@ def get_git_version(abbrev=4):
  
     if version is None:
         # raise ValueError("Cannot find the version number!")
-        version = '0.1.0'
+        version = '0.0.0'
         source_hash = ''
  
     # If the current version is different from what's in the
