@@ -19,6 +19,10 @@
  * changing MentionID to i32, so it can be unique across the whole
  * document instead of only the sentence.  
  *
+ * March 2014: Amend v0_3_0 to add a FlagType to Label and Rating,
+ * replicate Rating's contents in Label, and make it possible to store
+ * a Label independently of its source StreamItem
+ *
  *
  * This is released as open source software under the MIT X11 license:
  * Copyright (c) 2012 Computable Insights.
@@ -189,6 +193,14 @@ struct Target {
 }
 
 /**
+ * General purpose flags. These flags can be used to mark documents as
+ * meeting an extensible set of criteria.
+ */
+enum FlagType {
+  PROFILE = 0,
+}
+
+/**
  * Labels are human generated assertions about a portion of a document
  * For example, a human author might label their own text by inserting
  * hyperlinks to Wikipedia, or a NIST assessor might record which
@@ -224,6 +236,43 @@ struct Label {
    * indicated by setting Label.positive to False
    */
   4: optional bool positive = true,
+
+  /**
+   * Save notes from Annotator about this Rating
+   */
+  5: optional string comments,
+
+  /**
+   * Record strings that are "mentions" of the target in this text.
+   *
+   * Note: there used to be a field 'contains mention' which would
+   * allow for a document to be labeled as about a thing without
+   * containing a string naming the thing. That hardly ever actually
+   * happened, but maybe someday it could be added back if needed.
+   */
+  6: optional list<string> mentions,
+
+  /**
+   * numerical score assigned by annotator to "judge" or "rate" the
+   * utility of this StreamItem to addressing the target information
+   * need.  The range and interpretation of relevance numbers depends
+   * on the annotator.  relevance can represent a rank ordering or an
+   * enumeration such as -1=Garbage, 0=Neutral, 1=Useful, 2=Vital
+   */
+  7: optional i16 relevance,
+
+  /**
+   * Stream ID for this label.  This is the stream_id for the source
+   * StreamItem, if a label is stored independently from its original
+   * data.
+   */
+  8: optional string stream_id,
+
+  /**
+   * General purpose flags. These flags can be used to mark documents
+   * as meeting an extensible set of criteria. 
+   */
+  9: optional list<FlagType> flags,
 }
 
 /**
@@ -703,14 +752,6 @@ struct ContentItem {
   14: optional map<TaggerID, map<MentionID, string>> external_ids = {},
 }
 
-/*
- * General purpose flags. These flags can be used to mark documents as meeting an
- * extensible set of criteria.
- */
-enum FlagType {
-  PROFILE = 0,
-}
-
 /**
  * Ratings are buman generated assertions about a entire document's
  * utility for a particular topic or entity in a reference KB.
@@ -755,9 +796,8 @@ struct Rating {
   6: optional list<string> mentions,
 
   /**
-   * General purpose flags. These flags can be used to mark documents as meeting an
-   * extensible set of criteria.
-   * 
+   * General purpose flags. These flags can be used to mark documents
+   * as meeting an extensible set of criteria. 
    */
   7: optional list<FlagType> flags,
 }
