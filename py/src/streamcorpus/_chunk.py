@@ -405,7 +405,7 @@ def decrypt_and_uncompress(data, gpg_private=None, tmp_dir='/tmp'):
     '''
     Given a data buffer of bytes, if gpg_key_path is provided, decrypt
     data using gnupg, and uncompress using xz.
-
+    
     :returns: a tuple of (logs, data), where `logs` is an array of
       strings and data is a binary string
     '''
