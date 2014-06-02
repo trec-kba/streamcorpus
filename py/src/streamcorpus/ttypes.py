@@ -159,26 +159,63 @@ class Gender(object):
   }
 
 class AttributeType(object):
+  """
+  Attributes are based primarily on TAC KBP, see also saved in this directory
+  http://surdeanu.info/kbp2013/TAC_2013_KBP_Slot_Descriptions_1.0.pdf
+
+  Only slots that are not resolvable to unique entities are listed
+  here as attributes.  Most slots are relations, so see RelationType.
+  """
   PER_AGE = 0
   PER_GENDER = 1
+  PER_ALTERNATE_NAMES = 3
+  PER_CAUSE_OF_DEATH = 4
+  PER_TITLE = 5
+  PER_CHARGES = 6
+  ORG_ALTERNATE_NAMES = 7
+  ORG_NUMBER_OF_EMPLOYEES_MEMBERS = 8
 
   _VALUES_TO_NAMES = {
     0: "PER_AGE",
     1: "PER_GENDER",
+    3: "PER_ALTERNATE_NAMES",
+    4: "PER_CAUSE_OF_DEATH",
+    5: "PER_TITLE",
+    6: "PER_CHARGES",
+    7: "ORG_ALTERNATE_NAMES",
+    8: "ORG_NUMBER_OF_EMPLOYEES_MEMBERS",
   }
 
   _NAMES_TO_VALUES = {
     "PER_AGE": 0,
     "PER_GENDER": 1,
+    "PER_ALTERNATE_NAMES": 3,
+    "PER_CAUSE_OF_DEATH": 4,
+    "PER_TITLE": 5,
+    "PER_CHARGES": 6,
+    "ORG_ALTERNATE_NAMES": 7,
+    "ORG_NUMBER_OF_EMPLOYEES_MEMBERS": 8,
   }
 
 class RelationType(object):
   """
   RelationType is used in Relation to map relation "name" to type.
-  This list borrows from ACE with these string replacements: s/-//
-  and s/./_/
 
+  Relations 0 through 50 borrow from ACE with these string replacements:
+  s/-// and s/./_/
   http://projects.ldc.upenn.edu/ace/docs/English-Events-Guidelines_v5.4.3.pdf
+
+  Relations 51-  borrows from KBP slot filling
+  http://surdeanu.info/kbp2013/TAC_2013_KBP_Slot_Descriptions_1.0.pdf
+
+  Most entity slots are relations, so the PER_ and ORG_ and FAC_
+  relations listed below are primary for slot filling.
+
+  Many of the KBP-based slots are redundant or overlapping with the
+  ACE-based slots.  The KBP-based slots are generally simpler and
+  were developed to support knowledge base population rather than
+  single-document extraction (as ACE was).  Therefore, for KB-focused
+  tasks, we recommend using the Relations 51-
   """
   PHYS_Located = 0
   PHYS_Near = 1
@@ -231,6 +268,43 @@ class RelationType(object):
   Personnel_StartPosition = 48
   Transaction_TransferMoney = 49
   Transaction_TransferOwnership = 50
+  PER_DATE_OF_BIRTH = 51
+  PER_COUNTRY_OF_BIRTH = 52
+  PER_STATEORPROVINCE_OF_BIRTH = 53
+  PER_CITY_OF_BIRTH = 54
+  PER_ORIGIN = 55
+  PER_DATE_OF_DEATH = 56
+  PER_COUNTRY_OF_DEATH = 57
+  PER_STATEORPROVINCE_OF_DEATH = 58
+  PER_CITY_OF_DEATH = 59
+  PER_COUNTRIES_OF_RESIDENCE = 60
+  PER_STATESORPROVINCES_OF_RESIDENCE = 61
+  PER_CITIES_OF_RESIDENCE = 62
+  PER_SCHOOLS_ATTENDED = 63
+  PER_EMPLOYEE_OR_MEMBER_OF = 64
+  PER_RELIGION = 65
+  PER_SPOUSE = 66
+  PER_CHILDREN = 67
+  PER_PARENTS = 68
+  PER_SIBLINGS = 69
+  PER_OTHER_FAMILY = 70
+  ORG_TOP_MEMBERS_EMPLOYEES = 71
+  ORG_MEMBERS = 72
+  ORG_MEMBER_OF = 73
+  ORG_SUBSIDIARIES = 74
+  ORG_PARENTS = 75
+  ORG_FOUNDED_BY = 76
+  ORG_DATE_FOUNDED = 77
+  ORG_DATE_DISSOLVED = 78
+  ORG_COUNTRY_OF_HEADQUARTERS = 79
+  ORG_STATEORPROVINCE_OF_HEADQUARTERS = 80
+  ORG_CITY_OF_HEADQUARTERS = 81
+  ORG_SHAREHOLDERS = 82
+  ORG_POLITICAL_OR_RELIGIOUS_AFFILIATION = 83
+  ORG_WEBSITE = 84
+  FAC_LOCATED = 85
+  FAC_VISITED_BY = 86
+  FAC_OWNER = 87
 
   _VALUES_TO_NAMES = {
     0: "PHYS_Located",
@@ -284,6 +358,43 @@ class RelationType(object):
     48: "Personnel_StartPosition",
     49: "Transaction_TransferMoney",
     50: "Transaction_TransferOwnership",
+    51: "PER_DATE_OF_BIRTH",
+    52: "PER_COUNTRY_OF_BIRTH",
+    53: "PER_STATEORPROVINCE_OF_BIRTH",
+    54: "PER_CITY_OF_BIRTH",
+    55: "PER_ORIGIN",
+    56: "PER_DATE_OF_DEATH",
+    57: "PER_COUNTRY_OF_DEATH",
+    58: "PER_STATEORPROVINCE_OF_DEATH",
+    59: "PER_CITY_OF_DEATH",
+    60: "PER_COUNTRIES_OF_RESIDENCE",
+    61: "PER_STATESORPROVINCES_OF_RESIDENCE",
+    62: "PER_CITIES_OF_RESIDENCE",
+    63: "PER_SCHOOLS_ATTENDED",
+    64: "PER_EMPLOYEE_OR_MEMBER_OF",
+    65: "PER_RELIGION",
+    66: "PER_SPOUSE",
+    67: "PER_CHILDREN",
+    68: "PER_PARENTS",
+    69: "PER_SIBLINGS",
+    70: "PER_OTHER_FAMILY",
+    71: "ORG_TOP_MEMBERS_EMPLOYEES",
+    72: "ORG_MEMBERS",
+    73: "ORG_MEMBER_OF",
+    74: "ORG_SUBSIDIARIES",
+    75: "ORG_PARENTS",
+    76: "ORG_FOUNDED_BY",
+    77: "ORG_DATE_FOUNDED",
+    78: "ORG_DATE_DISSOLVED",
+    79: "ORG_COUNTRY_OF_HEADQUARTERS",
+    80: "ORG_STATEORPROVINCE_OF_HEADQUARTERS",
+    81: "ORG_CITY_OF_HEADQUARTERS",
+    82: "ORG_SHAREHOLDERS",
+    83: "ORG_POLITICAL_OR_RELIGIOUS_AFFILIATION",
+    84: "ORG_WEBSITE",
+    85: "FAC_LOCATED",
+    86: "FAC_VISITED_BY",
+    87: "FAC_OWNER",
   }
 
   _NAMES_TO_VALUES = {
@@ -338,6 +449,43 @@ class RelationType(object):
     "Personnel_StartPosition": 48,
     "Transaction_TransferMoney": 49,
     "Transaction_TransferOwnership": 50,
+    "PER_DATE_OF_BIRTH": 51,
+    "PER_COUNTRY_OF_BIRTH": 52,
+    "PER_STATEORPROVINCE_OF_BIRTH": 53,
+    "PER_CITY_OF_BIRTH": 54,
+    "PER_ORIGIN": 55,
+    "PER_DATE_OF_DEATH": 56,
+    "PER_COUNTRY_OF_DEATH": 57,
+    "PER_STATEORPROVINCE_OF_DEATH": 58,
+    "PER_CITY_OF_DEATH": 59,
+    "PER_COUNTRIES_OF_RESIDENCE": 60,
+    "PER_STATESORPROVINCES_OF_RESIDENCE": 61,
+    "PER_CITIES_OF_RESIDENCE": 62,
+    "PER_SCHOOLS_ATTENDED": 63,
+    "PER_EMPLOYEE_OR_MEMBER_OF": 64,
+    "PER_RELIGION": 65,
+    "PER_SPOUSE": 66,
+    "PER_CHILDREN": 67,
+    "PER_PARENTS": 68,
+    "PER_SIBLINGS": 69,
+    "PER_OTHER_FAMILY": 70,
+    "ORG_TOP_MEMBERS_EMPLOYEES": 71,
+    "ORG_MEMBERS": 72,
+    "ORG_MEMBER_OF": 73,
+    "ORG_SUBSIDIARIES": 74,
+    "ORG_PARENTS": 75,
+    "ORG_FOUNDED_BY": 76,
+    "ORG_DATE_FOUNDED": 77,
+    "ORG_DATE_DISSOLVED": 78,
+    "ORG_COUNTRY_OF_HEADQUARTERS": 79,
+    "ORG_STATEORPROVINCE_OF_HEADQUARTERS": 80,
+    "ORG_CITY_OF_HEADQUARTERS": 81,
+    "ORG_SHAREHOLDERS": 82,
+    "ORG_POLITICAL_OR_RELIGIOUS_AFFILIATION": 83,
+    "ORG_WEBSITE": 84,
+    "FAC_LOCATED": 85,
+    "FAC_VISITED_BY": 86,
+    "FAC_OWNER": 87,
   }
 
 class Versions(object):
