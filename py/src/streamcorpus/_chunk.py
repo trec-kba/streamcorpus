@@ -408,6 +408,7 @@ def decrypt_and_uncompress(data, gpg_private=None, tmp_dir='/tmp'):
     
     :returns: a tuple of (logs, data), where `logs` is an array of
       strings and data is a binary string
+
     '''
     _errors = []
     tmp_path = os.path.join(tmp_dir, 'tmp-compress-and-encrypt-path-' + uuid.uuid4().hex)
