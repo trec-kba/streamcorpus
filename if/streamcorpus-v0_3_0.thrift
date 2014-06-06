@@ -655,6 +655,8 @@ enum RelationType {
 
   ORG_ATTENDED = 92, // meeting event
   ORG_VISITED = 93, // meeting event
+  
+  PER_WEBSITE = 94,
 }
 
 /**
