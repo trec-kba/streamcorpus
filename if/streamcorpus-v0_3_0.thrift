@@ -647,6 +647,16 @@ enum RelationType {
   FAC_LOCATED = 85,
   FAC_VISITED_BY = 86,
   FAC_OWNER = 87,
+
+  PER_WON_AWARD = 88,
+  PER_MET_WITH = 89, // PER or ORG
+  PER_ATTENDED = 90, // meeting event
+  PER_VISITED = 91,  // FAC (more general than attended)
+
+  ORG_ATTENDED = 92, // meeting event
+  ORG_VISITED = 93, // meeting event
+  
+  PER_WEBSITE = 94,
 }
 
 /**
