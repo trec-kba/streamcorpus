@@ -86,6 +86,9 @@ class EntityType(object):
   URL = 16
   CUSTOM_TYPE = 17
   LIST = 18
+  RELIGION = 19
+  NATIONALITY = 20
+  TITLE = 21
 
   _VALUES_TO_NAMES = {
     0: "PER",
@@ -105,6 +108,9 @@ class EntityType(object):
     16: "URL",
     17: "CUSTOM_TYPE",
     18: "LIST",
+    19: "RELIGION",
+    20: "NATIONALITY",
+    21: "TITLE",
   }
 
   _NAMES_TO_VALUES = {
@@ -125,6 +131,9 @@ class EntityType(object):
     "URL": 16,
     "CUSTOM_TYPE": 17,
     "LIST": 18,
+    "RELIGION": 19,
+    "NATIONALITY": 20,
+    "TITLE": 21,
   }
 
 class MentionType(object):
@@ -305,6 +314,14 @@ class RelationType(object):
   FAC_LOCATED = 85
   FAC_VISITED_BY = 86
   FAC_OWNER = 87
+  PER_WON_AWARD = 88
+  PER_MET_WITH = 89
+  PER_ATTENDED = 90
+  PER_VISITED = 91
+  ORG_ATTENDED = 92
+  ORG_VISITED = 93
+  PER_WEBSITE = 94
+  PER_NATIONALITY = 95
 
   _VALUES_TO_NAMES = {
     0: "PHYS_Located",
@@ -395,6 +412,14 @@ class RelationType(object):
     85: "FAC_LOCATED",
     86: "FAC_VISITED_BY",
     87: "FAC_OWNER",
+    88: "PER_WON_AWARD",
+    89: "PER_MET_WITH",
+    90: "PER_ATTENDED",
+    91: "PER_VISITED",
+    92: "ORG_ATTENDED",
+    93: "ORG_VISITED",
+    94: "PER_WEBSITE",
+    95: "PER_NATIONALITY",
   }
 
   _NAMES_TO_VALUES = {
@@ -486,6 +511,14 @@ class RelationType(object):
     "FAC_LOCATED": 85,
     "FAC_VISITED_BY": 86,
     "FAC_OWNER": 87,
+    "PER_WON_AWARD": 88,
+    "PER_MET_WITH": 89,
+    "PER_ATTENDED": 90,
+    "PER_VISITED": 91,
+    "ORG_ATTENDED": 92,
+    "ORG_VISITED": 93,
+    "PER_WEBSITE": 94,
+    "PER_NATIONALITY": 95,
   }
 
 class Versions(object):
