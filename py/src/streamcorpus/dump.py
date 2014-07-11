@@ -457,6 +457,23 @@ def _find_missing_labels(fpaths, annotator_ids, component):
                 else:
                     print getattr(si.body, component)
 
+
+def _tagger_stats(args, fpaths):
+    '''
+    Produce stats that indicates the size of data from each
+    tagger.
+    '''
+    for fpath in fpaths:
+        print fpath
+        for i, si in enumerate(Chunk(path=fpath, mode='rb')):
+            if args.limit and i >= args.limit:
+                break
+            print '  %s' % si.stream_id
+            for tagger, data in si.body.sentences.iteritems():
+                print '    %s => %d' % (tagger, len(repr(data)))
+            sys.stdout.flush()
+
+
 def _stats(fpaths):
     '''
     Read streamcorpus.Chunk files and print their stats
@@ -547,6 +564,8 @@ def main():
         help='Paths to a chunk files, or directory of chunks, Note: "-" denotes stdin has a list of paths, NOT streamcorpus data')
     parser.add_argument('--stats', action='store_true', default=False,
                         help='print out the .body.raw of a specific stream_id')
+    parser.add_argument('--tagger-stats', action='store_true', default=False,
+                        help='Print the *relative* size of data contributed by each tagger.')
     parser.add_argument('--find', dest='find', metavar='STREAM_ID', help='print out the .body.raw of a specific stream_id')
     parser.add_argument('--binary', dest='dump_binary_stream_item', 
                         action='store_true', default=False, 
@@ -627,6 +646,9 @@ def main():
     ## now actually do whatever was requested
     if args.fields:
         _show_fields(args.input_path, args.fields, args.len_fields)
+
+    elif args.tagger_stats:
+        _tagger_stats(args, args.input_path)
 
     elif args.stats:
         _stats(args.input_path)
