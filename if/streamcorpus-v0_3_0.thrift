@@ -318,6 +318,9 @@ enum EntityType {
 
   LIST = 18,
 
+  RELIGION = 19,
+  NATIONALITY = 20,
+  TITLE = 21,
 }
 
 enum MentionType {
@@ -657,6 +660,7 @@ enum RelationType {
   ORG_VISITED = 93, // meeting event
   
   PER_WEBSITE = 94,
+  PER_NATIONALITY = 95,
 }
 
 /**
