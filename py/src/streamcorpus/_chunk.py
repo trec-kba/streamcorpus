@@ -401,7 +401,7 @@ class Chunk(object):
             except EOFError:
                 break
 
-def decrypt_and_uncompress(data, gpg_private=None, tmp_dir='/tmp'):
+def decrypt_and_uncompress(data, gpg_private=None, tmp_dir=None):
     '''
     Given a data buffer of bytes, if gpg_key_path is provided, decrypt
     data using gnupg, and uncompress using xz.
@@ -414,41 +414,40 @@ def decrypt_and_uncompress(data, gpg_private=None, tmp_dir='/tmp'):
         logger.error('decrypt_and_uncompress starting with empty data')
         return ['no data'], None
     _errors = []
-    tmp_path = os.path.join(tmp_dir, 'tmp-compress-and-encrypt-path-' + uuid.uuid4().hex)
-    if not os.path.exists(tmp_path):
-        os.makedirs(tmp_path)
     if gpg_private is not None:
         ### setup gpg for decryption
-        gpg_dir = os.path.join(tmp_path, 'gpg_dir')
+        gpg_dir = os.tempnam(tmp_dir, 'tmp-compress-and-encrypt-')
         os.makedirs(gpg_dir)
+        try:
+            gpg_child = subprocess.Popen(
+                ['gpg', '--no-permission-warning', '--homedir', gpg_dir,
+                 '--import', gpg_private],
+                stderr=subprocess.PIPE)
+            s_out, errors = gpg_child.communicate()
+            if errors:
+                _errors.append('gpg logs to stderr, read carefully:\n\n%s' %
+                               errors)
 
-        gpg_child = subprocess.Popen(
-            ['gpg', '--no-permission-warning', '--homedir', gpg_dir,
-             '--import', gpg_private],
-            stderr=subprocess.PIPE)
-        s_out, errors = gpg_child.communicate()
-        if errors:
-            _errors.append('gpg logs to stderr, read carefully:\n\n%s' % errors)
+            ## decrypt it, and free memory
+            ## encrypt using the fingerprint for our trec-kba-rsa key pair
+            gpg_child = subprocess.Popen(
+                ## setup gpg to decrypt with trec-kba private key
+                ## (i.e. make it the recipient), with zero compression,
+                ## ascii armoring is off by default, and --output - must
+                ## appear before --decrypt -
+                ['gpg',   '--no-permission-warning', '--homedir', gpg_dir,
+                 '--trust-model', 'always', '--output', '-', '--decrypt', '-'],
+                stdin =subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE)
+            ## communicate with child via its stdin 
+            data, errors = gpg_child.communicate(data)
+            if errors:
+                _errors.append(errors)
 
-        ## decrypt it, and free memory
-        ## encrypt using the fingerprint for our trec-kba-rsa key pair
-        gpg_child = subprocess.Popen(
-            ## setup gpg to decrypt with trec-kba private key
-            ## (i.e. make it the recipient), with zero compression,
-            ## ascii armoring is off by default, and --output - must
-            ## appear before --decrypt -
-            ['gpg',   '--no-permission-warning', '--homedir', gpg_dir,
-             '--trust-model', 'always', '--output', '-', '--decrypt', '-'],
-            stdin =subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE)
-        ## communicate with child via its stdin 
-        data, errors = gpg_child.communicate(data)
-        if errors:
-            _errors.append(errors)
-
-        ## remove the gpg_dir
-        shutil.rmtree(gpg_dir, ignore_errors=True)
+        finally:
+            ## remove the gpg_dir
+            shutil.rmtree(gpg_dir, ignore_errors=True)
 
         if not data:
             logger.error('empty data after gpg decrypt')
@@ -478,7 +477,8 @@ def decrypt_and_uncompress(data, gpg_private=None, tmp_dir='/tmp'):
 
     return _errors, data
 
-def compress_and_encrypt(data, gpg_public=None, gpg_recipient='trec-kba'):
+def compress_and_encrypt(data, gpg_public=None, gpg_recipient='trec-kba',
+                         tmp_dir=None):
     '''
     Given a data buffer of bytes compress it using xz, if gpg_public
     is provided, encrypt data using gnupg.
@@ -498,41 +498,45 @@ def compress_and_encrypt(data, gpg_public=None, gpg_recipient='trec-kba'):
 
     if gpg_public is not None:
         ### setup gpg for encryption.  
-        gpg_dir = os.path.join(tmp_dir, 'tmp-compress-and-encrypt-' + uuid.uuid1().hex)
+        gpg_dir = os.tempnam(tmp_dir, 'tmp-compress-and-encrypt-')
         os.makedirs(gpg_dir)
+        try:
 
-        ## Load public key.  Could do this just once, but performance
-        ## hit is minor and code simpler to do it everytime
-        gpg_child = subprocess.Popen(
-            ['gpg', '--no-permission-warning', '--homedir', gpg_dir,
-             '--import', gpg_public],
-            stderr=subprocess.PIPE)
-        s_out, errors = gpg_child.communicate()
-        if errors:
-            _errors.append('gpg logs to stderr, read carefully:\n\n%s' % errors)
+            ## Load public key.  Could do this just once, but performance
+            ## hit is minor and code simpler to do it everytime
+            gpg_child = subprocess.Popen(
+                ['gpg', '--no-permission-warning', '--homedir', gpg_dir,
+                 '--import', gpg_public],
+                stderr=subprocess.PIPE)
+            s_out, errors = gpg_child.communicate()
+            if errors:
+                _errors.append('gpg logs to stderr, read carefully:\n\n%s' %
+                               errors)
 
-        ## encrypt using the fingerprint for our trec-kba-rsa key pair
-        gpg_child = subprocess.Popen(
-            ## setup gpg to decrypt with trec-kba private key
-            ## (i.e. make it the recipient), with zero compression,
-            ## ascii armoring is off by default, and --output - must
-            ## appear before --encrypt -
-            ['gpg',  '--no-permission-warning', '--homedir', gpg_dir,
-             '-r', gpg_recipient, '-z', '0', '--trust-model', 'always',
-             '--output', '-', '--encrypt', '-'],
-            stdin =subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE)
-        ## communicate with child via its stdin 
-        data, errors = gpg_child.communicate(data)
-        if errors:
-            _errors.append(errors)
+            ## encrypt using the fingerprint for our trec-kba-rsa key pair
+            gpg_child = subprocess.Popen(
+                ## setup gpg to decrypt with trec-kba private key
+                ## (i.e. make it the recipient), with zero compression,
+                ## ascii armoring is off by default, and --output - must
+                ## appear before --encrypt -
+                ['gpg',  '--no-permission-warning', '--homedir', gpg_dir,
+                 '-r', gpg_recipient, '-z', '0', '--trust-model', 'always',
+                 '--output', '-', '--encrypt', '-'],
+                stdin =subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE)
+            ## communicate with child via its stdin 
+            data, errors = gpg_child.communicate(data)
+            if errors:
+                _errors.append(errors)
 
-        shutil.rmtree(gpg_dir, ignore_errors=True)
+        finally:
+            shutil.rmtree(gpg_dir, ignore_errors=True)
 
     return _errors, data
 
-def compress_and_encrypt_path(path, gpg_public=None, gpg_recipient='trec-kba', tmp_dir='/tmp'):
+def compress_and_encrypt_path(path, gpg_public=None, gpg_recipient='trec-kba',
+                              tmp_dir='/tmp'):
     '''
     Given a path in the local file system, compress it using xz, if gpg_public
     is provided, encrypt data using gnupg.
