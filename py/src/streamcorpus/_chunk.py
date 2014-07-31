@@ -410,6 +410,9 @@ def decrypt_and_uncompress(data, gpg_private=None, tmp_dir='/tmp'):
       strings and data is a binary string
 
     '''
+    if not data:
+        logger.error('decrypt_and_uncompress starting with empty data')
+        return ['no data'], None
     _errors = []
     tmp_path = os.path.join(tmp_dir, 'tmp-compress-and-encrypt-path-' + uuid.uuid4().hex)
     if not os.path.exists(tmp_path):
@@ -447,8 +450,18 @@ def decrypt_and_uncompress(data, gpg_private=None, tmp_dir='/tmp'):
         ## remove the gpg_dir
         shutil.rmtree(gpg_dir, ignore_errors=True)
 
+        if not data:
+            logger.error('empty data after gpg decrypt')
+            _errors.append('gpg -> no data')
+            return _errors, None
+
     if lzma is not None:
-        data = lzma.decompress(data)
+        try:
+            bigdata = lzma.decompress(data)
+            data = bigdata
+        except:
+            logger.error('decompress of %s bytes failed', len(data))
+            raise
 
     else:
         ## launch xz child
