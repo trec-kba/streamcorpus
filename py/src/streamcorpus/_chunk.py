@@ -560,17 +560,18 @@ def compress_and_encrypt_path(path, gpg_public=None, gpg_recipient='trec-kba',
         ## Load public key.  Could do this just once, but performance
         ## hit is minor and code simpler to do it everytime
         gpg_child = subprocess.Popen(
-            ['gpg', '--no-permission-warning', '--homedir', gpg_dir,
+            ['gpg', '--quiet', '--no-permission-warning', '--homedir', gpg_dir,
              '--import', gpg_public],
             stderr=subprocess.PIPE)
         s_out, errors = gpg_child.communicate()
-        if errors:
-            _errors.append('gpg logs to stderr, read carefully:\n\n%s' % errors)
+        if gpg_child.returncode != 0:
+            _errors.append('gpg setup exited with status {}\n'.format(gpg_child.returncode))
+            _errors.append('gpg logs to stderr, read carefully:\n\n' + errors)
 
         ## setup gpg to decrypt with provided private key (i.e. make
         ## it the recipient), with zero compression, ascii armoring is
         ## off by default, and --output - must come before --encrypt -
-        command += '| gpg  --no-permission-warning --homedir ' + gpg_dir \
+        command += '| gpg --quiet --no-permission-warning --homedir ' + gpg_dir \
                  + ' -r ' + gpg_recipient \
                  + ' -z 0 --trust-model always --output - --encrypt - '
 
@@ -581,22 +582,11 @@ def compress_and_encrypt_path(path, gpg_public=None, gpg_recipient='trec-kba',
 
     command += ' 1> ' + o_path 
 
-    ## wrap entire command in parentheses and pipe stderr to a file
-    command = '( ' + command + ') 2> ' + e_path
-
-    ## launch xz child
-    child = os.system(command)
-
-    if os.path.exists(e_path):
-        errors = open(e_path).read()
-        ## clean up temp path
-        os.remove(e_path)
-    else:
-        errors = None
-
-    if errors:
-        ## will send back errors in list
-        _errors.append(errors)
+    p = subprocess.Popen(command, shell=True, stderr=subprocess.PIPE)
+    p_stdout, p_stderr = p.communicate()
+    # p_stdout should be empty because we're redirecting to o_path
+    if p.returncode != 0:
+        _errors.append(p_stderr)
 
     if gpg_public is not None:
         shutil.rmtree(gpg_dir, ignore_errors=True)
