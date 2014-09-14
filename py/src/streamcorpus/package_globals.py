@@ -29,9 +29,8 @@
 Python module of convenience functions around the structures defined
 in streamcorpus.thrift
 
-This software is released under an MIT/X11 open source license.
-
-Copyright 2012-2014 Diffeo, Inc.
+.. This software is released under an MIT/X11 open source license.
+   Copyright 2012-2014 Diffeo, Inc.
 '''
 
 import re
@@ -101,6 +100,16 @@ def get_date_hour(stream_thing):
         % (type(stream_thing), stream_thing)
 
     return stream_thing.zulu_timestamp.split(':')[0].replace('T', '-')
+
+
+def get_epoch_ticks_for_date_hour(date_hour):
+    '''
+    Returns an epoch_ticks int for the start of a date_hour string
+    '''
+    parts = date_hour.split('-')
+    assert len(parts) == 4
+    zt = '-'.join(parts[:3]) + 'T' + parts[3] + ':00:00.000000Z'
+    return make_stream_time(zt).epoch_ticks
 
 
 def make_stream_time(zulu_timestamp=None, epoch_ticks=None):
