@@ -22,6 +22,7 @@ from . import VersionMismatchError
 from . import Versions
 from . import StreamItem_v0_2_0, StreamItem_v0_3_0
 from streamcorpus import _chunk
+from ._chunk import JsonChunk, PickleChunk
 
 TEST_XZ_PATH = os.path.join(os.path.dirname(__file__), '../../../test-data/john-smith-tagged-by-lingpipe-0-v0_2_0.sc.xz')
 TEST_SC_PATH = os.path.join(os.path.dirname(__file__), '../../../test-data/john-smith-tagged-by-lingpipe-0-v0_2_0.sc')
@@ -51,10 +52,14 @@ def test_chunk():
     ch.add( si )
     assert len(ch) == 1
 
-def test_chunk_wrapper():
+@pytest.fixture(scope='function', params=[Chunk, PickleChunk])
+def chunk_constructor(request):
+    return request.param
+
+def test_chunk_wrapper(chunk_constructor):
     ## write in-memory
     fh = StringIO()
-    ch = Chunk(file_obj=fh, write_wrapper=lambda x: x['dog'], mode='wb')
+    ch = chunk_constructor(file_obj=fh, write_wrapper=lambda x: x['dog'], mode='wb')
     assert ch.mode == 'wb'
     si = make_si()
     si = dict(dog=si)
@@ -64,9 +69,32 @@ def test_chunk_wrapper():
     blob = fh.getvalue()
     assert blob
     fh = StringIO(blob)
-    ch = Chunk(file_obj=fh, read_wrapper=lambda x: dict(dog=x), mode='rb')
+    ch = chunk_constructor(file_obj=fh, read_wrapper=lambda x: dict(dog=x), mode='rb')
     si2 = list(ch)[0]
     assert si2 == si
+
+
+def test_json_chunk():
+    chunk_constructor = JsonChunk
+    fh = StringIO()
+    ch = chunk_constructor(file_obj=fh, mode='wb')
+    assert ch.mode == 'wb'
+    si = {
+        'abs_url':'http://example.com',
+        'body': {
+            'raw': 'hello!'
+        },
+    }
+    ch.add( si )
+    assert len(ch) == 1
+    ch.flush()
+    blob = fh.getvalue()
+    assert blob
+    fh = StringIO(blob)
+    ch = chunk_constructor(file_obj=fh, message=lambda x: x, mode='rb')
+    si2 = list(ch)[0]
+    assert si2 == si
+
 
 def test_xz():
     count = 0

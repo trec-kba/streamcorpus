@@ -11,7 +11,23 @@ This software is released under an MIT/X11 open source license.
 Copyright 2012 Diffeo, Inc.
 '''
 
+
+import errno
+import exceptions
+import gzip
+import hashlib
 import logging
+import os
+import uuid
+import shutil
+import subprocess
+from cStringIO import StringIO
+
+try:
+    import cPickle as pickle
+except:
+    import pickle
+
 logger = logging.getLogger('streamcorpus')
 
 ## import the thrift library
@@ -33,16 +49,6 @@ try:
     from backports import lzma
 except:
     lzma = None
-
-import gzip
-import os
-import uuid
-import errno
-import shutil
-import hashlib
-import subprocess
-import exceptions
-from cStringIO import StringIO
 
 from ttypes import StreamItem as StreamItem_v0_3_0
 from ttypes_v0_1_0 import StreamItem as StreamItem_v0_1_0
@@ -95,6 +101,16 @@ class md5_file(object):
         self._md5.update(data)
         return data
 
+    def readline(self, *args, **kwargs):
+        data = self._fh.readline(*args, **kwargs)
+        self._md5.update(data)
+        return data
+
+    def __iter__(self):
+        for data in self._fh:
+            self._md5.update(data)
+            yield data
+
     def write(self, data, *args, **kwargs):
         self._md5.update(data)
         self._fh.write(data, *args, **kwargs)
@@ -124,9 +140,13 @@ class md5_file(object):
     def md5_hexdigest(self):
         return self._md5.hexdigest()
 
-class Chunk(object):
+class BaseChunk(object):
     '''
-    reader/writer for batches of Thrift messages stored in flat files.
+    reader/writer for batches of messages stored in flat files.
+    This class handles compression, md5, and item counts.
+
+    Serialization specifics handled by subclass (Thrift, pickle, etc.)
+    Abstract base class. Needs write_msg_impl() read_msg_impl()
     '''
     def __init__(self, path=None, data=None, file_obj=None, mode='rb',
                  message=StreamItem_v0_3_0,
@@ -163,12 +183,6 @@ class Chunk(object):
         takes the added object as input and returns another object
         that is a thrift class that can be serialized.
         '''
-        if not fastbinary_import_failure:
-            logger.debug('using TBinaryProtocolAccelerated (fastbinary)')
-
-        else:
-            logger.warn('import fastbinary failed; falling back to 15x slower TBinaryProtocol: %r'\
-                            % fastbinary_import_failure)
 
         self.read_wrapper = read_wrapper
         self.write_wrapper = write_wrapper
@@ -187,13 +201,9 @@ class Chunk(object):
 
         ## might not have any output parts
         self._o_chunk_fh = None
-        self._o_transport = None
-        self._o_protocol = None
 
         ## might not have any input parts
         self._i_chunk_fh = None
-        self._i_transport = None
-        self._i_protocol = None
 
         ## open an existing file from path, or create it
         if path is not None:
@@ -286,13 +296,10 @@ class Chunk(object):
 
         if mode in ['ab', 'wb']:
             self._o_chunk_fh = md5_file( file_obj )
-            self._o_transport = TTransport.TBufferedTransport(self._o_chunk_fh)
-            self._o_protocol = protocol(self._o_transport)
 
         else:
             assert mode == 'rb', mode
             self._i_chunk_fh = md5_file( file_obj )
-            #_i_transport and _i_protocol are set below in __iter__
 
     def __enter__(self):
         return self
@@ -302,26 +309,25 @@ class Chunk(object):
 
     def add(self, msg):
         'add message instance to chunk'
-        assert self._o_protocol, 'cannot add to a Chunk instantiated with data'
-        assert self._o_chunk_fh is not None, 'cannot Chunk.add after Chunk.close'
+
         if self.write_wrapper is not None:
             msg = self.write_wrapper(msg)
-        if not (isinstance(msg, self.message) or (type(msg) == self.message)):
-            raise VersionMismatchError(
-                'mismatched type: %s != %s' % (type(msg), self.message))
-        msg.write(self._o_protocol)
+
+        self.write_msg_impl(msg)
         self._count += 1
 
+    def write_msg_impl(self, msg):
+        raise NotImplementedError()
+
     def flush(self):
-        if self._o_chunk_fh is not None:
-            self._o_transport.flush()
+        if (self._o_chunk_fh is not None) and hasattr(self._o_chunk_fh, 'flush'):
+            self._o_chunk_fh.flush()
 
     def close(self):
         '''
         Close any chunk file that we might have had open for writing.
         '''
         if self._o_chunk_fh is not None:
-            self._o_transport.flush()
             self._o_chunk_fh.close()
             ## make this method idempotent
             self._md5_hexdigest = self._o_chunk_fh.md5_hexdigest
@@ -346,13 +352,71 @@ class Chunk(object):
         raise exceptions.NotImplementedError
 
     def __repr__(self):
-        return 'Chunk(len=%d)' % len(self)
+        return '{}(len={})'.format(type(self).__name__, len(self))
 
     def __len__(self):
         ## how to make this pythonic given that we have __iter__?
         return self._count
 
     def __iter__(self):
+        '''
+        Iterator over messages in the chunk
+        '''
+        for msg in self.read_msg_impl():
+            self._count += 1
+
+            if self.read_wrapper is not None:
+                msg = self.read_wrapper(msg)
+            yield msg
+
+    def read_msg_impl(self):
+        '''
+        implementations should yield read objects of self.message type
+        '''
+        raise NotImplementedError()
+
+
+class Chunk(BaseChunk):
+    '''Chunk, the default Chunk, is a Thrift Chunk.
+    See also PickleChunk, JsonChunk, and CborChunk'''
+    def __init__(self, *args, **kwargs):
+        super(Chunk, self).__init__(*args, **kwargs)
+        if not fastbinary_import_failure:
+            logger.debug('using TBinaryProtocolAccelerated (fastbinary)')
+
+        else:
+            logger.warn('import fastbinary failed; falling back to 15x slower TBinaryProtocol: %r', fastbinary_import_failure)
+
+        self._o_transport = None
+        self._o_protocol = None
+
+    def _otp(self):
+        if self._o_protocol is None:
+            self._o_transport = TTransport.TBufferedTransport(self._o_chunk_fh)
+            self._o_protocol = protocol(self._o_transport)
+        return self._o_protocol
+
+    def write_msg_impl(self, msg):
+        'add message instance to chunk'
+        o_protocol = self._otp()
+        assert o_protocol, 'cannot add to a Chunk instantiated with data'
+        assert self._o_chunk_fh is not None, 'cannot Chunk.add after Chunk.close'
+        if not (isinstance(msg, self.message) or (type(msg) == self.message)):
+            raise VersionMismatchError(
+                'mismatched type: %s != %s' % (type(msg), self.message))
+        msg.write(o_protocol)
+
+    def flush(self):
+        if self._o_transport is not None:
+            self._o_transport.flush()
+        super(Chunk,self).flush()
+
+    def close(self):
+        if self._o_transport is not None:
+            self._o_transport.flush()
+        super(Chunk, self).close()
+
+    def read_msg_impl(self):
         '''
         Iterator over messages in the chunk
         '''
@@ -390,16 +454,51 @@ class Chunk(object):
                         raise VersionMismatchError(
                             'read msg.version = %d != %d = message().version):' % \
                                 (msg.version, self.message().version))
-                
-                ## yield is python primitive for iteration
-                self._count += 1
-
-                if self.read_wrapper is not None:
-                    msg = self.read_wrapper(msg)
                 yield msg
 
             except EOFError:
                 break
+
+
+import json
+class JsonChunk(BaseChunk):
+    '''
+    `message` must be a constructor or factory function that accepts the object from json.load() that results from json.dump(write_wrapper(msg))
+    '''
+    def __init__(self, *args, **kwargs):
+        super(JsonChunk, self).__init__(*args, **kwargs)
+
+    def write_msg_impl(self, msg):
+        assert self._o_chunk_fh is not None
+        json.dump(msg, self._o_chunk_fh)
+        self._o_chunk_fh.write('\n')
+
+    def read_msg_impl(self):
+        assert self._i_chunk_fh is not None
+        for line in self._i_chunk_fh:
+            line = line.strip()
+            ob = json.loads(line)
+            msg = self.message(ob)
+            yield msg
+
+
+class PickleChunk(BaseChunk):
+    def __init__(self, *args, **kwargs):
+        super(PickleChunk, self).__init__(*args, **kwargs)
+
+    def write_msg_impl(self, msg):
+        assert self._o_chunk_fh is not None
+        pickle.dump(msg, self._o_chunk_fh, protocol=pickle.HIGHEST_PROTOCOL)
+
+    def read_msg_impl(self):
+        assert self._i_chunk_fh is not None
+        while True:
+            try:
+                ob = pickle.load(self._i_chunk_fh)
+                yield ob
+            except EOFError as eof:
+                # okay
+                return
 
 def decrypt_and_uncompress(data, gpg_private=None, tmp_dir=None):
     '''
@@ -582,10 +681,15 @@ def compress_and_encrypt_path(path, gpg_public=None, gpg_recipient='trec-kba',
 
     command += ' 1> ' + o_path 
 
+    logger.debug('compress_and_encrypt_path command %r', command)
     p = subprocess.Popen(command, shell=True, stderr=subprocess.PIPE)
     p_stdout, p_stderr = p.communicate()
     # p_stdout should be empty because we're redirecting to o_path
     if p.returncode != 0:
+        _errors.append('command return code {}'.format(p.retcode))
+        _errors.append(p_stderr)
+    elif p_stderr:
+        # sometimes returncode is zero on failures
         _errors.append(p_stderr)
 
     if gpg_public is not None:
