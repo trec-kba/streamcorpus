@@ -414,6 +414,7 @@ class Chunk(BaseChunk):
     def close(self):
         if self._o_transport is not None:
             self._o_transport.flush()
+            self._o_transport = None
         super(Chunk, self).close()
 
     def read_msg_impl(self):
