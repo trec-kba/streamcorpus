@@ -151,6 +151,7 @@ class BaseChunk(object):
     def __init__(self, path=None, data=None, file_obj=None, mode='rb',
                  message=StreamItem_v0_3_0,
                  read_wrapper=None, write_wrapper=None,
+                 inline_md5=True
         ):
         '''Load a chunk from an existing file handle or buffer of data.
         If no data is passed in, then chunk starts as empty and
@@ -295,11 +296,17 @@ class BaseChunk(object):
             ## happens, i.e. in streaming mode.
 
         if mode in ['ab', 'wb']:
-            self._o_chunk_fh = md5_file( file_obj )
+            if inline_md5:
+                self._o_chunk_fh = md5_file( file_obj )
+            else:
+                self._o_chunk_fh = file_obj
 
         else:
             assert mode == 'rb', mode
-            self._i_chunk_fh = md5_file( file_obj )
+            if inline_md5:
+                self._i_chunk_fh = md5_file( file_obj )
+            else:
+                self._i_chunk_fh = file_obj
 
     def __enter__(self):
         return self
@@ -330,7 +337,8 @@ class BaseChunk(object):
         if self._o_chunk_fh is not None:
             self._o_chunk_fh.close()
             ## make this method idempotent
-            self._md5_hexdigest = self._o_chunk_fh.md5_hexdigest
+            if isinstance(self._o_chunk_fh, md5_file):
+                self._md5_hexdigest = self._o_chunk_fh.md5_hexdigest
             self._o_chunk_fh = None
 
     @property
@@ -338,10 +346,10 @@ class BaseChunk(object):
         if self._md5_hexdigest:
             ## only set if closed already
             return self._md5_hexdigest
-        if self._o_chunk_fh:
+        if self._o_chunk_fh and isinstance(self._o_chunk_fh, md5_file):
             ## get it directly from the output chunk
             return self._o_chunk_fh.md5_hexdigest
-        elif self._i_chunk_fh:
+        elif self._i_chunk_fh and isinstance(self._i_chunk_fh, md5_file):
             ## get it directly from the input chunk
             return self._i_chunk_fh.md5_hexdigest
         else:

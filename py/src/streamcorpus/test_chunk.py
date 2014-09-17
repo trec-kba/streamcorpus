@@ -23,6 +23,12 @@ from . import Versions
 from . import StreamItem_v0_2_0, StreamItem_v0_3_0
 from streamcorpus import _chunk
 from ._chunk import JsonChunk, PickleChunk
+from ._cbor_chunk import CborChunk
+
+try:
+    import cbor
+except:
+    cbor = None
 
 TEST_XZ_PATH = os.path.join(os.path.dirname(__file__), '../../../test-data/john-smith-tagged-by-lingpipe-0-v0_2_0.sc.xz')
 TEST_SC_PATH = os.path.join(os.path.dirname(__file__), '../../../test-data/john-smith-tagged-by-lingpipe-0-v0_2_0.sc')
@@ -76,6 +82,29 @@ def test_chunk_wrapper(chunk_constructor):
 
 def test_json_chunk():
     chunk_constructor = JsonChunk
+    fh = StringIO()
+    ch = chunk_constructor(file_obj=fh, mode='wb')
+    assert ch.mode == 'wb'
+    si = {
+        'abs_url':'http://example.com',
+        'body': {
+            'raw': 'hello!'
+        },
+    }
+    ch.add( si )
+    assert len(ch) == 1
+    ch.flush()
+    blob = fh.getvalue()
+    assert blob
+    fh = StringIO(blob)
+    ch = chunk_constructor(file_obj=fh, message=lambda x: x, mode='rb')
+    si2 = list(ch)[0]
+    assert si2 == si
+
+
+@pytest.mark.skipif('cbor is None')
+def test_cbor_chunk():
+    chunk_constructor = CborChunk
     fh = StringIO()
     ch = chunk_constructor(file_obj=fh, mode='wb')
     assert ch.mode == 'wb'

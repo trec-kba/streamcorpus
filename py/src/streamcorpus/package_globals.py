@@ -56,12 +56,15 @@ from ttypes_v0_2_0 import StreamItem as StreamItem_v0_2_0
 import ttypes_v0_1_0
 import ttypes_v0_2_0
 
-from _chunk import Chunk, decrypt_and_uncompress, compress_and_encrypt, \
+from _chunk import Chunk, PickleChunk, JsonChunk, \
+    decrypt_and_uncompress, compress_and_encrypt, \
     compress_and_encrypt_path, \
     serialize, deserialize, \
     VersionMismatchError
+from _cbor_chunk import CborChunk
 
-__all__ = ['Chunk', 'decrypt_and_uncompress', 'compress_and_encrypt',
+__all__ = ['Chunk', 'PickleChunk', 'JsonChunk', 'CborChunk',
+           'decrypt_and_uncompress', 'compress_and_encrypt',
            'compress_and_encrypt_path',
            'serialize', 'deserialize',
            'make_stream_time', 'make_stream_item',
