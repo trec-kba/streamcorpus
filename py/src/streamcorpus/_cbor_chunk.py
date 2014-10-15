@@ -17,10 +17,65 @@ except:
     cbor = None
 
 
+class BufferedReader(object):
+    '''
+    Wrap a file-like object from which we .read() in one which which buffers.
+    '''
+    _BUFSIZE = 32*1024
+    def __init__(self, fp):
+        self._fp = fp
+        self.buf = None
+        self.pos = 0
+
+    def read(self, *args):
+        if args:
+            toread = args[0]
+        else:
+            toread = -1
+        if toread == -1:
+            rest = self._fp.read(-1)
+            if self.buf is not None:
+                rest = self.buf + rest
+                self.buf = None
+                self.pos = 0
+            return rest
+
+        have = ((self.buf is not None) and (len(self.buf) - self.pos)) or 0
+        while have < toread:
+            need = max(self._BUFSIZE, toread - have)
+            got = self._fp.read(need)
+            if self.buf is None:
+                self.buf = got
+            else:
+                self.buf = self.buf[self.pos:] + got
+            self.pos = 0
+            have = ((self.buf is not None) and len(self.buf)) or 0
+
+        out = self.buf[self.pos:self.pos+toread]
+        self.pos += toread
+        #self.buf = self.buf[toread:]
+        return out
+
+
 class CborChunk(BaseChunk):
     '''
     `message` must be a constructor or factory function that accepts the object from cbor.load() that results from cbor.dump(write_wrapper(msg))
     '''
+
+    # These are known to be okay for a zillion little reads that the
+    # CBOR library does. Other file-like-objects will get wrapped in a
+    # BufferedReader
+    #
+    # Specifically things like lzma.open() and network sockets are
+    # pretty terrible when accessed by a zillion little read()
+    # operations.
+    #
+    # NOTE: Using BufferedReader assumes you're going to read the
+    # stream through to the end. Stopping in the middle will leave
+    # some random fraction of input in the BufferedReader and that
+    # would be lost and break the stream.
+    _OK_RAW_INPUTS = (file, BufferedReader)
+
     def __init__(self, *args, **kwargs):
         super(CborChunk, self).__init__(*args, **kwargs)
 
@@ -30,6 +85,8 @@ class CborChunk(BaseChunk):
 
     def read_msg_impl(self):
         assert self._i_chunk_fh is not None
+        if not isinstance(self._i_chunk_fh, self._OK_RAW_INPUTS):
+            self._i_chunk_fh = BufferedReader(self._i_chunk_fh)
         while True:
             try:
                 ob = cbor.load(self._i_chunk_fh)
@@ -52,4 +109,3 @@ if cbor is None:
             raise Exception('package cbor is not installed')
 
     CborChunk = MissingCbor
-
