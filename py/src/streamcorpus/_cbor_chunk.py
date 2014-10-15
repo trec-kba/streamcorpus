@@ -10,6 +10,9 @@ This software is released under an MIT/X11 open source license.
 Copyright 2012 Diffeo, Inc.
 '''
 
+import StringIO
+import cStringIO
+
 from ._chunk import BaseChunk
 try:
     import cbor
@@ -43,7 +46,13 @@ class BufferedReader(object):
         have = ((self.buf is not None) and (len(self.buf) - self.pos)) or 0
         while have < toread:
             need = max(self._BUFSIZE, toread - have)
+            assert need > 0
             got = self._fp.read(need)
+            if not got:
+                out = self.buf[self.pos:]
+                self.buf = None
+                self.pos = 0
+                return out
             if self.buf is None:
                 self.buf = got
             else:
@@ -74,7 +83,7 @@ class CborChunk(BaseChunk):
     # stream through to the end. Stopping in the middle will leave
     # some random fraction of input in the BufferedReader and that
     # would be lost and break the stream.
-    _OK_RAW_INPUTS = (file, BufferedReader)
+    _OK_RAW_INPUTS = (file, BufferedReader, StringIO.StringIO, type(cStringIO.StringIO()))
 
     def __init__(self, *args, **kwargs):
         super(CborChunk, self).__init__(*args, **kwargs)
