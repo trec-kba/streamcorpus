@@ -1,11 +1,16 @@
 #!/usr/bin/env python
-'''
-A command line utility for printing out information from
-streamcorpus.Chunk files.
+'''Print information from a chunk file.
 
-This software is released under an MIT/X11 open source license.
+.. This software is released under an MIT/X11 open source license.
+   Copyright 2012-2014 Diffeo, Inc.
 
-Copyright 2012 Diffeo, Inc.
+:program:`streamcorpus_dump` prints information on a
+:class:`streamcorpus.Chunk` file.  Basic usage is:
+
+.. code-block:: bash
+
+    streamcorpus_dump --show-all input.sc
+
 '''
 from __future__ import absolute_import
 import os
