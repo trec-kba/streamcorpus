@@ -124,6 +124,7 @@ setup(
     author=AUTHOR,
     author_email=AUTHOR_EMAIL,
     url=URL,
+    license='MIT/X11 license http://opensource.org/licenses/MIT',
     packages = find_packages('src'),
     package_dir = {'': 'src'},
     cmdclass = {'test': PyTest, 'thrift': Thrift},
