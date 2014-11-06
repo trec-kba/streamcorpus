@@ -19,6 +19,8 @@ import json
 import logging
 import itertools
 import collections
+from operator import itemgetter
+
 from streamcorpus._chunk import Chunk as _Chunk
 from streamcorpus.ttypes import OffsetType, Token, EntityType, MentionType
 
@@ -380,6 +382,9 @@ def _find(fpaths, stream_id, dump_binary_stream_item=False):
     match stream_id, then print stream_item.body.raw to stdout
     '''
     sys.stderr.write('hunting for %r\n' % stream_id)
+    offsets = None
+    if "#" in stream_id:
+        stream_id, offsets = stream_id.split('#')
     for fpath in fpaths:
         for si in Chunk(path=fpath, mode='rb'):
             if si.stream_id == stream_id:
@@ -388,9 +393,27 @@ def _find(fpaths, stream_id, dump_binary_stream_item=False):
                     o_chunk.add(si)
                     o_chunk.close()
                     sys.exit()
-                elif si.body and si.body.raw:
+                elif not offsets and si.body and si.body.raw:
                     print si.body.raw
                     sys.exit()
+                elif offsets and si.body and (si.body.clean_html or si.body.clean_visible):
+                    if si.body.clean_html:
+                        ## prefer using clean_html, if available
+                        text = si.body.clean_html
+                    else:
+                        text = si.body.clean_visible
+                    offsets = offsets.split(',')
+                    offset_type = set(map(itemgetter(0), offsets))
+                    assert len(offset_type) == 1, 'mixed b|c!?: %r' % offsets
+                    assert offset_type in (set(['']), set(['b']), set(['c'])), offset_type
+                    is_bytes = bool( offset_type != set(['c']) )
+                    if not is_bytes:
+                        text = text.decode('utf8')
+                    for rng in offsets:
+                        first, last = rng.split('-')
+                        first, last = int(first[1:]), int(last)
+                        print text[first:last]
+                        
                 elif si.body:
                     sys.exit('Found %s without si.body.raw' % stream_id)
                 else:
