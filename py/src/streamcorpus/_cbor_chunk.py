@@ -13,20 +13,21 @@ Copyright 2012 Diffeo, Inc.
 import StringIO
 import cStringIO
 
-from ._chunk import BaseChunk
+from ._chunk import BaseChunk, md5_file
 try:
     import cbor
 except:
     cbor = None
 
 
-class BufferedReader(object):
+class BufferedReader(md5_file):
     '''
     Wrap a file-like object from which we .read() in one which which buffers.
     '''
     _BUFSIZE = 32*1024
-    def __init__(self, fp):
-        self._fp = fp
+
+    def __init__(self, fh):
+        super(BufferedReader, self).__init__(fh)
         self.buf = None
         self.pos = 0
 
@@ -36,7 +37,7 @@ class BufferedReader(object):
         else:
             toread = -1
         if toread == -1:
-            rest = self._fp.read(-1)
+            rest = self._fh.read(-1)
             if self.buf is not None:
                 rest = self.buf + rest
                 self.buf = None
@@ -47,7 +48,7 @@ class BufferedReader(object):
         while have < toread:
             need = max(self._BUFSIZE, toread - have)
             assert need > 0
-            got = self._fp.read(need)
+            got = self._fh.read(need)
             if not got:
                 out = self.buf[self.pos:]
                 self.buf = None
@@ -63,6 +64,7 @@ class BufferedReader(object):
         out = self.buf[self.pos:self.pos+toread]
         self.pos += toread
         #self.buf = self.buf[toread:]
+        self._md5.update(out)
         return out
 
 
