@@ -35,10 +35,6 @@ def _myinstall(pkgspec):
     )
 
 
-install_requires=[
-    'thrift>=0.9',
-]
-
 class PyTest(Command):
     '''run py.test'''
 
@@ -139,5 +135,15 @@ setup(
             'streamcorpus_dump = streamcorpus.dump:main',
         ]
     },
-    install_requires=install_requires
+    install_requires=[
+        'thrift>=0.9',
+    ],
+    extras_require = {
+        'snappy': [
+            'snappy',
+        ],
+        'xz': [
+            'backports.lzma',
+        ],
+    },
 )

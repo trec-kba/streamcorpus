@@ -17,7 +17,10 @@ ch.setFormatter(formatter)
 logger.addHandler(ch)
 
 ## import from inside the local package, i.e. get these things through __init__.py
-from . import make_stream_item, ContentItem, Chunk, serialize, deserialize, compress_and_encrypt_path
+from . import make_stream_item, ContentItem, Chunk, serialize, deserialize, \
+    parse_file_extensions, \
+    compress_and_encrypt, decrypt_and_uncompress, \
+    compress_and_encrypt_path
 from . import VersionMismatchError
 from . import Versions
 from . import StreamItem_v0_2_0, StreamItem_v0_3_0
@@ -144,7 +147,7 @@ def test_gz():
     assert count == 197
     os.system('rm %s' % test_gz_path)
 
-@pytest.mark.skipif('not _chunk.lzma')
+@pytest.mark.skipif('not _chunk.xz')
 def test_xz_write():
     count = 0
     test_xz_path = '/tmp/test_path.xz'
@@ -168,10 +171,11 @@ def test_speed():
 
 
 @pytest.fixture(scope='function')
-def path(request):
-    path = '/tmp/test_chunk-%s.sc' % str(uuid.uuid4())
+def path(request, tmpdir):
+    path = os.path.join(str(tmpdir), 'test_chunk-%s.sc' % str(uuid.uuid4()))
     def fin():
-        os.remove(path)
+        if os.path.exists(path):
+            os.remove(path)
     request.addfinalizer(fin)
     return path
 
@@ -209,7 +213,7 @@ def test_chunk_path_append(path):
     print repr(ch)
     assert len(list( Chunk(path=path, mode='rb') )) == 2
 
-@pytest.mark.skipif('not _chunk.lzma')
+@pytest.mark.skipif('not _chunk.xz')
 def test_chunk_path_append_xz(path_xz):
     ch = Chunk(path=path_xz, mode='wb')
     si = make_si()
@@ -324,3 +328,59 @@ def test_with(path):
         ch.add(make_si())
         ch.add(make_si())
     assert len(list(Chunk(path))) == 3
+
+def test_parse_file_extensions():
+    examples = [
+        ('dog.sc.gz.gpg', ('sc', 'gz', 'gpg')),
+        ('dog.gz.gpg', (None, 'gz', 'gpg')),
+        ('dog.gpg', (None, None, 'gpg')),
+        ('dog.sc.gz', ('sc', 'gz', None)),
+        ('dog.gz', (None, 'gz', None)),
+        ('dog', (None, None, None)),
+        ('dog.sc', ('sc', None, None)),
+        ('dog.xz', (None, 'xz', None)),
+        ]
+    for ex in examples:
+        assert ex[1] == parse_file_extensions(ex[0])
+
+def test_fileobj():
+    errors, data = decrypt_and_uncompress(open(TEST_XZ_PATH).read())
+    count = 0
+    for si in Chunk(file_obj=StringIO(data), message=StreamItem_v0_2_0):
+        count += 1
+        assert si.body.clean_visible
+    assert count == 197
+
+@pytest.mark.parametrize('compression', ['xz', 'gz', 'sz', ''])
+def test_compression(compression, path):
+    ## analog of pytest.skipif for parametrize:
+    if compression and not getattr(_chunk, compression):
+        logger.warn('not able to run test_compression(%r) because %r not available',
+                    compression, compression)
+        return
+
+    ## get some raw data in memory for testing
+    errors, rdata = decrypt_and_uncompress(open(TEST_XZ_PATH).read())
+    assert not errors
+
+    ## first check it all in memory
+    errors, cdata = compress_and_encrypt(rdata, compression=compression)
+    assert not errors
+    assert (not compression) or (len(cdata) < len(rdata))
+    errors, rdata2 = decrypt_and_uncompress(cdata, compression=compression)
+    assert not errors
+    assert rdata2 == rdata
+
+    ## now check for the _path version of compress_and_encrypt...
+    fh = open(path, 'wb')
+    fh.write(rdata)
+    fh.close()
+    t_dir = os.path.dirname(path)
+    errors, o_path = compress_and_encrypt_path(path, compression=compression, 
+                                               tmp_dir=t_dir)
+    assert not errors
+    cdata = open(o_path).read()
+    assert (not compression) or (len(cdata) < len(rdata))
+    errors, rdata2 = decrypt_and_uncompress(cdata, compression=compression)
+    assert not errors
+    assert rdata2 == rdata

@@ -57,6 +57,7 @@ import ttypes_v0_1_0
 import ttypes_v0_2_0
 
 from _chunk import Chunk, PickleChunk, JsonChunk, \
+    parse_file_extensions, \
     decrypt_and_uncompress, compress_and_encrypt, \
     compress_and_encrypt_path, \
     serialize, deserialize, \
@@ -66,6 +67,7 @@ from _cbor_chunk import CborChunk
 __all__ = ['Chunk', 'PickleChunk', 'JsonChunk', 'CborChunk',
            'decrypt_and_uncompress', 'compress_and_encrypt',
            'compress_and_encrypt_path',
+           'parse_file_extensions',
            'serialize', 'deserialize',
            'make_stream_time', 'make_stream_item',
            'get_entity_type',

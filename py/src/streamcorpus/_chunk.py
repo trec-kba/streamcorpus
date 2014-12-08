@@ -14,11 +14,12 @@ Copyright 2012 Diffeo, Inc.
 
 import errno
 import exceptions
-import gzip
+import gzip as gz
 import hashlib
 import logging
 import os
 import uuid
+import re
 import shutil
 import subprocess
 from cStringIO import StringIO
@@ -46,9 +47,16 @@ except Exception, exc:
     protocol = TBinaryProtocol
 
 try:
-    from backports import lzma
+    from backports import lzma as xz
 except:
-    lzma = None
+    logger.warn('failed to import lzma for XZ compression', exc_info=True)
+    xz = None
+
+try:
+    import snappy as sz
+except:
+    logger.warn('failed to import snappy', exc_info=True)
+    sz = None
 
 from ttypes import StreamItem as StreamItem_v0_3_0
 from ttypes_v0_1_0 import StreamItem as StreamItem_v0_1_0
@@ -217,7 +225,7 @@ class BaseChunk(object):
                     exc.errno = errno.EEXIST
                     raise exc
                 if path.endswith('.xz'):
-                    if lzma is None:
+                    if xz is None:
                         if mode != 'rb':
                             raise Exception('backports.lzma is not installed and mode=%r but only "rb" is allowed without backports.lzma' % mode)
                         ## launch xz child
@@ -228,11 +236,11 @@ class BaseChunk(object):
                         file_obj = xz_child.stdout
                         ## what to do with stderr
                     else:
-                        file_obj = lzma.open(path, mode)
+                        file_obj = xz.open(path, mode)
                         
                 elif path.endswith('.gz'):
                     assert mode == 'rb', 'mode=%r for .gz' % mode
-                    file_obj  = gzip.open(path)
+                    file_obj  = gz.open(path)
                 elif path.endswith('.xz.gpg'):
                     assert mode == 'rb', 'mode=%r for .xz' % mode
                     ## launch xz child
@@ -254,11 +262,11 @@ class BaseChunk(object):
                 if dirname and not os.path.exists(dirname):
                     os.makedirs(dirname)
                 if path.endswith('.gz'):
-                    file_obj = gzip.open(path, mode)
+                    file_obj = gz.open(path, mode)
                 elif path.endswith('.xz'):
-                    if lzma is None:
+                    if xz is None:
                         raise Exception('file extension is .xz but backports.lzma is not installed')
-                    file_obj = lzma.open(path, mode)
+                    file_obj = xz.open(path, mode)
                 else:
                     file_obj = open(path, mode)
 
@@ -509,10 +517,11 @@ class PickleChunk(BaseChunk):
                 # okay
                 return
 
-def decrypt_and_uncompress(data, gpg_private=None, tmp_dir=None):
-    '''
-    Given a data buffer of bytes, if gpg_key_path is provided, decrypt
-    data using gnupg, and uncompress using xz.
+def decrypt_and_uncompress(data, gpg_private=None, tmp_dir=None,
+                           compression='xz'):
+    '''Given a data buffer of bytes, if gpg_key_path is provided, decrypt
+    data using gnupg, and uncompress using `compression` scheme, which
+    defaults to "xz" and can also be "gz", "sz", or "".
     
     :returns: a tuple of (logs, data), where `logs` is an array of
       strings and data is a binary string
@@ -562,9 +571,32 @@ def decrypt_and_uncompress(data, gpg_private=None, tmp_dir=None):
             _errors.append('gpg -> no data')
             return _errors, None
 
-    if lzma is not None:
+    if   compression == 'xz':
+        data = xz_decompress(data)
+    elif compression == 'sz':
+        ## sz.decompress is broken per https://github.com/andrix/python-snappy/issues/28
+        fh = StringIO()
+        sz.stream_decompress(StringIO(data), fh)
+        data = fh.getvalue()
+    elif compression == 'gz':
+        fh = StringIO(data)
+        gz_fh = gz.GzipFile(fileobj=fh, mode='r')
+        data = gz_fh.read(data)
+    elif compression == "":
+        ## data is not compressed
+        pass
+
+    return _errors, data
+
+
+def xz_decompress(data):
+    '''decompress xz `data` using backports.lzma, or if that's not
+    available then the commandline `xz --decompress` tool
+
+    '''
+    if xz is not None:
         try:
-            bigdata = lzma.decompress(data)
+            bigdata = xz.decompress(data)
             data = bigdata
         except:
             logger.error('decompress of %s bytes failed', len(data))
@@ -580,29 +612,67 @@ def decrypt_and_uncompress(data, gpg_private=None, tmp_dir=None):
         ## use communicate to pass the data incrementally to the child
         ## while reading the output, to avoid blocking 
         data, errors = xz_child.communicate(data)
+        assert not errors, errors
+
+    return data
+
+
+def xz_compress(data):
+    '''decompress xz `data` using backports.lzma, or if that's not
+    available then the commandline `xz --decompress` tool
+
+    '''
+    if xz is not None:
+        try:
+            data = xz.compress(data)
+        except:
+            logger.error('decompress of %s bytes failed', len(data))
+            raise
+
+    else:
+        ## launch xz child
+        xz_child = subprocess.Popen(
+            ['xz', '--compress'],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE)
+        ## use communicate to pass the data incrementally to the child
+        ## while reading the output, to avoid blocking 
+        data, errors = xz_child.communicate(data)
 
         assert not errors, errors
 
-    return _errors, data
+    return data
+
 
 def compress_and_encrypt(data, gpg_public=None, gpg_recipient='trec-kba',
-                         tmp_dir=None):
-    '''
-    Given a data buffer of bytes compress it using xz, if gpg_public
-    is provided, encrypt data using gnupg.
+                         tmp_dir=None, compression='xz'):
+    '''Given a data buffer of bytes compress it using the `compression`
+    scheme, if gpg_public is provided, encrypt data using gnupg.
+    Compression can be "xz", "sz", "gz", or ""
+
     '''
     _errors = []
-    ## launch xz child
-    xz_child = subprocess.Popen(
-        ['xz', '--compress'],
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE)
-    ## use communicate to pass the data incrementally to the child
-    ## while reading the output, to avoid blocking 
-    data, errors = xz_child.communicate(data)
 
-    assert not errors, errors
+    known_compression_schemes = set(['xz', 'sz', 'gz', ''])
+    if compression not in known_compression_schemes:
+        raise Exception('%s not in %r' % (compression, known_compression_schemes))
+
+    if   compression == 'xz':
+        data = xz_compress(data)
+    elif compression == 'sz':
+        ## sz.compress is broken per https://github.com/andrix/python-snappy/issues/28
+        fh = StringIO()
+        sz.stream_compress(StringIO(data), fh)
+        data = fh.getvalue()
+    elif compression == 'gz':
+        fh = StringIO()
+        gz_fh = gz.GzipFile(fileobj=fh, mode='w')
+        gz_fh.write(data)
+        gz_fh.close()
+        data = fh.getvalue()
+    elif compression == "":
+        pass
 
     if gpg_public is not None:
         ### setup gpg for encryption.  
@@ -643,18 +713,49 @@ def compress_and_encrypt(data, gpg_public=None, gpg_recipient='trec-kba',
 
     return _errors, data
 
-def compress_and_encrypt_path(path, gpg_public=None, gpg_recipient='trec-kba',
-                              tmp_dir='/tmp'):
-    '''
-    Given a path in the local file system, compress it using xz, if gpg_public
-    is provided, encrypt data using gnupg.
 
-    :returns: path to file of encrypted, compressed data
+file_extensions_re = re.compile('.*?(\.(?P<type>(fc|sc)))?(\.(?P<compression>(xz|gz|sz)))?(\.(?P<encryption>gpg))?$')
+
+def parse_file_extensions(path):
+    '''accepts a `path` string (can be just a filename) and parses the
+    extensions at the end of the file for up to three different
+    components:  type.compression.encryption
+    
+      <name>.<type=(fc|sc)>.<compression=(xz|gz|sz)>.<encryption=gpg>
+
+    '''
+    m = file_extensions_re.match(path)
+    if not m:
+        return None, None, None
+    else:
+        return m.group('type'), m.group('compression'), m.group('encryption')
+
+
+def compress_and_encrypt_path(path, gpg_public=None, gpg_recipient='trec-kba',
+                              compression='xz',
+                              tmp_dir='/tmp'):
+    '''Given a path in the local file system, compress it using
+    `compression`, which defaults to "xz", if gpg_public is provided,
+    encrypt data using gnupg.
+
+    :param compression: can be either "xz", "sz", or ""
+
+    :returns: path to file to a new file containing the of encrypted,
+    compressed data
+
     :rtype: str
+
     '''
     _errors = []
     assert os.path.exists(path), path
-    command = 'xz --compress < ' + path
+
+    commands = {
+        'xz': 'xz --compress < ' + path,
+        'sz': 'python -m snappy -c < ' + path,
+        'gz': 'gzip -c < ' + path,
+        '': 'cat ' + path,
+        }
+    command = commands.get(compression)
 
     tmp_path = os.path.join(tmp_dir, 'tmp-compress-and-encrypt-path-' + uuid.uuid4().hex)
     if not os.path.exists(tmp_path):
