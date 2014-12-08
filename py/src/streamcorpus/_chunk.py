@@ -800,7 +800,7 @@ def compress_and_encrypt_path(path, gpg_public=None, gpg_recipient='trec-kba',
     p_stdout, p_stderr = p.communicate()
     # p_stdout should be empty because we're redirecting to o_path
     if p.returncode != 0:
-        _errors.append('command return code {}'.format(p.retcode))
+        _errors.append('command return code {}'.format(p.returncode))
         _errors.append(p_stderr)
     elif p_stderr:
         # sometimes returncode is zero on failures
