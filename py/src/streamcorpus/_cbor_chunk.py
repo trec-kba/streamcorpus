@@ -26,10 +26,11 @@ class BufferedReader(md5_file):
     '''
     _BUFSIZE = 32*1024
 
-    def __init__(self, fh):
+    def __init__(self, fh, inline_md5=True):
         super(BufferedReader, self).__init__(fh)
         self.buf = None
         self.pos = 0
+        self.inline_md5 = inline_md5
 
     def read(self, *args):
         if args:
@@ -64,7 +65,12 @@ class BufferedReader(md5_file):
         out = self.buf[self.pos:self.pos+toread]
         self.pos += toread
         #self.buf = self.buf[toread:]
-        self._md5.update(out)
+        if self.inline_md5:
+            # This is breaking the abstraction barrier of `md5file`. We should
+            # be calling super.read so that `md5file` updates the md5 for us.
+            # (I think this requires splitting BufferedReader into two classes,
+            # but I'm not sure what the right design is.) ---AG
+            self._md5.update(out)
         return out
 
 
@@ -97,7 +103,9 @@ class CborChunk(BaseChunk):
     def read_msg_impl(self):
         assert self._i_chunk_fh is not None
         if not isinstance(self._i_chunk_fh, self._OK_RAW_INPUTS):
-            self._i_chunk_fh = BufferedReader(self._i_chunk_fh)
+            inline_md5 = hasattr(self._i_chunk_fh, 'md5_hexdigest')
+            self._i_chunk_fh = BufferedReader(self._i_chunk_fh,
+                                              inline_md5=inline_md5)
         while True:
             try:
                 ob = cbor.load(self._i_chunk_fh)
