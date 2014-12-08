@@ -582,7 +582,7 @@ def decrypt_and_uncompress(data, gpg_private=None, tmp_dir=None,
         fh = StringIO(data)
         gz_fh = gz.GzipFile(fileobj=fh, mode='r')
         data = gz_fh.read(data)
-    elif compression == "":
+    elif compression == "" or compression is None:
         ## data is not compressed
         pass
 
@@ -671,7 +671,7 @@ def compress_and_encrypt(data, gpg_public=None, gpg_recipient='trec-kba',
         gz_fh.write(data)
         gz_fh.close()
         data = fh.getvalue()
-    elif compression == "":
+    elif compression == "" or compression is None:
         pass
 
     if gpg_public is not None:
@@ -714,6 +714,7 @@ def compress_and_encrypt(data, gpg_public=None, gpg_recipient='trec-kba',
     return _errors, data
 
 
+known_compression_schemes = set(['xz', 'gz', 'sz', '', None])
 file_extensions_re = re.compile('.*?(\.(?P<type>(fc|sc)))?(\.(?P<compression>(xz|gz|sz)))?(\.(?P<encryption>gpg))?$')
 
 def parse_file_extensions(path):
@@ -748,6 +749,9 @@ def compress_and_encrypt_path(path, gpg_public=None, gpg_recipient='trec-kba',
     '''
     _errors = []
     assert os.path.exists(path), path
+
+    if compression is None:
+        compression = ''
 
     commands = {
         'xz': 'xz --compress < ' + path,
