@@ -219,7 +219,7 @@ class BaseChunk(object):
             assert data is None and file_obj is None, \
                 'Must specify only path or data or file_obj'
             if os.path.exists(path):
-                ## if the file is there, then use mode 
+                ## if the file is there, then use mode
                 if mode not in ['rb', 'ab']:
                     exc = IOError('mode=%r would overwrite existing %s' % (mode, path))
                     exc.errno = errno.EEXIST
@@ -237,7 +237,7 @@ class BaseChunk(object):
                         ## what to do with stderr
                     else:
                         file_obj = xz.open(path, mode)
-                        
+
                 elif path.endswith('.gz'):
                     assert mode == 'rb', 'mode=%r for .gz' % mode
                     file_obj  = gz.open(path)
@@ -457,7 +457,7 @@ class Chunk(BaseChunk):
         ## read message instances until input buffer is exhausted
         while 1:
 
-            ## instantiate a message  instance 
+            ## instantiate a message  instance
             msg = self.message()
 
             try:
@@ -522,7 +522,7 @@ def decrypt_and_uncompress(data, gpg_private=None, tmp_dir=None,
     '''Given a data buffer of bytes, if gpg_key_path is provided, decrypt
     data using gnupg, and uncompress using `compression` scheme, which
     defaults to "xz" and can also be "gz", "sz", or "".
-    
+
     :returns: a tuple of (logs, data), where `logs` is an array of
       strings and data is a binary string
 
@@ -557,7 +557,7 @@ def decrypt_and_uncompress(data, gpg_private=None, tmp_dir=None,
                 stdin =subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE)
-            ## communicate with child via its stdin 
+            ## communicate with child via its stdin
             data, errors = gpg_child.communicate(data)
             if errors:
                 _errors.append(errors)
@@ -610,7 +610,7 @@ def xz_decompress(data):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE)
         ## use communicate to pass the data incrementally to the child
-        ## while reading the output, to avoid blocking 
+        ## while reading the output, to avoid blocking
         data, errors = xz_child.communicate(data)
         assert not errors, errors
 
@@ -637,7 +637,7 @@ def xz_compress(data):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE)
         ## use communicate to pass the data incrementally to the child
-        ## while reading the output, to avoid blocking 
+        ## while reading the output, to avoid blocking
         data, errors = xz_child.communicate(data)
 
         assert not errors, errors
@@ -675,7 +675,7 @@ def compress_and_encrypt(data, gpg_public=None, gpg_recipient='trec-kba',
         pass
 
     if gpg_public is not None:
-        ### setup gpg for encryption.  
+        ### setup gpg for encryption.
         gpg_dir = os.tempnam(tmp_dir, 'tmp-compress-and-encrypt-')
         os.makedirs(gpg_dir)
         try:
@@ -703,7 +703,7 @@ def compress_and_encrypt(data, gpg_public=None, gpg_recipient='trec-kba',
                 stdin =subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE)
-            ## communicate with child via its stdin 
+            ## communicate with child via its stdin
             data, errors = gpg_child.communicate(data)
             if errors:
                 _errors.append(errors)
@@ -721,7 +721,7 @@ def parse_file_extensions(path):
     '''accepts a `path` string (can be just a filename) and parses the
     extensions at the end of the file for up to three different
     components:  type.compression.encryption
-    
+
       <name>.<type=(fc|sc)>.<compression=(xz|gz|sz)>.<encryption=gpg>
 
     '''
@@ -766,7 +766,7 @@ def compress_and_encrypt_path(path, gpg_public=None, gpg_recipient='trec-kba',
         os.makedirs(tmp_path)
 
     if gpg_public is not None:
-        ### setup gpg for encryption.  
+        ### setup gpg for encryption.
         gpg_dir = os.path.join(tmp_path, 'gpg_dir')
         os.makedirs(gpg_dir)
 
@@ -793,7 +793,7 @@ def compress_and_encrypt_path(path, gpg_public=None, gpg_recipient='trec-kba',
     o_path = os.path.join(tmp_path, 'o_path')
     e_path = os.path.join(tmp_path, 'e_path')
 
-    command += ' 1> ' + o_path 
+    command += ' 1> ' + o_path
 
     logger.debug('compress_and_encrypt_path command %r', command)
     p = subprocess.Popen(command, shell=True, stderr=subprocess.PIPE)

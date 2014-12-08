@@ -9,7 +9,7 @@ def test_cbor_chunk():
     c = CborChunk(file_obj=fh, mode='wb', message=lambda x: x)
     c.add(dict(test='msg'))
     c.flush()
-    
+
     data = fh.getvalue()
     assert hashlib.md5(data).hexdigest() == c.md5_hexdigest
 
@@ -17,5 +17,5 @@ def test_cbor_chunk():
     c = CborChunk(file_obj=fh, message=lambda x: x)
     msg = list(c)[0]
     assert msg['test'] == 'msg'
-    
+
     assert hashlib.md5(data).hexdigest() == c.md5_hexdigest
