@@ -141,7 +141,7 @@ setup(
     ],
     extras_require = {
         'snappy': [
-            'snappy',
+            'python-snappy',
         ],
         'xz': [
             'backports.lzma',
