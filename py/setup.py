@@ -137,7 +137,7 @@ setup(
     },
     install_requires=[
         'thrift>=0.9',
-        'cbor',
+        'cbor>=0.1.15',
     ],
     extras_require = {
         'snappy': [
