@@ -20,17 +20,16 @@ except:
     cbor = None
 
 
-class BufferedReader(md5_file):
+class BufferedReader(object):
     '''
     Wrap a file-like object from which we .read() in one which which buffers.
     '''
     _BUFSIZE = 32*1024
 
-    def __init__(self, fh, inline_md5=True):
-        super(BufferedReader, self).__init__(fh)
+    def __init__(self, fh):
         self.buf = None
         self.pos = 0
-        self.inline_md5 = inline_md5
+        self._fh = fh
 
     def read(self, *args):
         if args:
@@ -64,14 +63,11 @@ class BufferedReader(md5_file):
 
         out = self.buf[self.pos:self.pos+toread]
         self.pos += toread
-        #self.buf = self.buf[toread:]
-        if self.inline_md5:
-            # This is breaking the abstraction barrier of `md5file`. We should
-            # be calling super.read so that `md5file` updates the md5 for us.
-            # (I think this requires splitting BufferedReader into two classes,
-            # but I'm not sure what the right design is.) ---AG
-            self._md5.update(out)
         return out
+
+    @property
+    def md5_hexdigest(self):
+        return getattr(self._fh, 'md5_hexdigest', None)
 
 
 class CborChunk(BaseChunk):
@@ -91,7 +87,8 @@ class CborChunk(BaseChunk):
     # stream through to the end. Stopping in the middle will leave
     # some random fraction of input in the BufferedReader and that
     # would be lost and break the stream.
-    _OK_RAW_INPUTS = (file, BufferedReader, StringIO.StringIO, type(cStringIO.StringIO()))
+    _OK_RAW_INPUTS = (
+        file, BufferedReader, StringIO.StringIO, type(cStringIO.StringIO()))
 
     def __init__(self, *args, **kwargs):
         super(CborChunk, self).__init__(*args, **kwargs)
@@ -102,10 +99,8 @@ class CborChunk(BaseChunk):
 
     def read_msg_impl(self):
         assert self._i_chunk_fh is not None
-        if not isinstance(self._i_chunk_fh, self._OK_RAW_INPUTS):
-            inline_md5 = hasattr(self._i_chunk_fh, 'md5_hexdigest')
-            self._i_chunk_fh = BufferedReader(self._i_chunk_fh,
-                                              inline_md5=inline_md5)
+        if not self.is_ok_raw_input:
+            self._i_chunk_fh = BufferedReader(self._i_chunk_fh)
         while True:
             try:
                 ob = cbor.load(self._i_chunk_fh)
@@ -114,6 +109,13 @@ class CborChunk(BaseChunk):
             except EOFError:
                 # okay. done.
                 return
+
+    @property
+    def is_ok_raw_input(self):
+        if isinstance(self._i_chunk_fh, md5_file):
+            return isinstance(self._i_chunk_fh._fh, self._OK_RAW_INPUTS)
+        else:
+            return isinstance(self._i_chunk_fh, self._OK_RAW_INPUTS)
 
 
 if cbor is None:

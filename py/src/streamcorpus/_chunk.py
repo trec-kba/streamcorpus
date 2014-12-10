@@ -354,10 +354,10 @@ class BaseChunk(object):
         if self._md5_hexdigest:
             ## only set if closed already
             return self._md5_hexdigest
-        if self._o_chunk_fh and isinstance(self._o_chunk_fh, md5_file):
+        if self._o_chunk_fh and hasattr(self._o_chunk_fh, 'md5_hexdigest'):
             ## get it directly from the output chunk
             return self._o_chunk_fh.md5_hexdigest
-        elif self._i_chunk_fh and isinstance(self._i_chunk_fh, md5_file):
+        elif self._i_chunk_fh and hasattr(self._i_chunk_fh, 'md5_hexdigest'):
             ## get it directly from the input chunk
             return self._i_chunk_fh.md5_hexdigest
         else:
