@@ -89,6 +89,7 @@ class EntityType(object):
   RELIGION = 19
   NATIONALITY = 20
   TITLE = 21
+  EVENT = 22
 
   _VALUES_TO_NAMES = {
     0: "PER",
@@ -111,6 +112,7 @@ class EntityType(object):
     19: "RELIGION",
     20: "NATIONALITY",
     21: "TITLE",
+    22: "EVENT",
   }
 
   _NAMES_TO_VALUES = {
@@ -134,6 +136,7 @@ class EntityType(object):
     "RELIGION": 19,
     "NATIONALITY": 20,
     "TITLE": 21,
+    "EVENT": 22,
   }
 
 class MentionType(object):

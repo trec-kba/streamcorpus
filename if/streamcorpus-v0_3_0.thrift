@@ -321,6 +321,8 @@ enum EntityType {
   RELIGION = 19,
   NATIONALITY = 20,
   TITLE = 21,
+
+  EVENT = 22,
 }
 
 enum MentionType {
