@@ -111,6 +111,11 @@ struct Annotator {
  * annotation applies to a range of bytes
  *
  * annotation applies to a range of chars, typically unicode chars
+ * 
+
+ * annotation applies to a range of tokens separaed by this regex:
+ *   
+ * 
  */
 enum OffsetType {
   LINES = 0,
@@ -118,6 +123,8 @@ enum OffsetType {
   BYTES = 1,
 
   CHARS = 2,
+
+  REGEX = 3,
 }
 
 /**
