@@ -12,14 +12,26 @@ http://stackoverflow.com/questions/280712/javascript-unicode-regexes
 
 import regex as re
 
-token_re = re.compile(r'[\u2E80-\u2EFF\u3000-\u303F\u3200-\u32FF\u3400-\u4DBF\u4E00-\u9FFF]|[^\s\n\r\u2E80-\u2EFF\u3000-\u303F\u3200-\u32FF\u3400-\u4DBF\u4E00-\u9FFF]+')
+token_re = re.compile(ur'[\u2E80-\u2EFF\u3000-\u303F\u3200-\u32FF\u3400-\u4DBF\u4E00-\u9FFF]' + \
+                      ur'|[^\s\n\r\u2E80-\u2EFF\u3000-\u303F\u3200-\u32FF\u3400-\u4DBF\u4E00-\u9FFF]+')
+                      #ur'|(P<spans>\<span\>)')
 
 text = u'''
 This is some text
 
+
+
 in Chinese
 
+
+
+
 that we can all see as separate tokens:
+
+
+
+
+
 
 Isabella quarter obverse.jpg伊莎贝拉25美分硬币又名哥伦布博览会25美分硬
 币，是1893年铸造的一种美国纪念币，由联邦国会应芝加哥哥伦布纪念博览会女
@@ -32,6 +44,10 @@ Isabella quarter obverse.jpg伊莎贝拉25美分硬币又名哥伦布博览会25
 硬币背面描绘的是位正在纺纱的女性，左手持有拉线棒，右手拿着锭子，代表女
 性的工作行业，图案是基于助理雕刻师乔治·T·摩根的草图设计。钱币学媒体对硬
 币设计评价不佳，硬币本身当年在博览会上也不畅销，由于定价和哥伦布半美元
+
+
+
+
 一样都是1美元，所以25美分面值看起来不像半美元那么划算。最终有近一半已经
 铸造的硬币送回铸币局熔毁，近万枚由各女士经理人以面值买下，再在20世纪初
 进入钱币市场。如今，这些硬币深受收藏家追捧，根据理查德·约曼2014年版的
@@ -40,10 +56,23 @@ Isabella quarter obverse.jpg伊莎贝拉25美分硬币又名哥伦布博览会25
 '''
 
 
-def test_regex_offsets():
+def print_regex_offsets():
     for m in token_re.finditer(text):
         start, end = m.span()
         print start, end, text[start:end].encode('utf8')
+
+
+def test_regex_offsets():
+    without_collapse = [text[m.span()[0] : m.span()[1]].encode('utf8')
+                        for m in token_re.finditer(text)]
+    collapsed_text = re.sub(r'\s+', ' ', text, re.MULTILINE)
+    #collapsed_text = collapsed_text[:30] + '<span>' + collapsed_text[30:]
+    assert len(collapsed_text) < len(text)
+    with_collapse = [collapsed_text[m.span()[0] : m.span()[1]].encode('utf8')
+                     for m in token_re.finditer(collapsed_text)]
+
+    assert with_collapse == without_collapse, set(with_collapse) - set(without_collapse)
+
         
 if __name__ == '__main__':
     test_regex_offsets()
