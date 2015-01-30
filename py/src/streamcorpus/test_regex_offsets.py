@@ -13,7 +13,7 @@ http://stackoverflow.com/questions/280712/javascript-unicode-regexes
 import regex as re
 
 token_re = re.compile(ur'[\u2E80-\u2EFF\u3000-\u303F\u3200-\u32FF\u3400-\u4DBF\u4E00-\u9FFF]' + \
-                      ur'|[^\s\n\r\u2E80-\u2EFF\u3000-\u303F\u3200-\u32FF\u3400-\u4DBF\u4E00-\u9FFF]+')
+                      ur'|([^\s\n\r\u2E80-\u2EFF\u3000-\u303F\u3200-\u32FF\u3400-\u4DBF\u4E00-\u9FFF]+)')
                       #ur'|(P<spans>\<span\>)')
 
 text = u'''
@@ -60,6 +60,8 @@ def print_regex_offsets():
     for m in token_re.finditer(text):
         start, end = m.span()
         print start, end, text[start:end].encode('utf8')
+    print 'length', len(text)
+    print 'byte length', len(text.encode('utf-8'))
 
 
 def test_regex_offsets():
@@ -73,6 +75,7 @@ def test_regex_offsets():
 
     assert with_collapse == without_collapse, set(with_collapse) - set(without_collapse)
 
-        
+
 if __name__ == '__main__':
     test_regex_offsets()
+    print_regex_offsets()
