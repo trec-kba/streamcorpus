@@ -87,6 +87,7 @@ class CborChunk(BaseChunk):
     # stream through to the end. Stopping in the middle will leave
     # some random fraction of input in the BufferedReader and that
     # would be lost and break the stream.
+    is_available = True
     _OK_RAW_INPUTS = (
         file, BufferedReader, StringIO.StringIO, type(cStringIO.StringIO()))
 
@@ -121,6 +122,7 @@ class CborChunk(BaseChunk):
 if cbor is None:
     # clobber definition with something that just errors out on attempt to use
     class MissingCbor(BaseChunk):
+        is_available = False
         def __init__(self, *args, **kwargs):
             raise Exception('package cbor is not installed')
 
