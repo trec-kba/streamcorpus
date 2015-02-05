@@ -581,7 +581,7 @@ def decrypt_and_uncompress(data, gpg_private=None, tmp_dir=None,
         elif data[4:10] == 'sNaPpY':
             data = snappy_decompress(data)
             did_decompress = True
-        elif data[0:2] == '\x1f\x8b\x08':  # gzip+deflate section header bytes
+        elif data[0:3] == '\x1f\x8b\x08':  # gzip+deflate section header bytes
             data = gzip_decompress(data)
             did_decompress = True
         # else fall through and use a named decompression or raw data

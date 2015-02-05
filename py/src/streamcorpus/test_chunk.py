@@ -367,7 +367,7 @@ def test_compression(compression, path):
     errors, cdata = compress_and_encrypt(rdata, compression=compression)
     assert not errors
     assert (not compression) or (len(cdata) < len(rdata))
-    errors, rdata2 = decrypt_and_uncompress(cdata, compression=compression)
+    errors, rdata2 = decrypt_and_uncompress(cdata, compression=compression, detect_compression=False)
     assert not errors
     assert rdata2 == rdata
 
@@ -381,6 +381,40 @@ def test_compression(compression, path):
     assert not errors
     cdata = open(o_path).read()
     assert (not compression) or (len(cdata) < len(rdata))
-    errors, rdata2 = decrypt_and_uncompress(cdata, compression=compression)
+    errors, rdata2 = decrypt_and_uncompress(cdata, compression=compression, detect_compression=False)
+    assert not errors
+    assert rdata2 == rdata
+
+@pytest.mark.parametrize('compression', ['xz', 'gz', 'sz', ''])
+def test_detect_compression(compression, path):
+    ## analog of pytest.skipif for parametrize:
+    if compression and not getattr(_chunk, compression):
+        logger.warn('not able to run test_compression(%r) because %r not available',
+                    compression, compression)
+        return
+
+    ## get some raw data in memory for testing
+    errors, rdata = decrypt_and_uncompress(open(TEST_XZ_PATH).read())
+    assert not errors
+
+    ## first check it all in memory
+    errors, cdata = compress_and_encrypt(rdata, compression=compression)
+    assert not errors
+    assert (not compression) or (len(cdata) < len(rdata))
+    errors, rdata2 = decrypt_and_uncompress(cdata, compression='auto')
+    assert not errors
+    assert rdata2 == rdata
+
+    ## now check for the _path version of compress_and_encrypt...
+    fh = open(path, 'wb')
+    fh.write(rdata)
+    fh.close()
+    t_dir = os.path.dirname(path)
+    errors, o_path = compress_and_encrypt_path(path, compression=compression, 
+                                               tmp_dir=t_dir)
+    assert not errors
+    cdata = open(o_path).read()
+    assert (not compression) or (len(cdata) < len(rdata))
+    errors, rdata2 = decrypt_and_uncompress(cdata, compression='auto')
     assert not errors
     assert rdata2 == rdata
