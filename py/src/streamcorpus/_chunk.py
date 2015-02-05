@@ -398,7 +398,8 @@ class Chunk(BaseChunk):
     def __init__(self, *args, **kwargs):
         super(Chunk, self).__init__(*args, **kwargs)
         if not fastbinary_import_failure:
-            logger.debug('using TBinaryProtocolAccelerated (fastbinary)')
+            #logger.debug('using TBinaryProtocolAccelerated (fastbinary)')
+            pass
 
         else:
             logger.warn('import fastbinary failed; falling back to 15x slower TBinaryProtocol: %r', fastbinary_import_failure)
@@ -518,7 +519,7 @@ class PickleChunk(BaseChunk):
                 return
 
 def decrypt_and_uncompress(data, gpg_private=None, tmp_dir=None,
-                           compression='xz'):
+                           compression='xz', detect_compression=True):
     '''Given a data buffer of bytes, if gpg_key_path is provided, decrypt
     data using gnupg, and uncompress using `compression` scheme, which
     defaults to "xz" and can also be "gz", "sz", or "".
@@ -571,22 +572,47 @@ def decrypt_and_uncompress(data, gpg_private=None, tmp_dir=None,
             _errors.append('gpg -> no data')
             return _errors, None
 
-    if   compression == 'xz':
+    # First check if the data matches any magic strings
+    did_decompress = False
+    if detect_compression:
+        if data[1:5] == '7zXZ':
+            data = xz_decompress(data)
+            did_decompress = True
+        elif data[4:10] == 'sNaPpY':
+            data = snappy_decompress(data)
+            did_decompress = True
+        elif data[0:2] == '\x1f\x8b\x08':  # gzip+deflate section header bytes
+            data = gzip_decompress(data)
+            did_decompress = True
+        # else fall through and use a named decompression or raw data
+    # Next do decompression based on compression config
+    if did_decompress:
+        pass
+    elif compression == 'xz':
         data = xz_decompress(data)
     elif compression == 'sz':
-        ## sz.decompress is broken per https://github.com/andrix/python-snappy/issues/28
-        fh = StringIO()
-        sz.stream_decompress(StringIO(data), fh)
-        data = fh.getvalue()
+        data = snappy_decompress(data)
     elif compression == 'gz':
-        fh = StringIO(data)
-        gz_fh = gz.GzipFile(fileobj=fh, mode='r')
-        data = gz_fh.read(data)
+        data = gzip_decompress(data)
     elif compression == "" or compression is None:
         ## data is not compressed
         pass
 
     return _errors, data
+
+
+def snappy_decompress(data):
+    ## sz.decompress is broken per https://github.com/andrix/python-snappy/issues/28
+    fh = StringIO()
+    sz.stream_decompress(StringIO(data), fh)
+    return fh.getvalue()
+
+
+def gzip_decompress(data):
+    fh = StringIO(data)
+    gz_fh = gz.GzipFile(fileobj=fh, mode='r')
+    data = gz_fh.read(data)
+    return data
 
 
 def xz_decompress(data):
