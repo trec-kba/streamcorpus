@@ -22,6 +22,7 @@ import collections
 from operator import itemgetter
 
 from streamcorpus._chunk import Chunk as _Chunk
+from streamcorpus._cbor_chunk import CborChunk
 from streamcorpus.ttypes import OffsetType, Token, EntityType, MentionType
 
 from streamcorpus.ttypes import StreamItem as StreamItem_v0_3_0
@@ -582,6 +583,52 @@ def _copy(args):
     sys.stderr.write('wrote {0} items\n'.format(count))
 
 
+def _slots_to_kv(ob):
+    for sn in ob.__slots__:
+        v = getattr(ob, sn)
+        if v is not None:
+            yield sn, to_primitives(v)
+
+def _nonnullkvdict(ob):
+    for k,v in ob.iteritems():
+        if v is not None:
+            yield k,v
+
+def to_primitives(ob):
+    '''convert most Python objects into primitives for JSON or CBOR
+
+    Object must be acyclic! no loops!
+    '''
+    if ob is None:
+        return ob
+    if isinstance(ob, (str,unicode,int,long,float)):
+        return ob
+    if isinstance(ob, (tuple,list)):
+        return [to_primitives(x) for x in ob]
+    if isinstance(ob, dict):
+        return {to_primitives(k):to_primitives(v) for k,v in _nonnullkvdict(ob)}
+    if hasattr(ob, '__slots__'):
+        return {sk:sv for sk,sv in _slots_to_kv(ob)}
+    return {to_primitives(k):to_primitives(v) for k,v in _nonnullkvdict(ob.__dict__)}
+
+
+def _to_cbor(args):
+    count = 0
+    ochunk = CborChunk(file_obj=sys.stdout, mode='wb', write_wrapper=to_primitives)
+    for fpath in args.input_path:
+        ichunk = Chunk(path=fpath, mode='rb')
+        for si in ichunk:
+            count += 1
+            ochunk.add(si)
+            if (args.limit is not None) and (count >= args.limit):
+                break
+        ichunk.close()
+        if (args.limit is not None) and (count >= args.limit):
+            break
+    ochunk.close()
+    sys.stderr.write('wrote {0} items\n'.format(count))
+
+
 def main():
     import argparse
     parser = argparse.ArgumentParser()
@@ -636,6 +683,8 @@ def main():
     parser.add_argument('--print-url', action='store_true',
                         default=False, dest='print_url')
     parser.add_argument('--copy', action='store_true', default=False, help='copy items to stdout, useful with --limit')
+    if CborChunk.is_available:
+        parser.add_argument('--to-cbor', action='store_true', default=False)
     parser.add_argument('--verbose', action='store_true', default=False)
     # TODO: there appears to be no way to have streamcorpus_dump
     # receive data on stdin. All of the subcommands want
@@ -701,6 +750,9 @@ def main():
 
     elif args.copy:
         _copy(args)
+
+    elif args.to_cbor:
+        _to_cbor(args)
 
     else:
         for fpath in args.input_path:
