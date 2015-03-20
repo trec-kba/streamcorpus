@@ -541,6 +541,31 @@ struct Tagging {
 }
 
 /**
+ * Desription of a selector discovered by an extractor in the text.
+ */
+struct Selector {
+  /**
+   * what type of selector this is
+   */
+  1: optional string selector_type
+
+  /**
+   * the selector string as it appears in the document
+   */
+  2: string raw_selector
+
+  /**
+   * the selector string in a canonical form
+   */
+  3: string canonical_selector
+
+  /**
+   * pointer to the selector string within the clean_visible document
+   */
+  4: optional map<OffsetType, Offset> offsets = {},
+}
+
+/**
  * RelationType is used in Relation to map relation "name" to type.
  *
  * Relations 0 through 50 borrow from ACE with these string replacements: 
@@ -815,6 +840,11 @@ struct ContentItem {
    * record IDs with individual mentions, or sets of mentions.
    */
   14: optional map<TaggerID, map<MentionID, string>> external_ids = {},
+
+  /**
+   * Map of external identifier strings to selectors in clean_visible
+   */
+  15: optional map<TaggerID, list<Selector>> selectors = {},
 }
 
 /**
