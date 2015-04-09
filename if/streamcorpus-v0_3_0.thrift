@@ -17,7 +17,7 @@
  *
  * April 2013: v0_3_0 introduces the non-backwards compatible of
  * changing MentionID to i32, so it can be unique across the whole
- * document instead of only the sentence.  
+ * document instead of only the sentence.
  *
  * March 2014: Amend v0_3_0 to add a FlagType to Label and Rating,
  * replicate Rating's contents in Label, and make it possible to store
@@ -37,7 +37,7 @@
  *
  * The above copyright notice and this permission notice shall be
  * included in all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -75,7 +75,7 @@ struct StreamTime {
  * AnnotatorID identifies the source of a Label or Rating object.  It
  * is not necessarily unique.  We use these conventions:
  *
- *  - Avoid whitespace.  
+ *  - Avoid whitespace.
  *
  *  - email address is the best identifier
  *
@@ -111,6 +111,8 @@ struct Annotator {
  * annotation applies to a range of bytes
  *
  * annotation applies to a range of chars, typically unicode chars
+ *
+ * annotation applies to a range defined by xpaths (with relative char offsets)
  */
 enum OffsetType {
   LINES = 0,
@@ -118,6 +120,8 @@ enum OffsetType {
   BYTES = 1,
 
   CHARS = 2,
+
+  XPATH_CHARS = 3,
 }
 
 /**
@@ -134,7 +138,7 @@ struct Offset {
    * The data element identified by 'first' is included, and that
    * identified by first+length is also included.
    *
-   * In set notation, 
+   * In set notation,
    *     [first:first+length-1]
    *
    * or equivalently
@@ -145,13 +149,17 @@ struct Offset {
    *
    * While thrift treats these as signed integers, negative values are
    * meaningless in this context, i.e. we do not end wrap.
+   *
+   * N.B. When this is an xpath offset, `length` is always `0` and `first`
+   * is always the first xpath offset in correspondence with the `xpath`
+   * member.
    */
   2: i64 first,
   3: i32 length,
 
   /**
-   * if xpath is not empty, then annotation applies to an offset
-   * within data that starts with an XPATH query into XHTML or XML
+   * If this is an xpath offset, then this is set to the xpath address of the
+   * start text node. The relative start character offset is in `first`.
    */
   4: optional string xpath,
 
@@ -167,6 +175,25 @@ struct Offset {
    * to assist in debugging
    */
   6: optional binary value,
+
+  /**
+   * If this is an xpath range, then this is set to the xpath address of the
+   * end text node. The relative end character offset is in `xpath2_offset`.
+   *
+   * Note that `xpath` and `first` have the same relationship as
+   * `xpath_end` and `xpath_end_offset`.
+   */
+  7: optional string xpath_end,
+
+  /**
+   * If this is an xpath offset, then this is set to the ending xpath's
+   * relative char offset. (`first` contains the start offset.)
+   *
+   * Note that this offset participates in the half-open interval:
+   *
+   *     [(xpath, first), (xpath_end, xpath_end_offset)).
+   */
+  8: optional i64 xpath_end_offset,
 }
 
 /**
@@ -176,7 +203,7 @@ struct Offset {
 struct Target {
   /**
    * unique string identifier, usually a URL into Wikipedia, Freebase,
-   * or some other structured reference system for info targets.  
+   * or some other structured reference system for info targets.
    */
   1: string target_id,
 
@@ -205,7 +232,7 @@ enum FlagType {
  * For example, a human author might label their own text by inserting
  * hyperlinks to Wikipedia, or a NIST assessor might record which
  * tokens in a text mention a target entity.
- * 
+ *
  * Label instances can be attached in three palces:
  *  -  Token.labels  list
  *  -  Sentence.labels  list
@@ -270,7 +297,7 @@ struct Label {
 
   /**
    * General purpose flags. These flags can be used to mark documents
-   * as meeting an extensible set of criteria. 
+   * as meeting an extensible set of criteria.
    */
   9: optional list<FlagType> flags,
 }
@@ -304,7 +331,7 @@ enum EntityType {
   MONEY = 7,
   PERCENT = 8,
 
-  MISC = 9, 
+  MISC = 9,
 
   GPE = 10,
   FAC = 11,
@@ -472,12 +499,12 @@ struct Token {
    */
   11: optional string dependency_path,
 
-  /** 
+  /**
    * Labels attached to this token, defaults to an empty map
    */
   12: optional map<AnnotatorID, list<Label>> labels = {},
 
-  /** 
+  /**
    * Identify the type of mention, e.g. pronoun, description, proper name
    */
   13: optional MentionType mention_type,
@@ -485,7 +512,7 @@ struct Token {
   /**
    * CUSTOM entity type from named entity recognizer (classifier).  If
    * used, then entity_type should be set to EntityType.CUSTOM_TYPE,
-   * i.e. 17.  
+   * i.e. 17.
    *
    * This is useful when a specialized tagger has a large number of
    * unique entity types, such as entity:artefact:weapon:blunt Rather
@@ -509,7 +536,7 @@ struct Sentence {
 }
 
 /**
- * TaggerID is used as a key on maps in ContentItem.  
+ * TaggerID is used as a key on maps in ContentItem.
  *
  * It is just a string.  There is no enum for it, so consistency and
  * uniqueness depends on the system generating the TaggerID.
@@ -568,7 +595,7 @@ struct Selector {
 /**
  * RelationType is used in Relation to map relation "name" to type.
  *
- * Relations 0 through 50 borrow from ACE with these string replacements: 
+ * Relations 0 through 50 borrow from ACE with these string replacements:
  * s/-// and s/./_/
  * http://projects.ldc.upenn.edu/ace/docs/English-Events-Guidelines_v5.4.3.pdf
  *
@@ -685,7 +712,7 @@ enum RelationType {
 
   ORG_ATTENDED = 92, // meeting event
   ORG_VISITED = 93, // meeting event
-  
+
   PER_WEBSITE = 94,
   PER_NATIONALITY = 95,
 }
@@ -738,7 +765,7 @@ struct Language {
    * two letter code for the language
    */
   1: string code,
-  2: optional string name, 
+  2: optional string name,
 }
 
 /**
@@ -749,12 +776,12 @@ struct ContentItem {
   /**
    * original download, raw byte array
    */
-  1: optional binary raw, 
-  
+  1: optional binary raw,
+
   /**
    * guessed from raw and/or headers, e.g. by python-requests.org
    */
-  2: optional string encoding, 
+  2: optional string encoding,
 
   /**
    * Content-type header from fetching the data, or MIME type
@@ -776,7 +803,7 @@ struct ContentItem {
    *
    * Again: must be UTF8
    */
-  5: optional string clean_visible, 
+  5: optional string clean_visible,
 
   /**
    * Logs generated from processing pipeline, for forensics
@@ -794,7 +821,7 @@ struct ContentItem {
    * Taggings are generated from 'clean_visible' so offsets (byte,
    * char, line) refer to clean_visible and clean_html -- not raw.
    */
-  7: optional map<TaggerID, Tagging> taggings = {}, 
+  7: optional map<TaggerID, Tagging> taggings = {},
 
   /**
    * sets of annotations
@@ -871,7 +898,7 @@ struct Rating {
    */
   3: optional i16 relevance,
 
-  /** 
+  /**
    * true|false indication of whether the document mentions the target
    * entity.  This is only partially correlated with relevance.  For
    * example, a document might mention the entity only in chrome text
@@ -892,7 +919,7 @@ struct Rating {
 
   /**
    * General purpose flags. These flags can be used to mark documents
-   * as meeting an extensible set of criteria. 
+   * as meeting an extensible set of criteria.
    */
   7: optional list<FlagType> flags,
 }
@@ -901,7 +928,7 @@ struct Rating {
  * SourceMetadata is a binary object with format determined by the key
  * in StreamItem.source_metadata, which is often the same as
  * StreamItem.source.
- * 
+ *
  * For the kba-stream-corpus-2012, the SourceMetadata was always one
  * of these schemas where 'news', 'social', 'linking' is the string
  * found in StreamItem.source and the source_metadata map's key:
@@ -944,7 +971,7 @@ typedef string DocIDorStreamID
  * corpora, even if they were not explicitly created as such.
  *
  * stream_id is the unique identifier for documents in the corpus.
- * 
+ *
  * This is similar to the StreamItem defined in kba.thrift for TREC
  * KBA 2012, however it removes the 'title' and 'anchor' fields, which
  * can now be represented in other_content.  This means that code that
@@ -959,23 +986,23 @@ struct StreamItem {
   /**
    * md5 hash of the abs_url
    */
-  2: string doc_id,  
+  2: string doc_id,
 
   /**
    * normalized form of the original_url, should be a valid URL
    */
-  3: optional binary abs_url, 
+  3: optional binary abs_url,
 
   /**
    * scheme://hostname parsed from abs_url
    */
-  4: optional string schost,  
+  4: optional string schost,
 
   /**
    * string obtain from some source.  Only present if not a valid URL,
    * in which case abs_url was derived from original_url
    */
-  5: optional binary original_url, 
+  5: optional binary original_url,
 
   /**
    * string uniquely identifying this data set, should start with a
@@ -993,7 +1020,7 @@ struct StreamItem {
    * dictionary of metadata info from the source.  The string keys in
    * this map should be short, descriptive, and free of whitespace.
    */
-  8: optional map<string, SourceMetadata> source_metadata = {}, 
+  8: optional map<string, SourceMetadata> source_metadata = {},
 
   /**
    * stream_id is actual unique identifier for a StreamItem.  The
@@ -1003,7 +1030,7 @@ struct StreamItem {
    */
   9: string stream_id,
 
-  /** 
+  /**
    * earliest time that this content was known to exist.  Usually,
    * body.raw was also saved at the time of that first observation.
    */
