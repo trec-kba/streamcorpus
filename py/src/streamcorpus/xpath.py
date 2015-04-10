@@ -4,6 +4,23 @@ import re
 
 import lxml.html
 
+from streamcorpus.ttypes import OffsetType
+
+
+class InvalidXpath(Exception):
+    '''Raises when an invalid Xpath is found.
+
+    Technically, if an invalid xpath is found, then there is a bug in
+    the code that maps char offsets to xpaths. However, HTML is vast,
+    complex and full of corner cases. Therefore, it's a bug that one
+    might want to gracefully recover from.
+
+    An "invalid" Xpath is invalid with respect to the invariants
+    defined in :class:`XpathRange` (not invalid with respect to the
+    Xpath specification).
+    '''
+    pass
+
 
 class XpathRange(object):
     '''Represents a range in HTML with xpaths.
@@ -28,10 +45,14 @@ class XpathRange(object):
     def __init__(self, start_xpath, start_offset, end_xpath, end_offset):
         '''Create a new ``XpathRange``.
 
+        If you have a :class:`streamcorpus.Offset`, then you can use
+        the ``from_offset`` convenience constructor.
+
         :param str start_xpath: Start xpath
         :param int start_offset: Start offset (where text begins in node)
         :param str end_xpath: End xpath
         :param int end_offset: End offset (where text ends in node)
+        :rtype: :class:`streamcorpus.XpathRange`
         '''
         self.start_xpath = start_xpath
         self.start_offset = start_offset
@@ -41,6 +62,18 @@ class XpathRange(object):
         self.end_offset = end_offset
         self.end_container_xpath = XpathRange.strip_text(self.end_xpath)
         self.end_text_index = XpathRange.text_index(self.end_xpath)
+
+    @staticmethod
+    def from_offset(offset):
+        '''Creates a new ``XpathRange`` from a ``Offset``.
+
+        :param offset: A offset
+        :type offset: :class:`streamcorpus.Offset`
+        :rtype: :class:`streamcorpus.XpathRange`
+        '''
+        assert offset.type == OffsetType.XPATH_CHARS
+        return XpathRange(offset.xpath, offset.first,
+                          offset.xpath_end, offset.xpath_end_offset)
 
     @property
     def same_parent(self):
@@ -57,13 +90,13 @@ class XpathRange(object):
         return XpathRange(root_xpath + self.start_xpath, self.start_offset,
                           root_xpath + self.end_xpath, self.end_offset)
 
-    def from_html(self, html):
+    def slice_html(self, html):
         '''Returns the text corresponding to this range in ``html``.'''
         if not isinstance(html, unicode):
             html = unicode(html, 'utf-8')
-        return self.from_root_node(lxml.html.fromstring(html))
+        return self.slice_node(lxml.html.fromstring(html))
 
-    def from_root_node(self, root):
+    def slice_node(self, root):
         '''Returns the text corresponding to this range in ``root``.
 
         ``root`` should be a ``lxml.Element``.
@@ -101,7 +134,10 @@ class XpathRange(object):
     @staticmethod
     def one_node(root, xpath):
         node = root.xpath(xpath)
-        assert len(node) == 1, xpath
+        if len(node) != 1:
+            raise InvalidXpath(
+                'Xpath expected to address one node, '
+                'but it found %d nodes: %r' % (len(node), xpath))
         return node[0]
 
     @staticmethod
@@ -130,3 +166,11 @@ class XpathRange(object):
                 yield parent, text
             if child.tail is not None:
                 yield node, child.tail
+
+    def __str__(self):
+        return '((%s, %d), (%s, %d))' % (self.start_xpath, self.start_offset,
+                                         self.end_xpath, self.end_offset)
+
+    def __repr__(self):
+        return repr(((self.start_xpath, self.start_offset),
+                     (self.end_xpath, self.end_offset)))

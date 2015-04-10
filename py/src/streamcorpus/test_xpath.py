@@ -13,6 +13,44 @@ tests_roundtrip = [{
     'expected': ['Foo'],
     'tokens': [(3, 6)],
 }, {
+    'html': '<div>Foo<br>Bar</div>',
+    'ranges': [
+        (('/div[1]/text()[1]', 0), ('/div[1]/text()[1]', 3)),
+        (('/div[1]/text()[2]', 0), ('/div[1]/text()[2]', 3)),
+    ],
+    'expected': ['Foo', 'Bar'],
+    'tokens': [(5, 8), (12, 15)],
+}, {
+    'html': '<div><p>a</p> or <p>b</p><br />c</div>',
+    'ranges': [
+        (('/div[1]/p[1]/text()[1]', 0), ('/div[1]/p[1]/text()[1]', 1)),
+        (('/div[1]/p[2]/text()[1]', 0), ('/div[1]/p[2]/text()[1]', 1)),
+        (('/div[1]/text()[2]', 0), ('/div[1]/text()[2]', 1)),
+    ],
+    'expected': ['a', 'b', 'c'],
+    'tokens': [(8, 9), (20, 21), (31, 32)],
+}, {
+    'html': '<div><audio><source></source>Sorry, your browser.</audio></div>',
+    'ranges': [
+        (('/div[1]/audio[1]/text()[1]', 0), ('/div[1]/audio[1]/text()[1]', 5)),
+    ],
+    'expected': ['Sorry'],
+    'tokens': [(29, 34)],
+}, {
+    'html': '<p>Cheech &amp; Chong</p>',
+    'ranges': [
+        (('/p[1]/text()[1]', 0), ('/p[1]/text()[1]', 18)),
+    ],
+    'expected': ['Cheech & Chong'],
+    'tokens': [(3, 21)],
+}, {
+    'html': '<p>Cheech &amp; Chong</p>',
+    'ranges': [
+        (('/p[1]/text()[1]', 7), ('/p[1]/text()[1]', 8)),
+    ],
+    'expected': ['&'],
+    'tokens': [(10, 14)],
+}, {
     'html': '<p>Foo</p><p>Bar</p>',
     'ranges': [
         (('/p[1]/text()[1]', 0), ('/p[1]/text()[1]', 3)),
@@ -115,7 +153,7 @@ def run_test(test):
     for ((x1, i1), (x2, i2)), expect in zip(test['ranges'], test['expected']):
         html = '<html><body>' + test['html'] + '</body></html>'
         xprange = XpathRange('/html/body' + x1, i1, '/html/body' + x2, i2)
-        assert expect == xprange.from_html(html)
+        assert expect == xprange.slice_html(html)
 
 for i, test in enumerate(tests_roundtrip):
     globals()['test_roundtrip_%d' % i] = (lambda t: lambda: run_test(t))(test)

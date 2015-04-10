@@ -44,7 +44,7 @@ from streamcorpus.ttypes import StreamItem, ContentItem, Label, StreamTime, Sele
     Language, \
     MentionType, AttributeType, Attribute, Gender, \
     RelationType, FlagType
-from streamcorpus.xpath import XpathRange
+from streamcorpus.xpath import InvalidXpath, XpathRange
 
 ## unambiguous name for the current one
 StreamItem_v0_3_0 = StreamItem
@@ -89,7 +89,7 @@ __all__ = ['Chunk', 'PickleChunk', 'JsonChunk', 'CborChunk',
            'ttypes_v0_1_0',
            'ttypes_v0_2_0',
            'VersionMismatchError',
-           'XpathRange',
+           'InvalidXpath', 'XpathRange',
            ]
 
 def get_date_hour(stream_thing):
