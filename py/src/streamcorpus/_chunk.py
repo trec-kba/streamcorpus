@@ -368,7 +368,7 @@ class BaseChunk(object):
         raise exceptions.NotImplementedError
 
     def __repr__(self):
-        return '{}(len={})'.format(type(self).__name__, len(self))
+        return '{0}(len={1})'.format(type(self).__name__, len(self))
 
     def __len__(self):
         ## how to make this pythonic given that we have __iter__?
