@@ -368,7 +368,7 @@ class BaseChunk(object):
         raise exceptions.NotImplementedError
 
     def __repr__(self):
-        return '{}(len={})'.format(type(self).__name__, len(self))
+        return '{0}(len={1})'.format(type(self).__name__, len(self))
 
     def __len__(self):
         ## how to make this pythonic given that we have __iter__?
@@ -804,7 +804,7 @@ def compress_and_encrypt_path(path, gpg_public=None, gpg_recipient='trec-kba',
             stderr=subprocess.PIPE)
         s_out, errors = gpg_child.communicate()
         if gpg_child.returncode != 0:
-            _errors.append('gpg setup exited with status {}\n'.format(gpg_child.returncode))
+            _errors.append('gpg setup exited with status {0}\n'.format(gpg_child.returncode))
             _errors.append('gpg logs to stderr, read carefully:\n\n' + errors)
 
         ## setup gpg to decrypt with provided private key (i.e. make
@@ -826,7 +826,7 @@ def compress_and_encrypt_path(path, gpg_public=None, gpg_recipient='trec-kba',
     p_stdout, p_stderr = p.communicate()
     # p_stdout should be empty because we're redirecting to o_path
     if p.returncode != 0:
-        _errors.append('command return code {}'.format(p.returncode))
+        _errors.append('command return code {0}'.format(p.returncode))
         _errors.append(p_stderr)
     elif p_stderr:
         # sometimes returncode is zero on failures
