@@ -609,7 +609,7 @@ def to_primitives(ob):
         return dict([(to_primitives(k), to_primitives(v)) 
                      for k,v in _nonnullkvdict(ob)])
     if hasattr(ob, '__slots__'):
-        return {sk:sv for sk,sv in _slots_to_kv(ob)}
+        return dict([(sk, sv) for sk,sv in _slots_to_kv(ob)])
     return dict([(to_primitives(k), to_primitives(v))
                  for k,v in _nonnullkvdict(ob.__dict__)])
 
