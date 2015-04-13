@@ -40,6 +40,7 @@ class XpathRange(object):
         'start_text_index',
         'end_container_xpath', 'end_xpath', 'end_offset',
         'end_text_index',
+        'common_ancestor',
     ]
 
     def __init__(self, start_xpath, start_offset, end_xpath, end_offset):
@@ -62,6 +63,8 @@ class XpathRange(object):
         self.end_offset = end_offset
         self.end_container_xpath = XpathRange.strip_text(self.end_xpath)
         self.end_text_index = XpathRange.text_index(self.end_xpath)
+        self.common_ancestor = XpathRange.common_ancestor_xpath(
+            self.start_xpath, self.end_xpath)
 
     @staticmethod
     def from_offset(offset):
@@ -74,6 +77,46 @@ class XpathRange(object):
         assert offset.type == OffsetType.XPATH_CHARS
         return XpathRange(offset.xpath, offset.first,
                           offset.xpath_end, offset.xpath_end_offset)
+
+    @staticmethod
+    def common_ancestor_xpath(x1, x2):
+        '''Return least common ancestor between ``x1` and ``x2``.
+
+        Note that ``x1`` and ``x2`` must be canonical Xpaths as
+        describe in this class' documentation.
+
+        If there is no common ancestor, ``None`` is returned.
+        Otherwise, a (canonical and unique) xpath to the common
+        ancestor is returned.
+        '''
+        # This method is suspect. It doesn't just rely on canonicalization
+        # and uniqueness. Instead, it relies on a particular canonicalization
+        # so that splitting on `/` does the right thing. ---AG
+        pieces1, pieces2 = x1.split('/'), x2.split('/')
+        # Just return the longest common prefix.
+        ancestor = []
+        for p1, p2 in zip(x1.split('/'), x2.split('/')):
+            if p1 != p2:
+                break
+            ancestor.append(p1)
+        return '/'.join(ancestor) if len(ancestor) > 0 else None
+
+    @staticmethod
+    def html_node(html):
+        '''Returns an ``lxml.Element`` suitable for ``slice_node``.'''
+        if not isinstance(html, unicode):
+            html = unicode(html, 'utf-8')
+        # The catch here is that lxml's HTML parser replaces *some* HTML
+        # entity/char escape sequences with their proper Unicode codepoint
+        # (e.g., `&amp;` -> `&` and `&quot;` -> `"`).
+        # But not all such entities are replaced (e.g., `&Hat;` -> `&Hat;`).
+        # We can either special case the entities that lxml does replace
+        # (no thanks), or just escape every `&` in the HTML, which starts
+        # every entity/char escape sequence.
+        #
+        # We care about this because changing `&amp;` to `&` in the original
+        # HTML will throw off indexing.
+        return lxml.html.fromstring(html.replace(u'&', u'&amp;'))
 
     @property
     def same_parent(self):
@@ -92,40 +135,61 @@ class XpathRange(object):
 
     def slice_html(self, html):
         '''Returns the text corresponding to this range in ``html``.'''
-        if not isinstance(html, unicode):
-            html = unicode(html, 'utf-8')
-        return self.slice_node(lxml.html.fromstring(html))
+        return self.slice_node(XpathRange.html_node(html))
 
     def slice_node(self, root):
         '''Returns the text corresponding to this range in ``root``.
 
-        ``root`` should be a ``lxml.Element``.
+        ``root`` should be a ``lxml.Element`` and **must** be produced
+        by using :meth:`XpathRange.html_node`.
         '''
         if self.same_node:
             t = XpathRange.one_node(root, self.start_xpath)
             return t[self.start_offset:self.end_offset]
-        elif self.same_parent:
-            # start = XpathRange.text_index(self.start_xpath)
-            # end = XpathRange.text_index(self.end_xpath) + 1
-            node = XpathRange.one_node(root, self.start_container_xpath)
-            i = 0  # only counts direct child text nodes of `node`.
+        # elif self.same_parent:
+            # node = XpathRange.one_node(root, self.start_container_xpath)
+            # i = 0  # only counts direct child text nodes of `node`.
+            # parts = []
+            # for parent, text in XpathRange.text_node_tree(node):
+                # if self.start_text_index <= i <= self.end_text_index:
+                    # if node == parent and i == self.start_text_index:
+                        # parts.append(text[self.start_offset:])
+                    # elif node == parent and i == self.end_text_index:
+                        # parts.append(text[:self.end_offset])
+                    # else:
+                        # parts.append(text)
+                # if parent == node:
+                    # i += 1
+                # if i > self.end_text_index:
+                    # break
+            # return ''.join(parts)
+        else:
+            # TODO: In the general case, we need a full tree traversal. ---AG
+            print('%r' % self)
+            # raise NotImplementedError
+
+            ancestor = XpathRange.one_node(root, self.common_ancestor)
+            start_node = XpathRange.one_node(root, self.start_container_xpath)
+            end_node = XpathRange.one_node(root, self.end_container_xpath)
+            starti = 0  # only count direct children of `start_node`
+            endi = 0  # only count direct children of `end_node`
             parts = []
-            for parent, text in XpathRange.text_node_tree(node):
-                if self.start_text_index <= i <= self.end_text_index:
-                    if node == parent and i == self.start_text_index:
+            for parent, text in XpathRange.text_node_tree(ancestor):
+                print(parent, text, start_node, end_node)
+                if self.start_text_index <= starti or self.end_text_index >= endi:
+                    if parent == start_node and starti == self.start_text_index:
                         parts.append(text[self.start_offset:])
-                    elif node == parent and i == self.end_text_index:
+                    elif parent == end_node and endi == self.end_text_index:
                         parts.append(text[:self.end_offset])
                     else:
                         parts.append(text)
-                if parent == node:
-                    i += 1
-                if i > self.end_text_index:
+                if parent == start_node:
+                    starti += 1
+                if parent == end_node:
+                    endi += 1
+                if endi > self.end_text_index:
                     break
             return ''.join(parts)
-        else:
-            # TODO: In the general case, we need a full tree traversal. ---AG
-            raise NotImplementedError
 
     @staticmethod
     def strip_text(xpath):

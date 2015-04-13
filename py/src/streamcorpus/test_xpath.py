@@ -13,6 +13,16 @@ tests_roundtrip = [{
     'expected': ['Foo'],
     'tokens': [(3, 6)],
 }, {
+    'html': '<p>Foo</p>',
+    'ranges': [
+        None,
+        None,
+        (('/p[1]/text()[1]', 1), ('/p[1]/text()[1]', 2)),
+        None,
+    ],
+    'expected': [None, None, 'o', None],
+    'tokens': [(3, 3), (4, 4), (4, 5), (5, 5)],
+}, {
     'html': '<div>Foo<br>Bar</div>',
     'ranges': [
         (('/div[1]/text()[1]', 0), ('/div[1]/text()[1]', 3)),
@@ -41,15 +51,70 @@ tests_roundtrip = [{
     'ranges': [
         (('/p[1]/text()[1]', 0), ('/p[1]/text()[1]', 18)),
     ],
-    'expected': ['Cheech & Chong'],
+    'expected': ['Cheech &amp; Chong'],
     'tokens': [(3, 21)],
 }, {
     'html': '<p>Cheech &amp; Chong</p>',
-    'ranges': [
-        (('/p[1]/text()[1]', 7), ('/p[1]/text()[1]', 8)),
-    ],
-    'expected': ['&'],
+    'ranges': [None],
+    'expected': [None],
     'tokens': [(10, 14)],
+}, {
+    'html': '<p>Cheech &amp; Chong</p>',
+    'ranges': [None, None],
+    'expected': [None, None],
+    'tokens': [(10, 14), (14, 15)],
+}, {
+    'html': '<p>Cheech &amp; Chong</p>',
+    'ranges': [
+        None,
+        (('/p[1]/text()[1]', 13), ('/p[1]/text()[1]', 18)),
+    ],
+    'expected': [None, 'Chong'],
+    'tokens': [(10, 14), (16, 21)],
+}, {
+    'html': '<p>Cheech & Chong</p>',
+    'ranges': [None],
+    'expected': [None],
+    'tokens': [(10, 11)],
+}, {
+    'html': '<p>Cheech & Chong</p>',
+    'ranges': [
+        (('/p[1]/text()[1]', 7), ('/p[1]/text()[1]', 14)),
+    ],
+    'expected': ['& Chong'],
+    'tokens': [(10, 17)],
+}, {
+    'html': '<p>&quot;hi&quot;</p>',
+    'ranges': [
+        (('/p[1]/text()[1]', 6), ('/p[1]/text()[1]', 8)),
+    ],
+    'expected': ['hi'],
+    'tokens': [(9, 11)],
+}, {
+    'html': '<p>&#34;hi&#34;</p>',
+    'ranges': [
+        (('/p[1]/text()[1]', 5), ('/p[1]/text()[1]', 7)),
+    ],
+    'expected': ['hi'],
+    'tokens': [(8, 10)],
+}, {
+    'html': '<p>&#x22;hi&#x22;</p>',
+    'ranges': [
+        (('/p[1]/text()[1]', 6), ('/p[1]/text()[1]', 8)),
+    ],
+    'expected': ['hi'],
+    'tokens': [(9, 11)],
+}, {
+    'html': '<p><a href="#CITEREFZhangYang2004">Zhang &amp; Yang (2004)</a></p>',
+    'ranges': [
+        (('/p[1]/a[1]/text()[1]', 0), ('/p[1]/a[1]/text()[1]', 5)),
+        None,
+        None,
+        (('/p[1]/a[1]/text()[1]', 12), ('/p[1]/a[1]/text()[1]', 16)),
+    ],
+    'expected': ['Zhang', None, None, 'Yang'],
+    'tokens': [(35, 40), (41, 45), (45, 46), (47, 51)],
+
 }, {
     'html': '<p>Foo</p><p>Bar</p>',
     'ranges': [
@@ -138,22 +203,41 @@ tests_roundtrip = [{
     ],
     'expected': [u'1', u'☃', u'2☃3☃', u'4☃'],
     'tokens': [(3, 4), (4, 5), (5, 9), (9, 11)],
-# Getting these tests to pass will require a general tree traversal. ---AG
-# }, {
-    # 'html': '<b>b<i>ar</i></b>',
-    # 'tokens': [(3, 8)],
-    # 'expected': ['bar'],
-# }, {
-    # 'html': '<b>f<i>o</i>ob<u>a</u>r</b>',
-    # 'tokens': [(3, 23)],
+# These require general tree traversal.
+# i.e., Start and end in different DOM node. ---AG
+}, {
+    'html': '<b>b<i>ar</i></b>',
+    'ranges': [
+        (('/b[1]/text()[1]', 0), ('/b[1]/i[1]/text()[1]', 2)),
+    ],
+    'tokens': [(3, 9)],
+    'expected': ['bar'],
+}, {
+    'html': '<b>f<i>o</i>ob<u>a</u>r</b>',
+    'ranges': [
+        (('/b[1]/text()[1]', 0), ('/b[1]/text()[3]', 1)),
+    ],
+    'tokens': [(3, 23)],
+    'expected': ['foobar'],
+}, {
+    'html': '<div><p>##abc##</p>\n<p>!!mno!!</p>\n<p>@@xyz@@</p>\n</div>',
+    'ranges': [
+        (('/div[1]/p[1]/text()[1]', 2), ('/div[1]/p[3]/text()[1]', 5)),
+    ],
+    'tokens': [(10, 43)],
+    'expected': ['abc##\n!!mno!!\n@@xyz'],
 }]
 
 
 def run_test(test):
-    for ((x1, i1), (x2, i2)), expect in zip(test['ranges'], test['expected']):
-        html = '<html><body>' + test['html'] + '</body></html>'
-        xprange = XpathRange('/html/body' + x1, i1, '/html/body' + x2, i2)
-        assert expect == xprange.slice_html(html)
+    for xoffsets, expect in zip(test['ranges'], test['expected']):
+        if expect is None:
+            assert xoffsets is None
+        else:
+            (x1, i1), (x2, i2) = xoffsets
+            html = '<html><body>' + test['html'] + '</body></html>'
+            xprange = XpathRange('/html/body' + x1, i1, '/html/body' + x2, i2)
+            assert expect == xprange.slice_html(html)
 
 for i, test in enumerate(tests_roundtrip):
     globals()['test_roundtrip_%d' % i] = (lambda t: lambda: run_test(t))(test)
