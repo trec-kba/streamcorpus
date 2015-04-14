@@ -7,7 +7,7 @@ import lxml.html
 from streamcorpus.ttypes import OffsetType
 
 
-class InvalidXpath(Exception):
+class InvalidXpathError(Exception):
     '''Raises when an invalid Xpath is found.
 
     Technically, if an invalid xpath is found, then there is a bug in
@@ -146,49 +146,27 @@ class XpathRange(object):
         if self.same_node:
             t = XpathRange.one_node(root, self.start_xpath)
             return t[self.start_offset:self.end_offset]
-        # elif self.same_parent:
-            # node = XpathRange.one_node(root, self.start_container_xpath)
-            # i = 0  # only counts direct child text nodes of `node`.
-            # parts = []
-            # for parent, text in XpathRange.text_node_tree(node):
-                # if self.start_text_index <= i <= self.end_text_index:
-                    # if node == parent and i == self.start_text_index:
-                        # parts.append(text[self.start_offset:])
-                    # elif node == parent and i == self.end_text_index:
-                        # parts.append(text[:self.end_offset])
-                    # else:
-                        # parts.append(text)
-                # if parent == node:
-                    # i += 1
-                # if i > self.end_text_index:
-                    # break
-            # return ''.join(parts)
         else:
-            # TODO: In the general case, we need a full tree traversal. ---AG
-            print('%r' % self)
-            # raise NotImplementedError
-
             ancestor = XpathRange.one_node(root, self.common_ancestor)
             start_node = XpathRange.one_node(root, self.start_container_xpath)
             end_node = XpathRange.one_node(root, self.end_container_xpath)
-            starti = 0  # only count direct children of `start_node`
-            endi = 0  # only count direct children of `end_node`
+            starti = -1  # only count direct children of `start_node`
+            endi = -1  # only count direct children of `end_node`
             parts = []
             for parent, text in XpathRange.text_node_tree(ancestor):
-                print(parent, text, start_node, end_node)
-                if self.start_text_index <= starti or self.end_text_index >= endi:
-                    if parent == start_node and starti == self.start_text_index:
-                        parts.append(text[self.start_offset:])
-                    elif parent == end_node and endi == self.end_text_index:
-                        parts.append(text[:self.end_offset])
-                    else:
-                        parts.append(text)
                 if parent == start_node:
                     starti += 1
                 if parent == end_node:
                     endi += 1
-                if endi > self.end_text_index:
-                    break
+                if (starti > -1 and self.start_text_index <= starti) \
+                        or (endi > -1 and self.end_text_index >= endi):
+                    if parent == start_node and starti == self.start_text_index:
+                        parts.append(text[self.start_offset:])
+                    elif parent == end_node and endi == self.end_text_index:
+                        parts.append(text[:self.end_offset])
+                        break
+                    else:
+                        parts.append(text)
             return ''.join(parts)
 
     @staticmethod
@@ -199,7 +177,7 @@ class XpathRange(object):
     def one_node(root, xpath):
         node = root.xpath(xpath)
         if len(node) != 1:
-            raise InvalidXpath(
+            raise InvalidXpathError(
                 'Xpath expected to address one node, '
                 'but it found %d nodes: %r' % (len(node), xpath))
         return node[0]

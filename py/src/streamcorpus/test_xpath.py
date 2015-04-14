@@ -226,6 +226,19 @@ tests_roundtrip = [{
     ],
     'tokens': [(10, 43)],
     'expected': ['abc##\n!!mno!!\n@@xyz'],
+}, {
+    'html':
+        '<div>'
+            '<p><a>!!!</a></p>\n'
+            '<p><a>123</a></p>\n'
+            '<p><a>456</a></p>\n'
+            '<p><a>###</a></p>\n'
+        '</div>',
+    'ranges': [
+        (('/div[1]/p[2]/a[1]/text()[1]', 0), ('/div[1]/p[3]/a[1]/text()[1]', 2)),
+    ],
+    'tokens': [(29, 49)],
+    'expected': ['123\n45'],
 }]
 
 
