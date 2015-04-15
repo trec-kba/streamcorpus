@@ -105,6 +105,13 @@ tests_roundtrip = [{
     'expected': ['hi'],
     'tokens': [(9, 11)],
 }, {
+    'html': '<p><a>abc\na&gt;</a></p>',
+    'ranges': [
+        (('/p[1]/a[1]/text()[1]', 4), ('/p[1]/a[1]/text()[1]', 8)),
+    ],
+    'expected': [None],
+    'tokens': [(10, 14)],
+}, {
     'html': '<p><a href="#CITEREFZhangYang2004">Zhang &amp; Yang (2004)</a></p>',
     'ranges': [
         (('/p[1]/a[1]/text()[1]', 0), ('/p[1]/a[1]/text()[1]', 5)),
