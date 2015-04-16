@@ -119,7 +119,6 @@ tests_roundtrip = [{
     ],
     'expected': ['Zhang', None, None, 'Yang'],
     'tokens': [(35, 40), (41, 45), (45, 46), (47, 51)],
-
 }, {
     'html': '<p>Foo</p><p>Bar</p>',
     'ranges': [
@@ -244,6 +243,11 @@ tests_roundtrip = [{
     ],
     'tokens': [(29, 49)],
     'expected': ['123\n45'],
+}, {
+    'html': '<p>running process*<br><strong>Jun 01 13:06:26</strong> &lt;neuron_&gt;     wait &lt;.&lt; derp<br></p>',
+    'ranges': [None],
+    'tokens': [(89, 90)],
+    'expected': [None],
 }]
 
 
@@ -256,6 +260,7 @@ def run_test(test):
             html = '<html><body>' + test['html'] + '</body></html>'
             xprange = XpathRange('/html/body' + x1, i1, '/html/body' + x2, i2)
             assert expect == xprange.slice_html(html)
+
 
 for i, test in enumerate(tests_roundtrip):
     globals()['test_roundtrip_%d' % i] = (lambda t: lambda: run_test(t))(test)
