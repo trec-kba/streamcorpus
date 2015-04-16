@@ -106,9 +106,7 @@ tests_roundtrip = [{
     'tokens': [(9, 11)],
 }, {
     'html': '<p><a>abc\na&gt;</a></p>',
-    'ranges': [
-        (('/p[1]/a[1]/text()[1]', 4), ('/p[1]/a[1]/text()[1]', 8)),
-    ],
+    'ranges': [None],
     'expected': [None],
     'tokens': [(10, 14)],
 }, {
