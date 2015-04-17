@@ -222,5 +222,6 @@ class XpathRange(object):
                                          self.end_xpath, self.end_offset)
 
     def __repr__(self):
-        return repr(((self.start_xpath, self.start_offset),
-                     (self.end_xpath, self.end_offset)))
+        tup = repr(((self.start_xpath, self.start_offset),
+                    (self.end_xpath, self.end_offset)))
+        return '%s(%s)' % (self.__class__.__name__, tup)
