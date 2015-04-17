@@ -156,7 +156,7 @@ class XpathRange(object):
             for parent, text in XpathRange.text_node_tree(ancestor):
                 if parent == start_node:
                     starti += 1
-                if parent == end_node:
+                if starti > -1 and parent == end_node:
                     endi += 1
                 if (starti > -1 and self.start_text_index <= starti) \
                         or (endi > -1 and self.end_text_index >= endi):

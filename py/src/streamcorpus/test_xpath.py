@@ -248,6 +248,14 @@ tests_roundtrip = [{
     'ranges': [None],
     'tokens': [(89, 90)],
     'expected': [None],
+}, {
+    'html': '<p><b>T</b>om <b>B</b>rady</p>',
+    'ranges': [
+        (('/p[1]/b[1]/text()[1]', 0), ('/p[1]/text()[1]', 2)),
+        (('/p[1]/b[2]/text()[1]', 0), ('/p[1]/text()[2]', 4)),
+    ],
+    'tokens': [(6, 13), (17, 26)],
+    'expected': ['Tom', 'Brady'],
 }]
 
 
