@@ -209,6 +209,14 @@ class XpathRange(object):
             if child.tail is not None:
                 yield node, child.tail
 
+    def __eq__(self, other):
+        return (
+            self.start_offset == other.start_offset
+            and self.end_offset == other.end_offset
+            and self.start_xpath == other.start_xpath
+            and self.end_xpath == other.end_xpath
+        )
+
     def __str__(self):
         return '((%s, %d), (%s, %d))' % (self.start_xpath, self.start_offset,
                                          self.end_xpath, self.end_offset)
