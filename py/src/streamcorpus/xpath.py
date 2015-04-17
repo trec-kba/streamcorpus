@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+from itertools import ifilter
 import re
 
 import lxml.html
@@ -133,15 +134,18 @@ class XpathRange(object):
         return XpathRange(root_xpath + self.start_xpath, self.start_offset,
                           root_xpath + self.end_xpath, self.end_offset)
 
-    def slice_html(self, html):
+    def slice_html(self, html, trimmed=False):
         '''Returns the text corresponding to this range in ``html``.'''
         return self.slice_node(XpathRange.html_node(html))
 
-    def slice_node(self, root):
+    def slice_node(self, root, trimmed=False):
         '''Returns the text corresponding to this range in ``root``.
 
         ``root`` should be a ``lxml.Element`` and **must** be produced
         by using :meth:`XpathRange.html_node`.
+
+        If ``trimmed`` is true, then text nodes that are purely
+        whitespace are dropped.
         '''
         if self.same_node:
             t = XpathRange.one_node(root, self.start_xpath)
@@ -167,7 +171,11 @@ class XpathRange(object):
                         break
                     else:
                         parts.append(text)
-            return ''.join(parts)
+            if trimmed:
+                return ''.join(ifilter(lambda p: re.search('^\s+$', p) is None,
+                                       parts))
+            else:
+                return ''.join(parts)
 
     @staticmethod
     def strip_text(xpath):
