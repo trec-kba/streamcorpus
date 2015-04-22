@@ -134,6 +134,14 @@ class XpathRange(object):
         return XpathRange(root_xpath + self.start_xpath, self.start_offset,
                           root_xpath + self.end_xpath, self.end_offset)
 
+    def slice_stream_item(self, si, trimmed=False):
+        '''Returns the text corresponding to this range.
+
+        The text is sliced from the ``clean_html`` of the given
+        stream item.
+        '''
+        return self.slice_html(si.body.clean_html, trimmed=trimmed)
+
     def slice_html(self, html, trimmed=False):
         '''Returns the text corresponding to this range in ``html``.'''
         return self.slice_node(XpathRange.html_node(html))
