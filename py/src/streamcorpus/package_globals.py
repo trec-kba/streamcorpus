@@ -30,14 +30,14 @@ Python module of convenience functions around the structures defined
 in streamcorpus.thrift
 
 .. This software is released under an MIT/X11 open source license.
-   Copyright 2012-2014 Diffeo, Inc.
+   Copyright 2012-2015 Diffeo, Inc.
 '''
 
 import time
 import hashlib
 from datetime import datetime
 
-## import the KBA-specific thrift types
+# import the KBA-specific thrift types
 from streamcorpus.ttypes import StreamItem, ContentItem, Label, StreamTime, Selector, \
     Offset, Rating, Annotator, Versions, Token, Sentence, EntityType, \
     Tagging, OffsetType, Target, \
@@ -46,21 +46,21 @@ from streamcorpus.ttypes import StreamItem, ContentItem, Label, StreamTime, Sele
     RelationType, FlagType
 from streamcorpus.xpath import InvalidXpathError, XpathRange
 
-## unambiguous name for the current one
+# unambiguous name for the current one
 StreamItem_v0_3_0 = StreamItem
 
-from streamcorpus.ttypes_v0_1_0 import StreamItem as StreamItem_v0_1_0
-from streamcorpus.ttypes_v0_2_0 import StreamItem as StreamItem_v0_2_0
-import streamcorpus.ttypes_v0_1_0 as ttypes_v0_1_0
-import streamcorpus.ttypes_v0_2_0 as ttypes_v0_2_0
+from .ttypes_v0_1_0 import StreamItem as StreamItem_v0_1_0
+from .ttypes_v0_2_0 import StreamItem as StreamItem_v0_2_0
+from . import ttypes_v0_1_0, ttypes_v0_2_0
 
-from streamcorpus._chunk import Chunk, PickleChunk, JsonChunk, \
+from ._chunk import Chunk, PickleChunk, JsonChunk, \
     parse_file_extensions, known_compression_schemes, \
     decrypt_and_uncompress, compress_and_encrypt, \
     compress_and_encrypt_path, \
     serialize, deserialize, \
     VersionMismatchError
-from streamcorpus._cbor_chunk import CborChunk
+from ._cbor_chunk import CborChunk
+
 
 __all__ = ['Chunk', 'PickleChunk', 'JsonChunk', 'CborChunk',
            'decrypt_and_uncompress', 'compress_and_encrypt',
@@ -73,14 +73,15 @@ __all__ = ['Chunk', 'PickleChunk', 'JsonChunk', 'CborChunk',
            'get_date_hour',
            'add_annotation',
            'StreamItem', 'ContentItem', 'Label', 'StreamTime', 'Selector',
-           'Offset', 'Rating', 'Annotator', 'Versions', 'Token', 'Sentence', 'EntityType',
+           'Offset', 'Rating', 'Annotator', 'Versions', 'Token', 'Sentence',
+           'EntityType',
            'Target',
            'Tagging', 'OffsetType',
            'Language',
            'MentionType',
            'Attribute',
            'AttributeType',
-#           'Relation',
+           # 'Relation',
            'RelationType', 'FlagType',
            'Gender',
            'StreamItem_v0_1_0',
@@ -91,6 +92,7 @@ __all__ = ['Chunk', 'PickleChunk', 'JsonChunk', 'CborChunk',
            'VersionMismatchError',
            'InvalidXpathError', 'XpathRange',
            ]
+
 
 def get_date_hour(stream_thing):
     '''

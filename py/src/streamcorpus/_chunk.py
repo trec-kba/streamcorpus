@@ -8,9 +8,9 @@ Thrift-defined objects.
 
 This software is released under an MIT/X11 open source license.
 
-Copyright 2012 Diffeo, Inc.
+Copyright 2012-2015 Diffeo, Inc.
 '''
-
+from __future__ import absolute_import
 
 import errno
 import exceptions
@@ -29,9 +29,7 @@ try:
 except:
     import pickle
 
-logger = logging.getLogger('streamcorpus')
-
-## import the thrift library
+# import the thrift library
 from thrift import Thrift
 from thrift.transport import TTransport
 from thrift.protocol.TBinaryProtocol import TBinaryProtocol, TBinaryProtocolAccelerated
@@ -40,30 +38,32 @@ try:
     from thrift.protocol import fastbinary
     ## use faster C program to read/write
     protocol = TBinaryProtocolAccelerated
-
-except Exception, exc:
+except ImportError, exc:
     fastbinary_import_failure = exc
     ## fall back to pure python
     protocol = TBinaryProtocol
 
 try:
     from backports import lzma as xz
-except:
-    logger.warn('failed to import lzma for XZ compression', exc_info=True)
+except ImportError:
     xz = None
 
 try:
     import snappy as sz
-except:
-    logger.warn('failed to import snappy', exc_info=True)
+except ImportError:
     sz = None
 
-from ttypes import StreamItem as StreamItem_v0_3_0
-from ttypes_v0_1_0 import StreamItem as StreamItem_v0_1_0
-from ttypes_v0_2_0 import StreamItem as StreamItem_v0_2_0
+from .ttypes import StreamItem as StreamItem_v0_3_0
+from .ttypes_v0_1_0 import StreamItem as StreamItem_v0_1_0
+from .ttypes_v0_2_0 import StreamItem as StreamItem_v0_2_0
+
+logger = logging.getLogger('streamcorpus')
+
 
 class VersionMismatchError(Exception):
+    '''The version of a stream item is not what was expected.'''
     pass
+
 
 def serialize(msg):
     '''
@@ -602,6 +602,8 @@ def decrypt_and_uncompress(data, gpg_private=None, tmp_dir=None,
 
 
 def snappy_decompress(data):
+    if sz is None:
+        raise RuntimeError('Snappy decompression is not available')
     ## sz.decompress is broken per https://github.com/andrix/python-snappy/issues/28
     fh = StringIO()
     sz.stream_decompress(StringIO(data), fh)
@@ -680,13 +682,18 @@ def compress_and_encrypt(data, gpg_public=None, gpg_recipient='trec-kba',
     '''
     _errors = []
 
-    known_compression_schemes = set(['xz', 'sz', 'gz', ''])
+    known_compression_schemes = set(['xz', 'gz', ''])
+    if sz is not None:
+        known_compression_schemes.add('sz')
     if compression not in known_compression_schemes:
-        raise Exception('%s not in %r' % (compression, known_compression_schemes))
+        raise ValueError('Unrecognized compression scheme %s (known: %r)' %
+                         (compression, known_compression_schemes))
 
-    if   compression == 'xz':
+    if compression == 'xz':
         data = xz_compress(data)
     elif compression == 'sz':
+        if sz is None:
+            raise RuntimeError('Snappy compression is not available')
         ## sz.compress is broken per https://github.com/andrix/python-snappy/issues/28
         fh = StringIO()
         sz.stream_compress(StringIO(data), fh)
