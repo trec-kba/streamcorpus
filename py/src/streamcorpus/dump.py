@@ -68,7 +68,7 @@ def Token_repr(tok, limit=50, newlineSplitFields=False, indent=1, splitter=', ')
         else:
             fields.append('%s=%s' % (name, smart_repr_trim(v, limit=limit, newlineSplitFields=newlineSplitFields, indent=indent+1)))
     return 'Token(' + splitter.join(fields) + ')'
-    
+
 
 # map from type to function
 _better_repr_functions = [
@@ -175,7 +175,7 @@ def _dump(fpath, args):
                     si.other_content[oc] = None
 
         elif args.show_content_field and si.body:
-            
+
             print getattr(si.body, args.show_content_field)
 
         elif args.smart_dump:
@@ -316,7 +316,7 @@ def verify_offsets(fpaths):
                     for tok in sent.tokens:
                         if OffsetType.BYTES in tok.offsets:
                             off = tok.offsets[OffsetType.BYTES]
-                            
+
                             text = getattr(si.body, off.content_form)
                             val = text[ off.first : off.first + off.length]
 
@@ -341,7 +341,7 @@ def verify_offsets(fpaths):
 
                         if OffsetType.LINES in tok.offsets:
                             off = tok.offsets[OffsetType.LINES]
-                            
+
                             text = getattr(si.body, off.content_form)
                             def get_val(text, start, end):
                                 return '\n'.join( text.splitlines()[ start : end ] )
@@ -414,7 +414,7 @@ def _find(fpaths, stream_id, dump_binary_stream_item=False):
                         first, last = rng.split('-')
                         first, last = int(first[1:]), int(last)
                         print text[first:last]
-                        
+
                 elif si.body:
                     sys.exit('Found %s without si.body.raw' % stream_id)
                 else:
@@ -436,7 +436,7 @@ def _show_fields(fpaths, fields, len_fields):
                     if not isinstance(prop, basestring):
                         prop = repr(prop)
                     output.append( '%s: %s' % (field, prop) )
-            
+
             for field in len_fields:
                 prop = si
                 for prop_name in field.split('.'):
@@ -606,7 +606,7 @@ def to_primitives(ob):
     if isinstance(ob, (tuple,list)):
         return [to_primitives(x) for x in ob]
     if isinstance(ob, dict):
-        return dict([(to_primitives(k), to_primitives(v)) 
+        return dict([(to_primitives(k), to_primitives(v))
                      for k,v in _nonnullkvdict(ob)])
     if hasattr(ob, '__slots__'):
         return dict([(sk, sv) for sk,sv in _slots_to_kv(ob)])
@@ -631,11 +631,23 @@ def _to_cbor(args):
     sys.stderr.write('wrote {0} items\n'.format(count))
 
 
+def _to_html(args):
+    count = 0
+    for fpath in args.input_path:
+        ichunk = Chunk(path=fpath, mode='rb')
+        for si in ichunk:
+            count += 1
+            print si.body.clean_html
+        ichunk.close()
+        if args.limit is not None and count >= args.limit:
+            break
+
+
 def main():
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        'input_path', 
+        'input_path',
         nargs='*',
         default=[],
         help='Paths to a chunk files, or directory of chunks, Note: "-" denotes stdin has a list of paths, NOT streamcorpus data')
@@ -644,17 +656,17 @@ def main():
     parser.add_argument('--tagger-stats', action='store_true', default=False,
                         help='Print the *relative* size of data contributed by each tagger.')
     parser.add_argument('--find', dest='find', metavar='STREAM_ID', help='print out the .body.raw of a specific stream_id')
-    parser.add_argument('--binary', dest='dump_binary_stream_item', 
-                        action='store_true', default=False, 
+    parser.add_argument('--binary', dest='dump_binary_stream_item',
+                        action='store_true', default=False,
                         help='Use with --find to write full binary StreamItem of specific stream_id to stdout intead of .body.raw')
     parser.add_argument(
         '--find-missing', dest='find_missing', action='store_true', default=False,
         help='print out the .body.<content> of any stream_item that has no tokens with a label in annotator_ids')
     parser.add_argument(
-        '--component', dest='component', metavar='raw|clean_html|clean_visible', 
+        '--component', dest='component', metavar='raw|clean_html|clean_visible',
         help='print out the .body.<component>')
     parser.add_argument('--version', default='v0_3_0')
-    parser.add_argument('--tokens', action='store_true', 
+    parser.add_argument('--tokens', action='store_true',
                         default=False, dest='tokens')
     parser.add_argument('--ratings', action='store_true', default=False)
     parser.add_argument('--include-header', action='store_true', default=False, dest='include_header')
@@ -662,28 +674,29 @@ def main():
                         dest='annotator_ids', help='only show tokens that have this annotator_id')
     parser.add_argument('--tagger_id', action='append', default=[],
                         dest='tagger_ids', help='only show tokens that have this tagger_id')
-    parser.add_argument('--show-all', action='store_true', 
+    parser.add_argument('--show-all', action='store_true',
                         default=False, dest='show_all')
-    parser.add_argument('--show-content-field', 
+    parser.add_argument('--show-content-field',
                         default=None, dest='show_content_field')
     parser.add_argument('--smart-dump', action='store_true',
                         default=False, dest='smart_dump')
-    parser.add_argument('--len-field', 
-                        action='append', 
+    parser.add_argument('--len-field',
+                        action='append',
                         default=[], dest='len_fields')
-    parser.add_argument('--field', default=[], 
+    parser.add_argument('--field', default=[],
                         action='append', dest='fields',
                         help='".foo.bar" will yield StreamItem.foo.bar, if it exists.  Can request multiple --field .foo.bar1 --field .foo.bar2 ')
-    parser.add_argument('--count', action='store_true', 
+    parser.add_argument('--count', action='store_true',
                         default=False, help='print number of StreamItems')
     parser.add_argument('--limit', type=int,
                         default=None, help='Limit the number of StreamItems checked')
-    parser.add_argument('--labels-only', action='store_true', 
+    parser.add_argument('--labels-only', action='store_true',
                         default=False, dest='labels_only')
-    parser.add_argument('--verify-offsets', action='store_true', 
+    parser.add_argument('--verify-offsets', action='store_true',
                         default=False, dest='verify_offsets')
     parser.add_argument('--print-url', action='store_true',
                         default=False, dest='print_url')
+    parser.add_argument('--html', action='store_true')
     parser.add_argument('--copy', action='store_true', default=False, help='copy items to stdout, useful with --limit')
     if CborChunk.is_available:
         parser.add_argument('--to-cbor', action='store_true', default=False)
@@ -725,37 +738,29 @@ def main():
     ## now actually do whatever was requested
     if args.fields:
         _show_fields(args.input_path, args.fields, args.len_fields)
-
     elif args.tagger_stats:
         _tagger_stats(args, args.input_path)
-
     elif args.stats:
         _stats(args.input_path)
-
     elif args.find:
-        _find(args.input_path, args.find, 
+        _find(args.input_path, args.find,
               dump_binary_stream_item=args.dump_binary_stream_item)
-
     elif args.tokens:
         _dump_tokens(args.input_path, args.annotator_ids, args.tagger_ids)
-
     elif args.find_missing:
         _find_missing_labels(args.input_path, args.annotator_ids, args.component)
-
     elif args.verify_offsets:
         verify_offsets(args.input_path)
-
     elif args.ratings:
-        _dump_ratings(args.input_path, 
+        _dump_ratings(args.input_path,
                       annotator_ids=args.annotator_ids,
                       include_header=args.include_header)
-
     elif args.copy:
         _copy(args)
-
     elif args.to_cbor:
         _to_cbor(args)
-
+    elif args.html:
+        _to_html(args)
     else:
         for fpath in args.input_path:
             _dump(fpath, args)
