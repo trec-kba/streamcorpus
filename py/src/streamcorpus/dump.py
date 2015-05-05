@@ -66,6 +66,8 @@ def Token_repr(tok, limit=50, newlineSplitFields=False, indent=1, splitter=', ')
                 continue
             fields.append('%s=%s' % (name, MentionType._VALUES_TO_NAMES[v]))
         else:
+            if isinstance(v, str):
+                v = v.decode('utf8')
             fields.append('%s=%s' % (name, smart_repr_trim(v, limit=limit, newlineSplitFields=newlineSplitFields, indent=indent+1)))
     return 'Token(' + splitter.join(fields) + ')'
 
