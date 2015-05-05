@@ -592,6 +592,29 @@ struct Selector {
   4: optional map<OffsetType, Offset> offsets = {},
 }
 
+enum ZoneType {
+  UNZONED = 0,
+  HEADER = 1,
+  TITLE = 2,
+  BODY = 3,
+  FOOTER = 4,
+}
+
+/**
+ * Desription of a Zone discovered by an extractor in the text.
+ */
+struct Zone {
+  /**
+   * what type of zone this is
+   */
+  1: ZoneType zone_type
+
+  /**
+   * For a given OffsetType provide a *list* of Offset objects
+   */
+  2: map<OffsetType, list<Offset>> offsets = {},
+}
+
 /**
  * RelationType is used in Relation to map relation "name" to type.
  *
@@ -872,6 +895,11 @@ struct ContentItem {
    * Map of external identifier strings to selectors in clean_visible
    */
   15: optional map<TaggerID, list<Selector>> selectors = {},
+
+  /**
+   * Map of external identifier strings to Zones in clean_visible
+   */
+  16: optional map<TaggerID, list<Zone>> zones = {},
 }
 
 /**
