@@ -899,7 +899,7 @@ struct ContentItem {
   /**
    * Map of external identifier strings to Zones in clean_visible
    */
-  16: optional map<TaggerID, list<Zone>> zones = {},
+  16: optional map<TaggerID, map<ZoneType, Zone>> zones = {},
 }
 
 /**

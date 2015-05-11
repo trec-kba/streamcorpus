@@ -41,6 +41,7 @@ from datetime import datetime
 from streamcorpus.ttypes import StreamItem, ContentItem, Label, StreamTime, Selector, \
     Offset, Rating, Annotator, Versions, Token, Sentence, EntityType, \
     Tagging, OffsetType, Target, \
+    Zone, ZoneType, \
     Language, \
     MentionType, AttributeType, Attribute, Gender, \
     RelationType, FlagType
@@ -77,6 +78,7 @@ __all__ = ['Chunk', 'PickleChunk', 'JsonChunk', 'CborChunk',
            'EntityType',
            'Target',
            'Tagging', 'OffsetType',
+           'Zone', 'ZoneType',
            'Language',
            'MentionType',
            'Attribute',
