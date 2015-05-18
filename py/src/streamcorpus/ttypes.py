@@ -2967,8 +2967,6 @@ class Rating(object):
    - mentions: Record strings that are "mentions" of the target in this text
    - flags: General purpose flags. These flags can be used to mark documents
   as meeting an extensible set of criteria.
-   - tokenized_mentions: Record *lists* of strings that are "mentions" of the target in
-  this text.  This list is not ordered.
   """
 
   __slots__ = [ 
@@ -2979,7 +2977,6 @@ class Rating(object):
     'comments',
     'mentions',
     'flags',
-    'tokenized_mentions',
    ]
 
   thrift_spec = (
@@ -2991,12 +2988,9 @@ class Rating(object):
     (5, TType.STRING, 'comments', None, None, ), # 5
     (6, TType.LIST, 'mentions', (TType.STRING,None), None, ), # 6
     (7, TType.LIST, 'flags', (TType.I32,None), None, ), # 7
-    None, # 8
-    (9, TType.LIST, 'tokenized_mentions', (TType.LIST,(TType.STRING,None)), [
-    ], ), # 9
   )
 
-  def __init__(self, annotator=None, target=None, relevance=None, contains_mention=None, comments=None, mentions=None, flags=None, tokenized_mentions=thrift_spec[9][4],):
+  def __init__(self, annotator=None, target=None, relevance=None, contains_mention=None, comments=None, mentions=None, flags=None,):
     self.annotator = annotator
     self.target = target
     self.relevance = relevance
@@ -3004,10 +2998,6 @@ class Rating(object):
     self.comments = comments
     self.mentions = mentions
     self.flags = flags
-    if tokenized_mentions is self.thrift_spec[9][4]:
-      tokenized_mentions = [
-    ]
-    self.tokenized_mentions = tokenized_mentions
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -3065,21 +3055,6 @@ class Rating(object):
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
-      elif fid == 9:
-        if ftype == TType.LIST:
-          self.tokenized_mentions = []
-          (_etype252, _size249) = iprot.readListBegin()
-          for _i253 in xrange(_size249):
-            _elem254 = []
-            (_etype258, _size255) = iprot.readListBegin()
-            for _i259 in xrange(_size255):
-              _elem260 = iprot.readString();
-              _elem254.append(_elem260)
-            iprot.readListEnd()
-            self.tokenized_mentions.append(_elem254)
-          iprot.readListEnd()
-        else:
-          iprot.skip(ftype)
       else:
         iprot.skip(ftype)
       iprot.readFieldEnd()
@@ -3113,25 +3088,15 @@ class Rating(object):
     if self.mentions is not None:
       oprot.writeFieldBegin('mentions', TType.LIST, 6)
       oprot.writeListBegin(TType.STRING, len(self.mentions))
-      for iter261 in self.mentions:
-        oprot.writeString(iter261)
+      for iter249 in self.mentions:
+        oprot.writeString(iter249)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.flags is not None:
       oprot.writeFieldBegin('flags', TType.LIST, 7)
       oprot.writeListBegin(TType.I32, len(self.flags))
-      for iter262 in self.flags:
-        oprot.writeI32(iter262)
-      oprot.writeListEnd()
-      oprot.writeFieldEnd()
-    if self.tokenized_mentions is not None:
-      oprot.writeFieldBegin('tokenized_mentions', TType.LIST, 9)
-      oprot.writeListBegin(TType.LIST, len(self.tokenized_mentions))
-      for iter263 in self.tokenized_mentions:
-        oprot.writeListBegin(TType.STRING, len(iter263))
-        for iter264 in iter263:
-          oprot.writeString(iter264)
-        oprot.writeListEnd()
+      for iter250 in self.flags:
+        oprot.writeI32(iter250)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
@@ -3321,11 +3286,11 @@ class StreamItem(object):
       elif fid == 8:
         if ftype == TType.MAP:
           self.source_metadata = {}
-          (_ktype266, _vtype267, _size265 ) = iprot.readMapBegin() 
-          for _i269 in xrange(_size265):
-            _key270 = iprot.readString();
-            _val271 = iprot.readString();
-            self.source_metadata[_key270] = _val271
+          (_ktype252, _vtype253, _size251 ) = iprot.readMapBegin() 
+          for _i255 in xrange(_size251):
+            _key256 = iprot.readString();
+            _val257 = iprot.readString();
+            self.source_metadata[_key256] = _val257
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
@@ -3343,46 +3308,46 @@ class StreamItem(object):
       elif fid == 11:
         if ftype == TType.MAP:
           self.other_content = {}
-          (_ktype273, _vtype274, _size272 ) = iprot.readMapBegin() 
-          for _i276 in xrange(_size272):
-            _key277 = iprot.readString();
-            _val278 = ContentItem()
-            _val278.read(iprot)
-            self.other_content[_key277] = _val278
+          (_ktype259, _vtype260, _size258 ) = iprot.readMapBegin() 
+          for _i262 in xrange(_size258):
+            _key263 = iprot.readString();
+            _val264 = ContentItem()
+            _val264.read(iprot)
+            self.other_content[_key263] = _val264
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
       elif fid == 12:
         if ftype == TType.MAP:
           self.ratings = {}
-          (_ktype280, _vtype281, _size279 ) = iprot.readMapBegin() 
-          for _i283 in xrange(_size279):
-            _key284 = iprot.readString();
-            _val285 = []
-            (_etype289, _size286) = iprot.readListBegin()
-            for _i290 in xrange(_size286):
-              _elem291 = Rating()
-              _elem291.read(iprot)
-              _val285.append(_elem291)
+          (_ktype266, _vtype267, _size265 ) = iprot.readMapBegin() 
+          for _i269 in xrange(_size265):
+            _key270 = iprot.readString();
+            _val271 = []
+            (_etype275, _size272) = iprot.readListBegin()
+            for _i276 in xrange(_size272):
+              _elem277 = Rating()
+              _elem277.read(iprot)
+              _val271.append(_elem277)
             iprot.readListEnd()
-            self.ratings[_key284] = _val285
+            self.ratings[_key270] = _val271
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
       elif fid == 14:
         if ftype == TType.MAP:
           self.external_ids = {}
-          (_ktype293, _vtype294, _size292 ) = iprot.readMapBegin() 
-          for _i296 in xrange(_size292):
-            _key297 = iprot.readString();
-            _val298 = {}
-            (_ktype300, _vtype301, _size299 ) = iprot.readMapBegin() 
-            for _i303 in xrange(_size299):
-              _key304 = iprot.readString();
-              _val305 = iprot.readString();
-              _val298[_key304] = _val305
+          (_ktype279, _vtype280, _size278 ) = iprot.readMapBegin() 
+          for _i282 in xrange(_size278):
+            _key283 = iprot.readString();
+            _val284 = {}
+            (_ktype286, _vtype287, _size285 ) = iprot.readMapBegin() 
+            for _i289 in xrange(_size285):
+              _key290 = iprot.readString();
+              _val291 = iprot.readString();
+              _val284[_key290] = _val291
             iprot.readMapEnd()
-            self.external_ids[_key297] = _val298
+            self.external_ids[_key283] = _val284
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
@@ -3427,9 +3392,9 @@ class StreamItem(object):
     if self.source_metadata is not None:
       oprot.writeFieldBegin('source_metadata', TType.MAP, 8)
       oprot.writeMapBegin(TType.STRING, TType.STRING, len(self.source_metadata))
-      for kiter306,viter307 in self.source_metadata.items():
-        oprot.writeString(kiter306)
-        oprot.writeString(viter307)
+      for kiter292,viter293 in self.source_metadata.items():
+        oprot.writeString(kiter292)
+        oprot.writeString(viter293)
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.stream_id is not None:
@@ -3443,31 +3408,31 @@ class StreamItem(object):
     if self.other_content is not None:
       oprot.writeFieldBegin('other_content', TType.MAP, 11)
       oprot.writeMapBegin(TType.STRING, TType.STRUCT, len(self.other_content))
-      for kiter308,viter309 in self.other_content.items():
-        oprot.writeString(kiter308)
-        viter309.write(oprot)
+      for kiter294,viter295 in self.other_content.items():
+        oprot.writeString(kiter294)
+        viter295.write(oprot)
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.ratings is not None:
       oprot.writeFieldBegin('ratings', TType.MAP, 12)
       oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.ratings))
-      for kiter310,viter311 in self.ratings.items():
-        oprot.writeString(kiter310)
-        oprot.writeListBegin(TType.STRUCT, len(viter311))
-        for iter312 in viter311:
-          iter312.write(oprot)
+      for kiter296,viter297 in self.ratings.items():
+        oprot.writeString(kiter296)
+        oprot.writeListBegin(TType.STRUCT, len(viter297))
+        for iter298 in viter297:
+          iter298.write(oprot)
         oprot.writeListEnd()
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.external_ids is not None:
       oprot.writeFieldBegin('external_ids', TType.MAP, 14)
       oprot.writeMapBegin(TType.STRING, TType.MAP, len(self.external_ids))
-      for kiter313,viter314 in self.external_ids.items():
-        oprot.writeString(kiter313)
-        oprot.writeMapBegin(TType.STRING, TType.STRING, len(viter314))
-        for kiter315,viter316 in viter314.items():
-          oprot.writeString(kiter315)
-          oprot.writeString(viter316)
+      for kiter299,viter300 in self.external_ids.items():
+        oprot.writeString(kiter299)
+        oprot.writeMapBegin(TType.STRING, TType.STRING, len(viter300))
+        for kiter301,viter302 in viter300.items():
+          oprot.writeString(kiter301)
+          oprot.writeString(viter302)
         oprot.writeMapEnd()
       oprot.writeMapEnd()
       oprot.writeFieldEnd()

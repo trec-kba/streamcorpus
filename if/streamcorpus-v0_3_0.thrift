@@ -939,6 +939,7 @@ struct Rating {
    */
   5: optional string comments,
 
+
   /**
    * Record strings that are "mentions" of the target in this text
    */
@@ -949,12 +950,6 @@ struct Rating {
    * as meeting an extensible set of criteria.
    */
   7: optional list<FlagType> flags,
-
-  /**
-   * Record *lists* of strings that are "mentions" of the target in
-   * this text.  This list is not ordered.
-   */
-  9: optional list<list<string>> tokenized_mentions = [],
 }
 
 /**
