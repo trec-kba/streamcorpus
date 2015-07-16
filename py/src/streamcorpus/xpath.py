@@ -169,9 +169,13 @@ class XpathRange(object):
                     starti += 1
                 if starti > -1 and parent == end_node:
                     endi += 1
-                if (starti > -1 and self.start_text_index <= starti) \
-                        or (endi > -1 and self.end_text_index >= endi):
-                    if parent == start_node and starti == self.start_text_index:
+                if starti > -1 and \
+                        (self.start_text_index <= starti or
+                         (endi > -1 and
+                          self.end_text_index >= endi and
+                          len(parts) > 0)):
+                    if parent == start_node \
+                            and starti == self.start_text_index:
                         parts.append(text[self.start_offset:])
                     elif parent == end_node and endi == self.end_text_index:
                         parts.append(text[:self.end_offset])
