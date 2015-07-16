@@ -93,7 +93,6 @@ class XpathRange(object):
         # This method is suspect. It doesn't just rely on canonicalization
         # and uniqueness. Instead, it relies on a particular canonicalization
         # so that splitting on `/` does the right thing. ---AG
-        pieces1, pieces2 = x1.split('/'), x2.split('/')
         # Just return the longest common prefix.
         ancestor = []
         for p1, p2 in zip(x1.split('/'), x2.split('/')):
@@ -227,10 +226,10 @@ class XpathRange(object):
 
     def __eq__(self, other):
         return (
-            self.start_offset == other.start_offset
-            and self.end_offset == other.end_offset
-            and self.start_xpath == other.start_xpath
-            and self.end_xpath == other.end_xpath
+            self.start_offset == other.start_offset and
+            self.end_offset == other.end_offset and
+            self.start_xpath == other.start_xpath and
+            self.end_xpath == other.end_xpath
         )
 
     def __str__(self):
