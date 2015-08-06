@@ -22,6 +22,7 @@ def test_chunk_roller(tmpdir):
 
     files = []
     for fname in os.listdir(str(tmpdir)):
+        assert 'tmp' not in fname
         count = int(fname.split('-')[0])
         files.append(count)
 
