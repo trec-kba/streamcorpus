@@ -61,9 +61,10 @@ from ._chunk import Chunk, PickleChunk, JsonChunk, \
     serialize, deserialize, \
     VersionMismatchError
 from ._cbor_chunk import CborChunk
-
+from chunk_roller import ChunkRoller
 
 __all__ = ['Chunk', 'PickleChunk', 'JsonChunk', 'CborChunk',
+           'ChunkRoller',
            'decrypt_and_uncompress', 'compress_and_encrypt',
            'compress_and_encrypt_path',
            'parse_file_extensions',
