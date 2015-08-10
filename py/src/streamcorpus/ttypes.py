@@ -1995,6 +1995,8 @@ class Selector(object):
    - raw_selector: the selector string as it appears in the document
    - canonical_selector: the selector string in a canonical form
    - offsets: pointer to the selector string within the clean_visible document
+   - metadata: optional metadata binary string, such as a JSON or CBOR blob,
+  depends on the selector_type.
   """
 
   __slots__ = [ 
@@ -2002,6 +2004,7 @@ class Selector(object):
     'raw_selector',
     'canonical_selector',
     'offsets',
+    'metadata',
    ]
 
   thrift_spec = (
@@ -2011,9 +2014,10 @@ class Selector(object):
     (3, TType.STRING, 'canonical_selector', None, None, ), # 3
     (4, TType.MAP, 'offsets', (TType.I32,None,TType.STRUCT,(Offset, Offset.thrift_spec)), {
     }, ), # 4
+    (5, TType.STRING, 'metadata', None, None, ), # 5
   )
 
-  def __init__(self, selector_type=None, raw_selector=None, canonical_selector=None, offsets=thrift_spec[4][4],):
+  def __init__(self, selector_type=None, raw_selector=None, canonical_selector=None, offsets=thrift_spec[4][4], metadata=None,):
     self.selector_type = selector_type
     self.raw_selector = raw_selector
     self.canonical_selector = canonical_selector
@@ -2021,6 +2025,7 @@ class Selector(object):
       offsets = {
     }
     self.offsets = offsets
+    self.metadata = metadata
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -2058,6 +2063,11 @@ class Selector(object):
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
+      elif fid == 5:
+        if ftype == TType.STRING:
+          self.metadata = iprot.readString();
+        else:
+          iprot.skip(ftype)
       else:
         iprot.skip(ftype)
       iprot.readFieldEnd()
@@ -2087,6 +2097,10 @@ class Selector(object):
         oprot.writeI32(kiter78)
         viter79.write(oprot)
       oprot.writeMapEnd()
+      oprot.writeFieldEnd()
+    if self.metadata is not None:
+      oprot.writeFieldBegin('metadata', TType.STRING, 5)
+      oprot.writeString(self.metadata)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
