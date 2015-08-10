@@ -590,6 +590,12 @@ struct Selector {
    * pointer to the selector string within the clean_visible document
    */
   4: optional map<OffsetType, Offset> offsets = {},
+
+  /**
+   * optional metadata binary string, such as a JSON or CBOR blob,
+   * depends on the selector_type.
+   */
+  5: optional binary metadata
 }
 
 enum ZoneType {
