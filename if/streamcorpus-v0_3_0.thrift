@@ -23,9 +23,34 @@
  * replicate Rating's contents in Label, and make it possible to store
  * a Label independently of its source StreamItem
  *
+ * September 2015: Introducing v0_4_0, which is backwards compatible
+ * with v0_3_0 in that new clients can load the older v0_3_0 format,
+ * however the data is organized into new structures, and therefore
+ * must be migrated upon loading.  The primary changes introduced in
+ * v0_4_0 are:
+ *
+ * - `EntityType` is deprecated in favor of `EntityClass`
+ *
+ * - `clean_html` and `clean_visible` are deprecated in favor of
+ *   `raw_characters`
+ *
+ * - `body.sentences` is deprecated in favor of a *single*
+ *   tokenization of the text stored in `body.spans`, which partitions
+ *   `raw_characters` into ranges of markup, whitespace, and content.
+ *
+ * - XPath offsets for the tags in `raw_characters` are encoded in
+ *   `span_xpaths` using integers from html-v5-tags.thrift.
+ *
+ * - coref chains are aggregated into `body.entities`, which provides
+ *   a KB-like structure for each entity identified by taggers
+ *   analyzing the text.
+ *
+ * - feature vectorized context data is captured for ranges of spans
+ *   in `body.contexts` and `Entity` instances point to the contexts
+ *   that describe the entity and its relations.
  *
  * This is released as open source software under the MIT X11 license:
- * Copyright (c) 2012-2014 Computable Insights.
+ * Copyright (c) 2012-2015 Diffeo, Inc.
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -103,16 +128,33 @@ struct Annotator {
 }
 
 /**
+ * ContentCleanseLevel enumerates the various forms of the original
+ * content that might be used in `Tokens`.  This pertains to migrating
+ * from v3 to v4, because in v4 clean_html and clean_visible are
+ * deprecated.  Tokens can be generated from an NER tagger operating
+ * on `raw_characters`
+ */
+enum ContentCleanseLevel {
+  raw = 0,
+  raw_characters = 1, // what "the" browser has as unicode characters
+  clean_html = 2,
+  clean_visible = 3,
+}
+
+/**
  * Offset and OffsetType are used by Annotation to identify the
  * portion of a ContentItem that a human labeled with a tag.
  *
- * annotation applies to a range of line numbers
+ *   * annotation applies to a range of line numbers
  *
- * annotation applies to a range of bytes
+ *   * annotation applies to a range of bytes
  *
- * annotation applies to a range of chars, typically unicode chars
+ *   * annotation applies to a range defined by xpaths (with relative char offsets)
  *
- * annotation applies to a range defined by xpaths (with relative char offsets)
+ *   * annotation applies to a range of unicode chars
+ *
+ * Generally, bytes and lines should be avoided in favor of using
+ * unicode characters.
  */
 enum OffsetType {
   LINES = 0,
@@ -167,8 +209,12 @@ struct Offset {
    * name of the data element inside a ContentItem to which this label
    * applies, e.g. 'raw' 'clean_html' or 'clean_visible'.  Defaults to
    * clean_visible, which is the most common case.
+   *
+   * Previously, this had the default value of "clean_visible" which
+   * was wasteful.  This field is now deprecated in favor of
+   * content_cleanse_level.
    */
-  5: optional string content_form = "clean_visible",
+  5: optional string content_form,
 
   /**
    * bytes specified by this offset extracted from the original; just
@@ -194,10 +240,23 @@ struct Offset {
    *     [(xpath, first), (xpath_end, xpath_end_offset)).
    */
   8: optional i64 xpath_end_offset,
+
+  /**
+   * This enables Offset to be less bloated.
+   */
+  7: optional ContentCleanseLevel content_cleanse_level,
 }
 
+
+typedef binary CorefChainID // see discussion in `struct Entity`
+typedef i32 ContextID  // index position into ContentItem.contexts
+typedef i32 SentenceID // index position into ContentItem.sentence_spans
+typedef double Confidence
+typedef string KbID
+typedef string ProfileID
+
 /**
- * Targets are "informationt targets," such as entities or topics,
+ * Targets are "information targets," such as entities or topics,
  * usually from a knowledge base, such as Wikipedia.
  */
 struct Target {
@@ -211,7 +270,7 @@ struct Target {
    * kb_id is usually redundant if the target_id is a full URL,
    * e.g. en.wikipedia.org
    */
-  2: optional string kb_id,
+  2: optional KbID kb_id,
 
   /**
    * moment in history that the target_kb was accessed
@@ -300,6 +359,13 @@ struct Label {
    * as meeting an extensible set of criteria.
    */
   9: optional list<FlagType> flags,
+
+  /**
+   * Confidence that this label is correct.  Created by automatic
+   * algorithms that create Label objects in Entity.kb_links
+   */
+  10: optional Confidence confidence,
+
 }
 
 /**
@@ -311,14 +377,8 @@ struct Label {
 typedef i32 MentionID
 
 /**
- * Different tagging tools have different strings for labeling the
- * various common entity types.  To avoid ambiguity, we define a
- * canonical list here, which we will surely have to expand over time
- * as new taggers recognize new types of entities.
- *
- * LOC: physical location
- *
- * MISC: uncategorized named entities, e.g. Civil War for Stanford CoreNLP
+ * EntityType is deprecated in favor of EntityClass, which is
+ * hierarchical and more logical than this old, flat structure.
  */
 enum EntityType {
   PER = 0,
@@ -330,9 +390,7 @@ enum EntityType {
   DATE = 6,
   MONEY = 7,
   PERCENT = 8,
-
-  MISC = 9,
-
+  MISC = 9, // MISC: uncategorized named entities, e.g. Civil War for Stanford CoreNLP
   GPE = 10,
   FAC = 11,
   VEH = 12,
@@ -350,6 +408,145 @@ enum EntityType {
   TITLE = 21,
 
   EVENT = 22,
+}
+
+
+/**
+ * What is a `hierarchical enumeration` (or `hierenum`)?  It is simply
+ * a regular enumeration with the extra *implied* structure that each
+ * value in the enum *may* correspond to another hierenum available
+ * within the module.  For example, `EntityClass.person` is a value in
+ * the `EntityClass` enum, and there is a corresponding enum called
+ * `person` that has values like `medical`, `political`, and `cyber`.
+ * Each of those *can* correspond to another enum called, e.g.,
+ * `person.cyber` that has values like `victim` and `threat`.  An
+ * entity type is a list of values in this hierarchy.  The length of
+ * the list is larger than one and can be as deep as the hierarchy,
+ * although it can stop at any point.  For example an entity mention
+ * could be simply EntityClass.person.cyber and not specified more
+ * precisely.
+ *
+ * The values are specified in an IDL style, either Thrift or
+ * Thrift-like, so that the values can be serialized as integers and
+ * interpretted by any software that can read the IDL.  This also
+ * enables expansion of the hierarchy without updating all clients,
+ * because in the spirit of thrift or protobufs, clients can fail
+ * gracefully for values not in its version of the IDL file.
+ **/
+typedef enum hierenum
+
+/**
+ * A hierarchical enumeration of types of entities designed to support
+ * description of entity mentions in human language discourse.  All
+ * types of things start off as natural forms, and then we carve out
+ * five human-derived types as top-level types that appear frequently
+ * in human discourse: person, organization, location, event, and
+ * artifact.
+ *
+ * A particular mention of an entity always has a primary type in this
+ * hierarchy.  That type should be selected based on what *defines*
+ * the entity in the context of that mention.  Thus, this assignment
+ * of in-context mentions to type values in this hierarchy should be
+ * universal, i.e. different people should arrive at the same type
+ * assignment.
+ *
+ * However, an entity may receive mentions from varying contexts that
+ * come from different parts of the hierarchy. For example, a spine
+ * surgeon may receive mentions of `PER.medical.surgeon.spine` in one
+ * context and also `PER.sports.coach.soccer` in an article describing
+ * her weekend activities with youth.  The top level taxonomy is
+ * intended to be mutually exclusive, e.g. the surgeon should not
+ * receive mentions of `NATURALFORM.animal.homo.sapiens`, which has
+ * been explicitly excluded from NATURALFORM in order to create the
+ * top-level type `person`.
+ *
+ * These six top-level types are intended to not exapnd, and
+ * enhancements are intended to appear at lower levels in the
+ * hierarchy.
+ */
+hierenum EntityClass {
+ /**
+  * Natural forms are phenomena defined by their independent existence
+  * from humans.  These are non-man-made things, so the inverse of
+  * artifact minus the other four types.  This includes elements,
+  * molecules, organisms, organs, diseases, species, viruses,
+  * particular trees with names, named patterns that form in various
+  * media, e.g. BZ waves and Cummulo Nimbus, the Great Spot of
+  * Jupiter.
+  */
+  naturalform = 1,
+
+ /**
+  * Person: defined by `species==homo sapiens`, includes nominals and
+  * therefore titles; also includes all professions, roles, positions.
+  * Could be put under NATURALFORM, except we intentionally bias this
+  * ontology toward humans.
+  */
+  person = 2,
+
+ /**
+  * Organization: defined by one or more humans declaring the
+  * existence of the organization as an independent entity.  Includes
+  * one-person companies and loose confederations defined by group
+  * actions, especially if the group action is referred to by a name.
+  * Includes GPE and therefore nationality; also includes religious
+  * orgs and therefore a person's religion is a relation to that org.
+  */
+  organization = 3,
+
+ /**
+  * Location: Defined by spatial extent or position relative to other
+  * locations.  Includes outerspace, so planetary bodies like Europa
+  * and concepts such as the Lagrange points, also subterranean and
+  * oceanic qlocations, such as the North Pacific Gyre (not a
+  * naturalform?)
+  */
+  location = 4,
+
+ /**
+  * Events: defined by temporal extent or position relative to other
+  * events.  Includes recurring and one-time events, all date and time
+  * references as nominals.
+  */
+  event = 5,
+
+ /**
+  * Man-made things: defined by having been conceived or created by
+  * `homo sapiens` even if lacking physical form.  Natural forms used
+  * by people are only an artifact if use by humans *defines* the
+  * thing.  For example, an adze is a stone whose defining
+  * characteristic is that humans shaped it into a cutting tool for
+  * use by humans.  Artifacts include vehicles, products, and tools
+  * without physical embodiment such as email accounts, URLs, and IP
+  * addresses.
+  */
+  artifact = 6,
+}
+
+hierenum artifact {
+ product = 1,
+ vehicle = 2,
+ weapon = 3,
+ cyber = 4,
+}
+
+hierenum artifact.cyber {
+ phone = 1,
+ email = 2,
+ IPv4 = 3,
+ IPv6 = 4,
+}
+
+/**
+ * The class of entity referenced by an in-context mention is a list of
+ * values in the EntityClass hierarchy, which is represented by a list
+ * of integers:
+ */
+struct EntityClassAddress {
+
+ 1: optional list<i16> address,
+
+ 2: optional Confidence confidence,
 }
 
 enum MentionType {
@@ -534,6 +731,25 @@ struct Sentence {
    */
   2: optional map<AnnotatorID, list<Label>> labels = {},
 }
+
+/**
+ * To digest raw HTML, we first decode it to unicode and then lightly
+ * parse it into whitespaces, markup which could become XPath offsets,
+ * and visible text that could be analyzed as natural language. Spans
+ * can be divided into smaller contiguous spans, including sentences,
+ * words, phrases, punctuation, etc.
+ */
+enum SpanType {
+  WHITESPACE = 0, // space between natural language tokens and also possibly long whitespace strings separated parts of a document.
+  MARKUP = 1, // includes HTML script, style, comments
+  CONTENT = 2, // intended for natural language analysis
+}
+
+/**
+ * two-tuple indicating *inclusive* start and *non-inclusive* end
+ * indexes in `spans`.  So a span of length=1 is [n, n+1]
+ */
+typedef list<i32> SpanRange
 
 /**
  * TaggerID is used as a key on maps in ContentItem.
@@ -798,6 +1014,78 @@ struct Language {
 }
 
 /**
+ * Description of a natural language used in text
+ */
+struct Mention { // v4
+  /**
+   * A bridge structure carrying references into other structures...  TODO: explain more
+   */
+  1: optional Confidence confidence,
+  2: optional SentenceID sentence_id,
+  3: optional SpanRange span_range,
+}
+
+/**
+ * A knowledge-base-like record for each entity recognized in
+ * `StreamItem.body`.  This serves two purposes: it carries the list
+ * of Mentions for efficiently highlighting mentions of the entity in
+ * a visual display of the document, and it points to the
+ * `body.contexts` that characterize the entity.
+ */
+struct Entity { // v4
+
+  /**
+   * Consider these possible methods of constructing identifiers for
+   * entities mentioned within a document:
+   *
+   * - arbitrary integer selected by NER engine(s), which is not
+   *   stable across software upgrades that re-analyze the text.
+   *
+   * - first character in the "best" mention.  Fails to be unique on
+   *   mentions like "Albany First National Bank", which might occur
+   *   in an article about Albany.
+   *
+   * - tuple of (first, length) for the best mention.  Tuples do not
+   *   work as keys in a map.
+   *
+   * - cbor.dumps((first, length))does work as a key in a map.
+   */
+  1: optional CorefChainID coref_chain_id,
+
+  /**
+   * Best mention is first and its (first, length) in cars is
+   * CorefChainID.
+   */
+  2: optional list<Mention> mentions,
+
+  /**
+   * See discussion of hierarchical entity classes.
+   */
+  3: optional list<EntityClassAddress> entity_classes,
+
+  /**
+   * A general structure for holding attribute-like information that
+   * has not yet been reified to a particular ontology or schema.
+   */
+  4: optional list<ContextID> descriptions,
+
+  /**
+   * A general structure for holding entity-to-entity relation-like
+   * information that has not yet been reified to a particular
+   * ontology or schema.
+   */
+  5: optional map<CorefChainID, list<ContextID>> associations,
+
+  /**
+   * When an Entity is resolved, its meaning should be recorded in a
+   * `Label` object.
+   */
+  6: optional list<Label> kb_links,
+
+}
+
+
+/**
  * ContentItem contains raw data, an indication of its character
  * encoding, and various transformed versions of the raw data.
  */
@@ -903,10 +1191,98 @@ struct ContentItem {
   15: optional map<TaggerID, list<Selector>> selectors = {},
 
   /**
-   * Map of external identifier strings to Zones in clean_visible
+   * Map of external identifier strings to Zones.  As indicated by
+   * content_form or content_cleanse_level in the Offset, it may refer
+   * to clean_visible or raw_characters.
    */
   16: optional map<TaggerID, map<ZoneType, Zone>> zones = {},
+
+  /**
+   * Unicode character string represented as UTF-8 bytes from decoding
+   * the binary `raw` data.
+   */
+  17: optional string raw_characters,
+
+  /**
+   * Ordered list of the lengths of spans in `raw_characters`
+   */
+  18: optional list<i32> span_lengths,
+
+  /**
+   * See description of `SpanType`
+   */
+  19: optional list<SpanType> span_types,
+
+  /**
+   * List of strings split at `span_lengths`
+   *
+   * In the interest of saving space, an implementation may omit `raw`
+   * and `raw_characters` in favor of using `spans` as the primary
+   * form of the content.
+   *
+   * An implementation may set MARKUP spans to '' and represent the
+   * MARKUP in span_xpaths.
+   *
+   *  if not ContentItem.span_xpaths:
+   *      assert u''.join(spans) == raw_characters
+   *  else:
+   *      assert len(spans) == len(span_xpaths)
+   *
+   * Since span_lengths is redundant, it could be omitted.  If
+   * present, then:
+   *
+   *  if ContentItem.span_lengths:
+   *      assert len(spans) == len(span_lengths)
+   *
+   * Note the lack of TaggerID.  This is a *single* primary
+   * tokenization of the document that a system could construct from a
+   * primary tokenizer and possibly further modify by token
+   * "improvers."
+   */
+  20: optional list<string> spans,
+
+  /**
+   * List of integers from the HtmlTags enum representing an XPath
+   * relative to the previous MARKUP span.  For example, a MARKUP span
+   * of "</p></li></ol><div>" would be [0, 0, 0, 36].
+   */
+  21: optional list<list<i8>> span_xpaths,
+
+  /**
+   * For each position in spans, a list of other strings that a system
+   * could/should index as variations to boost recall.  This is
+   * pre-indexing query expansion.  For example, stemmed and
+   * lemmatized strings appear here.
+   *
+   * assert len(normalized_spans) == len(spans)
+   *
+   * TODO: assess whether this should change to something simpler,
+   * like a bag-of-word-variants for the whole document.
+   */
+  22: optional list<list<string>>> normalized_spans,
+
+  /**
+   * List of begin/end ranges of spans for sentence chunking; index
+   * positions into sentence_spans are called `SentenceId`
+   */
+  23: optional list<SpanRange> sentence_spans,
+
+  /**
+   * Index from CorefChainID --> Entity structs
+   */
+  24: optional map<CorefChainID, Entity> entities,
+
+  /**
+   * ContextId is indexes into this list
+   *
+   * The binary blob is a general way of carrying feature vector data,
+   * such as dossier.fc.FeatureCollection or other data that is
+   * constructed and defined by a particular system.
+   */
+  25: optional list<binary> contexts,
+
 }
+
 
 /**
  * Ratings are buman generated assertions about a entire document's
@@ -986,6 +1362,7 @@ typedef binary SourceMetadata
 enum Versions {
   v0_2_0 = 0,
   v0_3_0 = 1,
+  v0_4_0 = 2,
 }
 
 /**
@@ -995,6 +1372,47 @@ enum Versions {
  */
 typedef string SystemID
 typedef string DocIDorStreamID
+
+/**
+ * When content is retrieved from remote servers, useful data can be
+ * buried in the request-response data of HTTP Transactions.  In
+ * particular, redirect chains can help identify duplicate documents,
+ * and information can be embedded in the various URLs that point at a
+ * document.
+ *
+ * For more details, see http://blog.catchpoint.com/2010/09/17/anatomyhttp/
+ */
+struct HttpTransaction {
+  /**
+   * hostname sent to DNS
+   */
+  1: optional string hostname,
+
+  /**
+   * IP address obtained from DNS
+   */
+  2: optional string ip_address,
+
+  /**
+   * byte string of HTTP Request
+   */
+  3: optional binary request,
+
+  /**
+   * byte string of HTTP Response headers *without* the body.
+   */
+  4: optional binary response,
+
+  /**
+   * Data from an HTTP *before* the final transaction.  The final
+   * transaction creates the `body` property on the `StreamItem`.  It
+   * is possible for an HTTP Redirect to have a non-empty body,
+   * e.g. an interstitial page saying "standby". This `body` property
+   * is intended to capture that data when present.
+   */
+  5: optional ContentItem body,
+}
+
 
 /**
  * This is the primary interface to the corpus data.  It is called
@@ -1015,7 +1433,7 @@ struct StreamItem {
   /**
    * must provide a version number here
    */
-  1: Versions version = Versions.v0_3_0,
+  1: Versions version = Versions.v0_4_0,
 
   /**
    * md5 hash of the abs_url
@@ -1092,4 +1510,18 @@ struct StreamItem {
    * stream_id, or possibly other IDs in the future.
    */
   14: optional map<SystemID, map<DocIDorStreamID, string>> external_ids = {},
+
+  /**
+   * If provided, this lists the sequence of possibly multiple HTTP
+   * Transactions that led to the `body` `ContentItem`.  The first
+   * item in the list is the initial request-response, and the last
+   * item in the list is the request-response that carried the body
+   * content that became the `body` attribute on this `StreamItem`.
+   * Multiple transactions result from *redirects*.  The `abs_url` is
+   * the *final* URL in the redirect chain, and the `original_url` is
+   * the original string that may have required cleanup before
+   * initiating the first request that started the chain.
+   */
+  15: optional list<HttpTransaction> http_transactions = [],
+
 }
