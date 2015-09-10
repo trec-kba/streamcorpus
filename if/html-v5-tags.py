@@ -132,15 +132,22 @@ print('''
  */''', file=fh)
 print('enum HtmlTags {', file=fh)
 
+tags = [('..', '..', 'Move back up to parent in the XPath. '
+         'This is a special entry in the enum and not an HTML tag')]
 rec_re = re.compile("^(?P<tag>\<.*?(?P<tag_name>[a-zA-Z]+).*?\>)\s+(?P<description>.*)")
-for idx, line in enumerate(sorted(data.splitlines())):
+for line in sorted(data.splitlines()):
     rec = rec_re.match(line)
     if not rec: sys.exit(line)
-    tag_name = rec.group('tag_name')
+    tags.append((rec.group('tag_name'),
+                 rec.group('tag'),
+                 rec.group('description')))
+
+
+for idx, (tag_name, tag, description) in enumerate(tags):
     num = ' = %d,' % idx
     s =  '    %s%s%s%s // %s %s' % (tag_name, ' ' * (10 - len(tag_name)), 
                                     num, ' ' * (10 - len(num)), 
-                                    rec.group('tag'), rec.group('description'))
+                                    tag, description)
     print(s, file=fh)
     
 print('}', file=fh)
