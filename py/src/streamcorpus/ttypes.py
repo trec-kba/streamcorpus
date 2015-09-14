@@ -16,18 +16,48 @@ except:
   fastbinary = None
 
 
+class ContentCleanseLevel(object):
+  """
+  ContentCleanseLevel enumerates the various forms of the original
+  content that might be used in `Tokens`.  This pertains to migrating
+  from v3 to v4, because in v4 clean_html and clean_visible are
+  deprecated.  Tokens can be generated from an NER tagger operating
+  on `raw_characters`
+  """
+  raw = 0
+  raw_characters = 1
+  clean_html = 2
+  clean_visible = 3
+
+  _VALUES_TO_NAMES = {
+    0: "raw",
+    1: "raw_characters",
+    2: "clean_html",
+    3: "clean_visible",
+  }
+
+  _NAMES_TO_VALUES = {
+    "raw": 0,
+    "raw_characters": 1,
+    "clean_html": 2,
+    "clean_visible": 3,
+  }
+
 class OffsetType(object):
   """
   Offset and OffsetType are used by Annotation to identify the
   portion of a ContentItem that a human labeled with a tag.
 
-  annotation applies to a range of line numbers
+    * annotation applies to a range of line numbers
 
-  annotation applies to a range of bytes
+    * annotation applies to a range of bytes
 
-  annotation applies to a range of chars, typically unicode chars
+    * annotation applies to a range defined by xpaths (with relative char offsets)
 
-  annotation applies to a range defined by xpaths (with relative char offsets)
+    * annotation applies to a range of unicode chars
+
+  Generally, bytes and lines should be avoided in favor of using
+  unicode characters.
   """
   LINES = 0
   BYTES = 1
@@ -65,14 +95,8 @@ class FlagType(object):
 
 class EntityType(object):
   """
-  Different tagging tools have different strings for labeling the
-  various common entity types.  To avoid ambiguity, we define a
-  canonical list here, which we will surely have to expand over time
-  as new taggers recognize new types of entities.
-
-  LOC: physical location
-
-  MISC: uncategorized named entities, e.g. Civil War for Stanford CoreNLP
+  EntityType is deprecated in favor of EntityClass, which is
+  hierarchical and more logical than this old, flat structure.
   """
   PER = 0
   ORG = 1
@@ -144,6 +168,179 @@ class EntityType(object):
     "EVENT": 22,
   }
 
+class EntityClass(object):
+  """
+  A hierarchical enumeration of types of entities designed to support
+  description of entity mentions in human language discourse.  All
+  types of things start off as natural forms, and then we carve out
+  five human-derived types as top-level types that appear frequently
+  in human discourse: person, organization, location, event, and
+  artifact.
+
+  A particular mention of an entity always has a primary type in this
+  hierarchy.  That type should be selected based on what *defines*
+  the entity in the context of that mention.  Thus, this assignment
+  of in-context mentions to type values in this hierarchy should be
+  universal, i.e. different people should arrive at the same type
+  assignment.
+
+  However, an entity may receive mentions from varying contexts that
+  come from different parts of the hierarchy. For example, a spine
+  surgeon may receive mentions of `PER_medical_surgeon_spine` in one
+  context and also `PER_sports_coach_soccer` in an article describing
+  her weekend activities with youth.  The top level taxonomy is
+  intended to be mutually exclusive, e.g. the surgeon should not
+  receive mentions of `NATURALFORM_animal_homo_sapiens`, which has
+  been explicitly excluded from NATURALFORM in order to create the
+  top-level type `person`.
+
+  NB: the delimiter "_" is likely to work in most programming
+  languages.
+
+  These six top-level types are intended to not expand, and
+  enhancements are intended to appear at lower levels in the
+  hierarchy.
+  """
+  naturalform = 1
+  person = 2
+  organization = 3
+  location = 4
+  event = 5
+  artifact = 6
+
+  _VALUES_TO_NAMES = {
+    1: "naturalform",
+    2: "person",
+    3: "organization",
+    4: "location",
+    5: "event",
+    6: "artifact",
+  }
+
+  _NAMES_TO_VALUES = {
+    "naturalform": 1,
+    "person": 2,
+    "organization": 3,
+    "location": 4,
+    "event": 5,
+    "artifact": 6,
+  }
+
+class location(object):
+  facility = 1
+  coordinates = 2
+
+  _VALUES_TO_NAMES = {
+    1: "facility",
+    2: "coordinates",
+  }
+
+  _NAMES_TO_VALUES = {
+    "facility": 1,
+    "coordinates": 2,
+  }
+
+class artifact(object):
+  product = 1
+  vehicle = 2
+  weapon = 3
+  cyber = 4
+  money = 5
+
+  _VALUES_TO_NAMES = {
+    1: "product",
+    2: "vehicle",
+    3: "weapon",
+    4: "cyber",
+    5: "money",
+  }
+
+  _NAMES_TO_VALUES = {
+    "product": 1,
+    "vehicle": 2,
+    "weapon": 3,
+    "cyber": 4,
+    "money": 5,
+  }
+
+class event(object):
+  date = 1
+  time = 2
+
+  _VALUES_TO_NAMES = {
+    1: "date",
+    2: "time",
+  }
+
+  _NAMES_TO_VALUES = {
+    "date": 1,
+    "time": 2,
+  }
+
+class artifact_product(object):
+  partnumber = 1
+
+  _VALUES_TO_NAMES = {
+    1: "partnumber",
+  }
+
+  _NAMES_TO_VALUES = {
+    "partnumber": 1,
+  }
+
+class artifact_cyber(object):
+  phone = 1
+  email = 2
+  IPv4 = 3
+  IPv6 = 4
+  skype = 5
+  ICQ = 6
+  QQ = 7
+  AIM = 8
+  MD5 = 9
+  URL = 10
+  file_path = 11
+  CVE_ID = 12
+  hex_value = 13
+  byte_sequence = 14
+  magic_value = 15
+
+  _VALUES_TO_NAMES = {
+    1: "phone",
+    2: "email",
+    3: "IPv4",
+    4: "IPv6",
+    5: "skype",
+    6: "ICQ",
+    7: "QQ",
+    8: "AIM",
+    9: "MD5",
+    10: "URL",
+    11: "file_path",
+    12: "CVE_ID",
+    13: "hex_value",
+    14: "byte_sequence",
+    15: "magic_value",
+  }
+
+  _NAMES_TO_VALUES = {
+    "phone": 1,
+    "email": 2,
+    "IPv4": 3,
+    "IPv6": 4,
+    "skype": 5,
+    "ICQ": 6,
+    "QQ": 7,
+    "AIM": 8,
+    "MD5": 9,
+    "URL": 10,
+    "file_path": 11,
+    "CVE_ID": 12,
+    "hex_value": 13,
+    "byte_sequence": 14,
+    "magic_value": 15,
+  }
+
 class MentionType(object):
   NAME = 0
   PRO = 1
@@ -212,6 +409,30 @@ class AttributeType(object):
     "PER_CHARGES": 6,
     "ORG_ALTERNATE_NAMES": 7,
     "ORG_NUMBER_OF_EMPLOYEES_MEMBERS": 8,
+  }
+
+class SpanType(object):
+  """
+  To digest raw HTML, we first decode it to unicode and then lightly
+  parse it into whitespaces, markup which could become XPath offsets,
+  and visible text that could be analyzed as natural language. Spans
+  can be divided into smaller contiguous spans, including sentences,
+  words, phrases, punctuation, etc.
+  """
+  WHITESPACE = 0
+  MARKUP = 1
+  CONTENT = 2
+
+  _VALUES_TO_NAMES = {
+    0: "WHITESPACE",
+    1: "MARKUP",
+    2: "CONTENT",
+  }
+
+  _NAMES_TO_VALUES = {
+    "WHITESPACE": 0,
+    "MARKUP": 1,
+    "CONTENT": 2,
   }
 
 class ZoneType(object):
@@ -562,15 +783,18 @@ class Versions(object):
   """
   v0_2_0 = 0
   v0_3_0 = 1
+  v0_4_0 = 2
 
   _VALUES_TO_NAMES = {
     0: "v0_2_0",
     1: "v0_3_0",
+    2: "v0_4_0",
   }
 
   _NAMES_TO_VALUES = {
     "v0_2_0": 0,
     "v0_3_0": 1,
+    "v0_4_0": 2,
   }
 
 
@@ -790,6 +1014,10 @@ class Offset(object):
    - content_form: name of the data element inside a ContentItem to which this label
   applies, e.g. 'raw' 'clean_html' or 'clean_visible'.  Defaults to
   clean_visible, which is the most common case.
+
+  Previously, this had the default value of "clean_visible" which
+  was wasteful.  This field is now deprecated in favor of
+  content_cleanse_level.
    - value: bytes specified by this offset extracted from the original; just
   to assist in debugging
    - xpath_end: If this is an xpath range, then this is set to the xpath address of the
@@ -803,6 +1031,7 @@ class Offset(object):
   Note that this offset participates in the half-open interval:
 
       [(xpath, first), (xpath_end, xpath_end_offset)).
+   - content_cleanse_level: This enables Offset to be less bloated.
   """
 
   __slots__ = [ 
@@ -814,6 +1043,7 @@ class Offset(object):
     'value',
     'xpath_end',
     'xpath_end_offset',
+    'content_cleanse_level',
    ]
 
   thrift_spec = (
@@ -822,13 +1052,14 @@ class Offset(object):
     (2, TType.I64, 'first', None, None, ), # 2
     (3, TType.I32, 'length', None, None, ), # 3
     (4, TType.STRING, 'xpath', None, None, ), # 4
-    (5, TType.STRING, 'content_form', None, "clean_visible", ), # 5
+    (5, TType.STRING, 'content_form', None, None, ), # 5
     (6, TType.STRING, 'value', None, None, ), # 6
     (7, TType.STRING, 'xpath_end', None, None, ), # 7
     (8, TType.I64, 'xpath_end_offset', None, None, ), # 8
+    (9, TType.I32, 'content_cleanse_level', None, None, ), # 9
   )
 
-  def __init__(self, type=None, first=None, length=None, xpath=None, content_form=thrift_spec[5][4], value=None, xpath_end=None, xpath_end_offset=None,):
+  def __init__(self, type=None, first=None, length=None, xpath=None, content_form=None, value=None, xpath_end=None, xpath_end_offset=None, content_cleanse_level=None,):
     self.type = type
     self.first = first
     self.length = length
@@ -837,6 +1068,7 @@ class Offset(object):
     self.value = value
     self.xpath_end = xpath_end
     self.xpath_end_offset = xpath_end_offset
+    self.content_cleanse_level = content_cleanse_level
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -887,6 +1119,11 @@ class Offset(object):
           self.xpath_end_offset = iprot.readI64();
         else:
           iprot.skip(ftype)
+      elif fid == 9:
+        if ftype == TType.I32:
+          self.content_cleanse_level = iprot.readI32();
+        else:
+          iprot.skip(ftype)
       else:
         iprot.skip(ftype)
       iprot.readFieldEnd()
@@ -929,6 +1166,10 @@ class Offset(object):
       oprot.writeFieldBegin('xpath_end_offset', TType.I64, 8)
       oprot.writeI64(self.xpath_end_offset)
       oprot.writeFieldEnd()
+    if self.content_cleanse_level is not None:
+      oprot.writeFieldBegin('content_cleanse_level', TType.I32, 9)
+      oprot.writeI32(self.content_cleanse_level)
+      oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
 
@@ -957,7 +1198,7 @@ class Offset(object):
 
 class Target(object):
   """
-  Targets are "informationt targets," such as entities or topics,
+  Targets are "information targets," such as entities or topics,
   usually from a knowledge base, such as Wikipedia.
 
   Attributes:
@@ -1098,6 +1339,8 @@ class Label(object):
   data.
    - flags: General purpose flags. These flags can be used to mark documents
   as meeting an extensible set of criteria.
+   - confidence: Confidence that this label is correct.  Created by automatic
+  algorithms that create Label objects in Entity.kb_links
   """
 
   __slots__ = [ 
@@ -1110,6 +1353,7 @@ class Label(object):
     'relevance',
     'stream_id',
     'flags',
+    'confidence',
    ]
 
   thrift_spec = (
@@ -1124,9 +1368,10 @@ class Label(object):
     (7, TType.I16, 'relevance', None, None, ), # 7
     (8, TType.STRING, 'stream_id', None, None, ), # 8
     (9, TType.LIST, 'flags', (TType.I32,None), None, ), # 9
+    (10, TType.DOUBLE, 'confidence', None, None, ), # 10
   )
 
-  def __init__(self, annotator=None, target=None, offsets=thrift_spec[3][4], positive=thrift_spec[4][4], comments=None, mentions=None, relevance=None, stream_id=None, flags=None,):
+  def __init__(self, annotator=None, target=None, offsets=thrift_spec[3][4], positive=thrift_spec[4][4], comments=None, mentions=None, relevance=None, stream_id=None, flags=None, confidence=None,):
     self.annotator = annotator
     self.target = target
     if offsets is self.thrift_spec[3][4]:
@@ -1139,6 +1384,7 @@ class Label(object):
     self.relevance = relevance
     self.stream_id = stream_id
     self.flags = flags
+    self.confidence = confidence
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -1213,6 +1459,11 @@ class Label(object):
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
+      elif fid == 10:
+        if ftype == TType.DOUBLE:
+          self.confidence = iprot.readDouble();
+        else:
+          iprot.skip(ftype)
       else:
         iprot.skip(ftype)
       iprot.readFieldEnd()
@@ -1268,6 +1519,107 @@ class Label(object):
       for iter22 in self.flags:
         oprot.writeI32(iter22)
       oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    if self.confidence is not None:
+      oprot.writeFieldBegin('confidence', TType.DOUBLE, 10)
+      oprot.writeDouble(self.confidence)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, getattr(self, key))
+      for key in self.__slots__]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    if not isinstance(other, self.__class__):
+      return False
+    for attr in self.__slots__:
+      my_val = getattr(self, attr)
+      other_val = getattr(other, attr)
+      if my_val != other_val:
+        return False
+    return True
+
+  def __ne__(self, other):
+    return not (self == other)
+
+
+class EntityClassAddress(object):
+  """
+  The class of entity referenced by an in-context mention is a list of
+  values in the EntityClass hierarchy, which is represented by a list
+  of integers:
+
+  Attributes:
+   - address
+   - confidence
+  """
+
+  __slots__ = [ 
+    'address',
+    'confidence',
+   ]
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.LIST, 'address', (TType.I16,None), None, ), # 1
+    (2, TType.DOUBLE, 'confidence', None, None, ), # 2
+  )
+
+  def __init__(self, address=None, confidence=None,):
+    self.address = address
+    self.confidence = confidence
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.LIST:
+          self.address = []
+          (_etype26, _size23) = iprot.readListBegin()
+          for _i27 in xrange(_size23):
+            _elem28 = iprot.readI16();
+            self.address.append(_elem28)
+          iprot.readListEnd()
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.DOUBLE:
+          self.confidence = iprot.readDouble();
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('EntityClassAddress')
+    if self.address is not None:
+      oprot.writeFieldBegin('address', TType.LIST, 1)
+      oprot.writeListBegin(TType.I16, len(self.address))
+      for iter29 in self.address:
+        oprot.writeI16(iter29)
+      oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    if self.confidence is not None:
+      oprot.writeFieldBegin('confidence', TType.DOUBLE, 2)
+      oprot.writeDouble(self.confidence)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
@@ -1560,12 +1912,12 @@ class Token(object):
       elif fid == 3:
         if ftype == TType.MAP:
           self.offsets = {}
-          (_ktype24, _vtype25, _size23 ) = iprot.readMapBegin() 
-          for _i27 in xrange(_size23):
-            _key28 = iprot.readI32();
-            _val29 = Offset()
-            _val29.read(iprot)
-            self.offsets[_key28] = _val29
+          (_ktype31, _vtype32, _size30 ) = iprot.readMapBegin() 
+          for _i34 in xrange(_size30):
+            _key35 = iprot.readI32();
+            _val36 = Offset()
+            _val36.read(iprot)
+            self.offsets[_key35] = _val36
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
@@ -1612,17 +1964,17 @@ class Token(object):
       elif fid == 12:
         if ftype == TType.MAP:
           self.labels = {}
-          (_ktype31, _vtype32, _size30 ) = iprot.readMapBegin() 
-          for _i34 in xrange(_size30):
-            _key35 = iprot.readString();
-            _val36 = []
-            (_etype40, _size37) = iprot.readListBegin()
-            for _i41 in xrange(_size37):
-              _elem42 = Label()
-              _elem42.read(iprot)
-              _val36.append(_elem42)
+          (_ktype38, _vtype39, _size37 ) = iprot.readMapBegin() 
+          for _i41 in xrange(_size37):
+            _key42 = iprot.readString();
+            _val43 = []
+            (_etype47, _size44) = iprot.readListBegin()
+            for _i48 in xrange(_size44):
+              _elem49 = Label()
+              _elem49.read(iprot)
+              _val43.append(_elem49)
             iprot.readListEnd()
-            self.labels[_key35] = _val36
+            self.labels[_key42] = _val43
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
@@ -1657,9 +2009,9 @@ class Token(object):
     if self.offsets is not None:
       oprot.writeFieldBegin('offsets', TType.MAP, 3)
       oprot.writeMapBegin(TType.I32, TType.STRUCT, len(self.offsets))
-      for kiter43,viter44 in self.offsets.items():
-        oprot.writeI32(kiter43)
-        viter44.write(oprot)
+      for kiter50,viter51 in self.offsets.items():
+        oprot.writeI32(kiter50)
+        viter51.write(oprot)
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.sentence_pos is not None:
@@ -1697,11 +2049,11 @@ class Token(object):
     if self.labels is not None:
       oprot.writeFieldBegin('labels', TType.MAP, 12)
       oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.labels))
-      for kiter45,viter46 in self.labels.items():
-        oprot.writeString(kiter45)
-        oprot.writeListBegin(TType.STRUCT, len(viter46))
-        for iter47 in viter46:
-          iter47.write(oprot)
+      for kiter52,viter53 in self.labels.items():
+        oprot.writeString(kiter52)
+        oprot.writeListBegin(TType.STRUCT, len(viter53))
+        for iter54 in viter53:
+          iter54.write(oprot)
         oprot.writeListEnd()
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
@@ -1782,28 +2134,28 @@ class Sentence(object):
       if fid == 1:
         if ftype == TType.LIST:
           self.tokens = []
-          (_etype51, _size48) = iprot.readListBegin()
-          for _i52 in xrange(_size48):
-            _elem53 = Token()
-            _elem53.read(iprot)
-            self.tokens.append(_elem53)
+          (_etype58, _size55) = iprot.readListBegin()
+          for _i59 in xrange(_size55):
+            _elem60 = Token()
+            _elem60.read(iprot)
+            self.tokens.append(_elem60)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
       elif fid == 2:
         if ftype == TType.MAP:
           self.labels = {}
-          (_ktype55, _vtype56, _size54 ) = iprot.readMapBegin() 
-          for _i58 in xrange(_size54):
-            _key59 = iprot.readString();
-            _val60 = []
-            (_etype64, _size61) = iprot.readListBegin()
-            for _i65 in xrange(_size61):
-              _elem66 = Label()
-              _elem66.read(iprot)
-              _val60.append(_elem66)
+          (_ktype62, _vtype63, _size61 ) = iprot.readMapBegin() 
+          for _i65 in xrange(_size61):
+            _key66 = iprot.readString();
+            _val67 = []
+            (_etype71, _size68) = iprot.readListBegin()
+            for _i72 in xrange(_size68):
+              _elem73 = Label()
+              _elem73.read(iprot)
+              _val67.append(_elem73)
             iprot.readListEnd()
-            self.labels[_key59] = _val60
+            self.labels[_key66] = _val67
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
@@ -1820,18 +2172,18 @@ class Sentence(object):
     if self.tokens is not None:
       oprot.writeFieldBegin('tokens', TType.LIST, 1)
       oprot.writeListBegin(TType.STRUCT, len(self.tokens))
-      for iter67 in self.tokens:
-        iter67.write(oprot)
+      for iter74 in self.tokens:
+        iter74.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.labels is not None:
       oprot.writeFieldBegin('labels', TType.MAP, 2)
       oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.labels))
-      for kiter68,viter69 in self.labels.items():
-        oprot.writeString(kiter68)
-        oprot.writeListBegin(TType.STRUCT, len(viter69))
-        for iter70 in viter69:
-          iter70.write(oprot)
+      for kiter75,viter76 in self.labels.items():
+        oprot.writeString(kiter75)
+        oprot.writeListBegin(TType.STRUCT, len(viter76))
+        for iter77 in viter76:
+          iter77.write(oprot)
         oprot.writeListEnd()
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
@@ -2054,12 +2406,12 @@ class Selector(object):
       elif fid == 4:
         if ftype == TType.MAP:
           self.offsets = {}
-          (_ktype72, _vtype73, _size71 ) = iprot.readMapBegin() 
-          for _i75 in xrange(_size71):
-            _key76 = iprot.readI32();
-            _val77 = Offset()
-            _val77.read(iprot)
-            self.offsets[_key76] = _val77
+          (_ktype79, _vtype80, _size78 ) = iprot.readMapBegin() 
+          for _i82 in xrange(_size78):
+            _key83 = iprot.readI32();
+            _val84 = Offset()
+            _val84.read(iprot)
+            self.offsets[_key83] = _val84
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
@@ -2093,9 +2445,9 @@ class Selector(object):
     if self.offsets is not None:
       oprot.writeFieldBegin('offsets', TType.MAP, 4)
       oprot.writeMapBegin(TType.I32, TType.STRUCT, len(self.offsets))
-      for kiter78,viter79 in self.offsets.items():
-        oprot.writeI32(kiter78)
-        viter79.write(oprot)
+      for kiter85,viter86 in self.offsets.items():
+        oprot.writeI32(kiter85)
+        viter86.write(oprot)
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.metadata is not None:
@@ -2173,17 +2525,17 @@ class Zone(object):
       elif fid == 2:
         if ftype == TType.MAP:
           self.offsets = {}
-          (_ktype81, _vtype82, _size80 ) = iprot.readMapBegin() 
-          for _i84 in xrange(_size80):
-            _key85 = iprot.readI32();
-            _val86 = []
-            (_etype90, _size87) = iprot.readListBegin()
-            for _i91 in xrange(_size87):
-              _elem92 = Offset()
-              _elem92.read(iprot)
-              _val86.append(_elem92)
+          (_ktype88, _vtype89, _size87 ) = iprot.readMapBegin() 
+          for _i91 in xrange(_size87):
+            _key92 = iprot.readI32();
+            _val93 = []
+            (_etype97, _size94) = iprot.readListBegin()
+            for _i98 in xrange(_size94):
+              _elem99 = Offset()
+              _elem99.read(iprot)
+              _val93.append(_elem99)
             iprot.readListEnd()
-            self.offsets[_key85] = _val86
+            self.offsets[_key92] = _val93
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
@@ -2204,11 +2556,11 @@ class Zone(object):
     if self.offsets is not None:
       oprot.writeFieldBegin('offsets', TType.MAP, 2)
       oprot.writeMapBegin(TType.I32, TType.LIST, len(self.offsets))
-      for kiter93,viter94 in self.offsets.items():
-        oprot.writeI32(kiter93)
-        oprot.writeListBegin(TType.STRUCT, len(viter94))
-        for iter95 in viter94:
-          iter95.write(oprot)
+      for kiter100,viter101 in self.offsets.items():
+        oprot.writeI32(kiter100)
+        oprot.writeListBegin(TType.STRUCT, len(viter101))
+        for iter102 in viter101:
+          iter102.write(oprot)
         oprot.writeListEnd()
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
@@ -2459,6 +2811,361 @@ class Language(object):
     return not (self == other)
 
 
+class Mention(object):
+  """
+  Description of a natural language used in text
+
+  Attributes:
+   - confidence: A bridge structure carrying references into other structures...  TODO: explain more
+   - sentence_id
+   - span_range
+  """
+
+  __slots__ = [ 
+    'confidence',
+    'sentence_id',
+    'span_range',
+   ]
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.DOUBLE, 'confidence', None, None, ), # 1
+    (2, TType.I32, 'sentence_id', None, None, ), # 2
+    (3, TType.LIST, 'span_range', (TType.I32,None), None, ), # 3
+  )
+
+  def __init__(self, confidence=None, sentence_id=None, span_range=None,):
+    self.confidence = confidence
+    self.sentence_id = sentence_id
+    self.span_range = span_range
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.DOUBLE:
+          self.confidence = iprot.readDouble();
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.I32:
+          self.sentence_id = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.LIST:
+          self.span_range = []
+          (_etype106, _size103) = iprot.readListBegin()
+          for _i107 in xrange(_size103):
+            _elem108 = iprot.readI32();
+            self.span_range.append(_elem108)
+          iprot.readListEnd()
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('Mention')
+    if self.confidence is not None:
+      oprot.writeFieldBegin('confidence', TType.DOUBLE, 1)
+      oprot.writeDouble(self.confidence)
+      oprot.writeFieldEnd()
+    if self.sentence_id is not None:
+      oprot.writeFieldBegin('sentence_id', TType.I32, 2)
+      oprot.writeI32(self.sentence_id)
+      oprot.writeFieldEnd()
+    if self.span_range is not None:
+      oprot.writeFieldBegin('span_range', TType.LIST, 3)
+      oprot.writeListBegin(TType.I32, len(self.span_range))
+      for iter109 in self.span_range:
+        oprot.writeI32(iter109)
+      oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, getattr(self, key))
+      for key in self.__slots__]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    if not isinstance(other, self.__class__):
+      return False
+    for attr in self.__slots__:
+      my_val = getattr(self, attr)
+      other_val = getattr(other, attr)
+      if my_val != other_val:
+        return False
+    return True
+
+  def __ne__(self, other):
+    return not (self == other)
+
+
+class Entity(object):
+  """
+  A knowledge-base-like record for each entity recognized in
+  `StreamItem.body`.  This serves two purposes: it carries the list
+  of Mentions for efficiently highlighting mentions of the entity in
+  a visual display of the document, and it points to the
+  `body.contexts` that characterize the entity.
+
+  Attributes:
+   - coref_chain_id: Consider these possible methods of constructing identifiers for
+  entities mentioned within a document:
+
+  - arbitrary integer selected by NER engine(s), which is not
+    stable across software upgrades that re-analyze the text.
+
+  - first character in the "best" mention.  Fails to be unique on
+    mentions like "Albany First National Bank", which might occur
+    in an article about Albany.
+
+  - tuple of (first, length) for the best mention.  Tuples do not
+    work as keys in a map.
+
+  - cbor.dumps((first, length))does work as a key in a map.
+   - mentions: List of `Mention` objects in order of appearance in text.
+   - best_id: Index position in mentions of a representative mention, which is
+  also used to construct the coref_chain_id
+   - entity_classes: See discussion of hierarchical entity classes.
+   - descriptions: A general structure for holding attribute-like information that
+  has not yet been reified to a particular ontology or schema.
+   - associations: A general structure for holding entity-to-entity relation-like
+  information that has not yet been reified to a particular
+  ontology or schema.
+   - kb_links: When an Entity is resolved, its meaning should be recorded in a
+  `Label` object.
+  """
+
+  __slots__ = [ 
+    'coref_chain_id',
+    'mentions',
+    'best_id',
+    'entity_classes',
+    'descriptions',
+    'associations',
+    'kb_links',
+   ]
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.STRING, 'coref_chain_id', None, None, ), # 1
+    (2, TType.LIST, 'mentions', (TType.STRUCT,(Mention, Mention.thrift_spec)), [
+    ], ), # 2
+    (3, TType.I32, 'best_id', None, None, ), # 3
+    (4, TType.LIST, 'entity_classes', (TType.STRUCT,(EntityClassAddress, EntityClassAddress.thrift_spec)), [
+    ], ), # 4
+    (5, TType.LIST, 'descriptions', (TType.I32,None), [
+    ], ), # 5
+    (6, TType.MAP, 'associations', (TType.STRING,None,TType.LIST,(TType.I32,None)), {
+    }, ), # 6
+    (7, TType.LIST, 'kb_links', (TType.STRUCT,(Label, Label.thrift_spec)), [
+    ], ), # 7
+  )
+
+  def __init__(self, coref_chain_id=None, mentions=thrift_spec[2][4], best_id=None, entity_classes=thrift_spec[4][4], descriptions=thrift_spec[5][4], associations=thrift_spec[6][4], kb_links=thrift_spec[7][4],):
+    self.coref_chain_id = coref_chain_id
+    if mentions is self.thrift_spec[2][4]:
+      mentions = [
+    ]
+    self.mentions = mentions
+    self.best_id = best_id
+    if entity_classes is self.thrift_spec[4][4]:
+      entity_classes = [
+    ]
+    self.entity_classes = entity_classes
+    if descriptions is self.thrift_spec[5][4]:
+      descriptions = [
+    ]
+    self.descriptions = descriptions
+    if associations is self.thrift_spec[6][4]:
+      associations = {
+    }
+    self.associations = associations
+    if kb_links is self.thrift_spec[7][4]:
+      kb_links = [
+    ]
+    self.kb_links = kb_links
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.STRING:
+          self.coref_chain_id = iprot.readString();
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.LIST:
+          self.mentions = []
+          (_etype113, _size110) = iprot.readListBegin()
+          for _i114 in xrange(_size110):
+            _elem115 = Mention()
+            _elem115.read(iprot)
+            self.mentions.append(_elem115)
+          iprot.readListEnd()
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.I32:
+          self.best_id = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.LIST:
+          self.entity_classes = []
+          (_etype119, _size116) = iprot.readListBegin()
+          for _i120 in xrange(_size116):
+            _elem121 = EntityClassAddress()
+            _elem121.read(iprot)
+            self.entity_classes.append(_elem121)
+          iprot.readListEnd()
+        else:
+          iprot.skip(ftype)
+      elif fid == 5:
+        if ftype == TType.LIST:
+          self.descriptions = []
+          (_etype125, _size122) = iprot.readListBegin()
+          for _i126 in xrange(_size122):
+            _elem127 = iprot.readI32();
+            self.descriptions.append(_elem127)
+          iprot.readListEnd()
+        else:
+          iprot.skip(ftype)
+      elif fid == 6:
+        if ftype == TType.MAP:
+          self.associations = {}
+          (_ktype129, _vtype130, _size128 ) = iprot.readMapBegin() 
+          for _i132 in xrange(_size128):
+            _key133 = iprot.readString();
+            _val134 = []
+            (_etype138, _size135) = iprot.readListBegin()
+            for _i139 in xrange(_size135):
+              _elem140 = iprot.readI32();
+              _val134.append(_elem140)
+            iprot.readListEnd()
+            self.associations[_key133] = _val134
+          iprot.readMapEnd()
+        else:
+          iprot.skip(ftype)
+      elif fid == 7:
+        if ftype == TType.LIST:
+          self.kb_links = []
+          (_etype144, _size141) = iprot.readListBegin()
+          for _i145 in xrange(_size141):
+            _elem146 = Label()
+            _elem146.read(iprot)
+            self.kb_links.append(_elem146)
+          iprot.readListEnd()
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('Entity')
+    if self.coref_chain_id is not None:
+      oprot.writeFieldBegin('coref_chain_id', TType.STRING, 1)
+      oprot.writeString(self.coref_chain_id)
+      oprot.writeFieldEnd()
+    if self.mentions is not None:
+      oprot.writeFieldBegin('mentions', TType.LIST, 2)
+      oprot.writeListBegin(TType.STRUCT, len(self.mentions))
+      for iter147 in self.mentions:
+        iter147.write(oprot)
+      oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    if self.best_id is not None:
+      oprot.writeFieldBegin('best_id', TType.I32, 3)
+      oprot.writeI32(self.best_id)
+      oprot.writeFieldEnd()
+    if self.entity_classes is not None:
+      oprot.writeFieldBegin('entity_classes', TType.LIST, 4)
+      oprot.writeListBegin(TType.STRUCT, len(self.entity_classes))
+      for iter148 in self.entity_classes:
+        iter148.write(oprot)
+      oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    if self.descriptions is not None:
+      oprot.writeFieldBegin('descriptions', TType.LIST, 5)
+      oprot.writeListBegin(TType.I32, len(self.descriptions))
+      for iter149 in self.descriptions:
+        oprot.writeI32(iter149)
+      oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    if self.associations is not None:
+      oprot.writeFieldBegin('associations', TType.MAP, 6)
+      oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.associations))
+      for kiter150,viter151 in self.associations.items():
+        oprot.writeString(kiter150)
+        oprot.writeListBegin(TType.I32, len(viter151))
+        for iter152 in viter151:
+          oprot.writeI32(iter152)
+        oprot.writeListEnd()
+      oprot.writeMapEnd()
+      oprot.writeFieldEnd()
+    if self.kb_links is not None:
+      oprot.writeFieldBegin('kb_links', TType.LIST, 7)
+      oprot.writeListBegin(TType.STRUCT, len(self.kb_links))
+      for iter153 in self.kb_links:
+        iter153.write(oprot)
+      oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, getattr(self, key))
+      for key in self.__slots__]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    if not isinstance(other, self.__class__):
+      return False
+    for attr in self.__slots__:
+      my_val = getattr(self, attr)
+      other_val = getattr(other, attr)
+      if my_val != other_val:
+        return False
+    return True
+
+  def __ne__(self, other):
+    return not (self == other)
+
+
 class ContentItem(object):
   """
   ContentItem contains raw data, an indication of its character
@@ -2505,7 +3212,57 @@ class ContentItem(object):
   particular tagger.  This allows external systems to associate
   record IDs with individual mentions, or sets of mentions.
    - selectors: Map of external identifier strings to selectors in clean_visible
-   - zones: Map of external identifier strings to Zones in clean_visible
+   - zones: Map of external identifier strings to Zones.  As indicated by
+  content_form or content_cleanse_level in the Offset, it may refer
+  to clean_visible or raw_characters.
+   - raw_characters: Unicode character string represented as UTF-8 bytes from decoding
+  the binary `raw` data.
+   - span_lengths: Ordered list of the lengths of spans in `raw_characters`
+   - span_types: See description of `SpanType`
+   - spans: List of strings split at `span_lengths`
+
+  In the interest of saving space, an implementation may omit `raw`
+  and `raw_characters` in favor of using `spans` as the primary
+  form of the content.
+
+  An implementation may set MARKUP spans to '' and represent the
+  MARKUP in span_xpaths.
+
+   if not ContentItem.span_xpaths:
+       assert u''.join(spans) == raw_characters
+   else:
+       assert len(spans) == len(span_xpaths)
+
+  Since span_lengths is redundant, it could be omitted.  If
+  present, then:
+
+   if ContentItem.span_lengths:
+       assert len(spans) == len(span_lengths)
+
+  Note the lack of TaggerID.  This is a *single* primary
+  tokenization of the document that a system could construct from a
+  primary tokenizer and possibly further modify by token
+  "improvers."
+   - span_xpaths: List of integers from the HtmlTags enum representing an XPath
+  relative to the previous MARKUP span.  For example, a MARKUP span
+  of "</p></li></ol><div>" would be [0, 0, 0, 36].
+   - normalized_spans: For each position in spans, a list of other strings that a system
+  could/should index as variations to boost recall.  This is
+  pre-indexing query expansion.  For example, stemmed and
+  lemmatized strings appear here.
+
+  assert len(normalized_spans) == len(spans)
+
+  TODO: assess whether this should change to something simpler,
+  like a bag-of-word-variants for the whole document.
+   - sentence_spans: List of begin/end ranges of spans for sentence chunking; index
+  positions into sentence_spans are called `SentenceId`
+   - entities: Index from CorefChainID --> Entity structs
+   - contexts: ContextId is indexes into this list
+
+  The binary blob is a general way of carrying feature vector data,
+  such as dossier.fc.FeatureCollection or other data that is
+  constructed and defined by a particular system.
   """
 
   __slots__ = [ 
@@ -2525,6 +3282,15 @@ class ContentItem(object):
     'external_ids',
     'selectors',
     'zones',
+    'raw_characters',
+    'span_lengths',
+    'span_types',
+    'spans',
+    'span_xpaths',
+    'normalized_spans',
+    'sentence_spans',
+    'entities',
+    'contexts',
    ]
 
   thrift_spec = (
@@ -2555,9 +3321,20 @@ class ContentItem(object):
     }, ), # 15
     (16, TType.MAP, 'zones', (TType.STRING,None,TType.MAP,(TType.I32,None,TType.STRUCT,(Zone, Zone.thrift_spec))), {
     }, ), # 16
+    (17, TType.STRING, 'raw_characters', None, None, ), # 17
+    (18, TType.LIST, 'span_lengths', (TType.I32,None), None, ), # 18
+    (19, TType.LIST, 'span_types', (TType.I32,None), None, ), # 19
+    (20, TType.LIST, 'spans', (TType.STRING,None), None, ), # 20
+    (21, TType.LIST, 'span_xpaths', (TType.LIST,(TType.I16,None)), None, ), # 21
+    (22, TType.LIST, 'normalized_spans', (TType.LIST,(TType.STRING,None)), None, ), # 22
+    (23, TType.LIST, 'sentence_spans', (TType.LIST,(TType.I32,None)), None, ), # 23
+    (24, TType.MAP, 'entities', (TType.STRING,None,TType.STRUCT,(Entity, Entity.thrift_spec)), {
+    }, ), # 24
+    (25, TType.LIST, 'contexts', (TType.STRING,None), [
+    ], ), # 25
   )
 
-  def __init__(self, raw=None, encoding=None, media_type=None, clean_html=None, clean_visible=None, logs=thrift_spec[6][4], taggings=thrift_spec[7][4], labels=thrift_spec[8][4], sentences=thrift_spec[9][4], sentence_blobs=thrift_spec[10][4], language=None, relations=thrift_spec[12][4], attributes=thrift_spec[13][4], external_ids=thrift_spec[14][4], selectors=thrift_spec[15][4], zones=thrift_spec[16][4],):
+  def __init__(self, raw=None, encoding=None, media_type=None, clean_html=None, clean_visible=None, logs=thrift_spec[6][4], taggings=thrift_spec[7][4], labels=thrift_spec[8][4], sentences=thrift_spec[9][4], sentence_blobs=thrift_spec[10][4], language=None, relations=thrift_spec[12][4], attributes=thrift_spec[13][4], external_ids=thrift_spec[14][4], selectors=thrift_spec[15][4], zones=thrift_spec[16][4], raw_characters=None, span_lengths=None, span_types=None, spans=None, span_xpaths=None, normalized_spans=None, sentence_spans=None, entities=thrift_spec[24][4], contexts=thrift_spec[25][4],):
     self.raw = raw
     self.encoding = encoding
     self.media_type = media_type
@@ -2604,6 +3381,21 @@ class ContentItem(object):
       zones = {
     }
     self.zones = zones
+    self.raw_characters = raw_characters
+    self.span_lengths = span_lengths
+    self.span_types = span_types
+    self.spans = spans
+    self.span_xpaths = span_xpaths
+    self.normalized_spans = normalized_spans
+    self.sentence_spans = sentence_spans
+    if entities is self.thrift_spec[24][4]:
+      entities = {
+    }
+    self.entities = entities
+    if contexts is self.thrift_spec[25][4]:
+      contexts = [
+    ]
+    self.contexts = contexts
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -2642,67 +3434,67 @@ class ContentItem(object):
       elif fid == 6:
         if ftype == TType.LIST:
           self.logs = []
-          (_etype99, _size96) = iprot.readListBegin()
-          for _i100 in xrange(_size96):
-            _elem101 = iprot.readString();
-            self.logs.append(_elem101)
+          (_etype157, _size154) = iprot.readListBegin()
+          for _i158 in xrange(_size154):
+            _elem159 = iprot.readString();
+            self.logs.append(_elem159)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
       elif fid == 7:
         if ftype == TType.MAP:
           self.taggings = {}
-          (_ktype103, _vtype104, _size102 ) = iprot.readMapBegin() 
-          for _i106 in xrange(_size102):
-            _key107 = iprot.readString();
-            _val108 = Tagging()
-            _val108.read(iprot)
-            self.taggings[_key107] = _val108
+          (_ktype161, _vtype162, _size160 ) = iprot.readMapBegin() 
+          for _i164 in xrange(_size160):
+            _key165 = iprot.readString();
+            _val166 = Tagging()
+            _val166.read(iprot)
+            self.taggings[_key165] = _val166
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
       elif fid == 8:
         if ftype == TType.MAP:
           self.labels = {}
-          (_ktype110, _vtype111, _size109 ) = iprot.readMapBegin() 
-          for _i113 in xrange(_size109):
-            _key114 = iprot.readString();
-            _val115 = []
-            (_etype119, _size116) = iprot.readListBegin()
-            for _i120 in xrange(_size116):
-              _elem121 = Label()
-              _elem121.read(iprot)
-              _val115.append(_elem121)
+          (_ktype168, _vtype169, _size167 ) = iprot.readMapBegin() 
+          for _i171 in xrange(_size167):
+            _key172 = iprot.readString();
+            _val173 = []
+            (_etype177, _size174) = iprot.readListBegin()
+            for _i178 in xrange(_size174):
+              _elem179 = Label()
+              _elem179.read(iprot)
+              _val173.append(_elem179)
             iprot.readListEnd()
-            self.labels[_key114] = _val115
+            self.labels[_key172] = _val173
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
       elif fid == 9:
         if ftype == TType.MAP:
           self.sentences = {}
-          (_ktype123, _vtype124, _size122 ) = iprot.readMapBegin() 
-          for _i126 in xrange(_size122):
-            _key127 = iprot.readString();
-            _val128 = []
-            (_etype132, _size129) = iprot.readListBegin()
-            for _i133 in xrange(_size129):
-              _elem134 = Sentence()
-              _elem134.read(iprot)
-              _val128.append(_elem134)
+          (_ktype181, _vtype182, _size180 ) = iprot.readMapBegin() 
+          for _i184 in xrange(_size180):
+            _key185 = iprot.readString();
+            _val186 = []
+            (_etype190, _size187) = iprot.readListBegin()
+            for _i191 in xrange(_size187):
+              _elem192 = Sentence()
+              _elem192.read(iprot)
+              _val186.append(_elem192)
             iprot.readListEnd()
-            self.sentences[_key127] = _val128
+            self.sentences[_key185] = _val186
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
       elif fid == 10:
         if ftype == TType.MAP:
           self.sentence_blobs = {}
-          (_ktype136, _vtype137, _size135 ) = iprot.readMapBegin() 
-          for _i139 in xrange(_size135):
-            _key140 = iprot.readString();
-            _val141 = iprot.readString();
-            self.sentence_blobs[_key140] = _val141
+          (_ktype194, _vtype195, _size193 ) = iprot.readMapBegin() 
+          for _i197 in xrange(_size193):
+            _key198 = iprot.readString();
+            _val199 = iprot.readString();
+            self.sentence_blobs[_key198] = _val199
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
@@ -2715,87 +3507,189 @@ class ContentItem(object):
       elif fid == 12:
         if ftype == TType.MAP:
           self.relations = {}
-          (_ktype143, _vtype144, _size142 ) = iprot.readMapBegin() 
-          for _i146 in xrange(_size142):
-            _key147 = iprot.readString();
-            _val148 = []
-            (_etype152, _size149) = iprot.readListBegin()
-            for _i153 in xrange(_size149):
-              _elem154 = Relation()
-              _elem154.read(iprot)
-              _val148.append(_elem154)
+          (_ktype201, _vtype202, _size200 ) = iprot.readMapBegin() 
+          for _i204 in xrange(_size200):
+            _key205 = iprot.readString();
+            _val206 = []
+            (_etype210, _size207) = iprot.readListBegin()
+            for _i211 in xrange(_size207):
+              _elem212 = Relation()
+              _elem212.read(iprot)
+              _val206.append(_elem212)
             iprot.readListEnd()
-            self.relations[_key147] = _val148
+            self.relations[_key205] = _val206
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
       elif fid == 13:
         if ftype == TType.MAP:
           self.attributes = {}
-          (_ktype156, _vtype157, _size155 ) = iprot.readMapBegin() 
-          for _i159 in xrange(_size155):
-            _key160 = iprot.readString();
-            _val161 = []
-            (_etype165, _size162) = iprot.readListBegin()
-            for _i166 in xrange(_size162):
-              _elem167 = Attribute()
-              _elem167.read(iprot)
-              _val161.append(_elem167)
+          (_ktype214, _vtype215, _size213 ) = iprot.readMapBegin() 
+          for _i217 in xrange(_size213):
+            _key218 = iprot.readString();
+            _val219 = []
+            (_etype223, _size220) = iprot.readListBegin()
+            for _i224 in xrange(_size220):
+              _elem225 = Attribute()
+              _elem225.read(iprot)
+              _val219.append(_elem225)
             iprot.readListEnd()
-            self.attributes[_key160] = _val161
+            self.attributes[_key218] = _val219
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
       elif fid == 14:
         if ftype == TType.MAP:
           self.external_ids = {}
-          (_ktype169, _vtype170, _size168 ) = iprot.readMapBegin() 
-          for _i172 in xrange(_size168):
-            _key173 = iprot.readString();
-            _val174 = {}
-            (_ktype176, _vtype177, _size175 ) = iprot.readMapBegin() 
-            for _i179 in xrange(_size175):
-              _key180 = iprot.readI32();
-              _val181 = iprot.readString();
-              _val174[_key180] = _val181
+          (_ktype227, _vtype228, _size226 ) = iprot.readMapBegin() 
+          for _i230 in xrange(_size226):
+            _key231 = iprot.readString();
+            _val232 = {}
+            (_ktype234, _vtype235, _size233 ) = iprot.readMapBegin() 
+            for _i237 in xrange(_size233):
+              _key238 = iprot.readI32();
+              _val239 = iprot.readString();
+              _val232[_key238] = _val239
             iprot.readMapEnd()
-            self.external_ids[_key173] = _val174
+            self.external_ids[_key231] = _val232
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
       elif fid == 15:
         if ftype == TType.MAP:
           self.selectors = {}
-          (_ktype183, _vtype184, _size182 ) = iprot.readMapBegin() 
-          for _i186 in xrange(_size182):
-            _key187 = iprot.readString();
-            _val188 = []
-            (_etype192, _size189) = iprot.readListBegin()
-            for _i193 in xrange(_size189):
-              _elem194 = Selector()
-              _elem194.read(iprot)
-              _val188.append(_elem194)
+          (_ktype241, _vtype242, _size240 ) = iprot.readMapBegin() 
+          for _i244 in xrange(_size240):
+            _key245 = iprot.readString();
+            _val246 = []
+            (_etype250, _size247) = iprot.readListBegin()
+            for _i251 in xrange(_size247):
+              _elem252 = Selector()
+              _elem252.read(iprot)
+              _val246.append(_elem252)
             iprot.readListEnd()
-            self.selectors[_key187] = _val188
+            self.selectors[_key245] = _val246
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
       elif fid == 16:
         if ftype == TType.MAP:
           self.zones = {}
-          (_ktype196, _vtype197, _size195 ) = iprot.readMapBegin() 
-          for _i199 in xrange(_size195):
-            _key200 = iprot.readString();
-            _val201 = {}
-            (_ktype203, _vtype204, _size202 ) = iprot.readMapBegin() 
-            for _i206 in xrange(_size202):
-              _key207 = iprot.readI32();
-              _val208 = Zone()
-              _val208.read(iprot)
-              _val201[_key207] = _val208
+          (_ktype254, _vtype255, _size253 ) = iprot.readMapBegin() 
+          for _i257 in xrange(_size253):
+            _key258 = iprot.readString();
+            _val259 = {}
+            (_ktype261, _vtype262, _size260 ) = iprot.readMapBegin() 
+            for _i264 in xrange(_size260):
+              _key265 = iprot.readI32();
+              _val266 = Zone()
+              _val266.read(iprot)
+              _val259[_key265] = _val266
             iprot.readMapEnd()
-            self.zones[_key200] = _val201
+            self.zones[_key258] = _val259
           iprot.readMapEnd()
+        else:
+          iprot.skip(ftype)
+      elif fid == 17:
+        if ftype == TType.STRING:
+          self.raw_characters = iprot.readString();
+        else:
+          iprot.skip(ftype)
+      elif fid == 18:
+        if ftype == TType.LIST:
+          self.span_lengths = []
+          (_etype270, _size267) = iprot.readListBegin()
+          for _i271 in xrange(_size267):
+            _elem272 = iprot.readI32();
+            self.span_lengths.append(_elem272)
+          iprot.readListEnd()
+        else:
+          iprot.skip(ftype)
+      elif fid == 19:
+        if ftype == TType.LIST:
+          self.span_types = []
+          (_etype276, _size273) = iprot.readListBegin()
+          for _i277 in xrange(_size273):
+            _elem278 = iprot.readI32();
+            self.span_types.append(_elem278)
+          iprot.readListEnd()
+        else:
+          iprot.skip(ftype)
+      elif fid == 20:
+        if ftype == TType.LIST:
+          self.spans = []
+          (_etype282, _size279) = iprot.readListBegin()
+          for _i283 in xrange(_size279):
+            _elem284 = iprot.readString();
+            self.spans.append(_elem284)
+          iprot.readListEnd()
+        else:
+          iprot.skip(ftype)
+      elif fid == 21:
+        if ftype == TType.LIST:
+          self.span_xpaths = []
+          (_etype288, _size285) = iprot.readListBegin()
+          for _i289 in xrange(_size285):
+            _elem290 = []
+            (_etype294, _size291) = iprot.readListBegin()
+            for _i295 in xrange(_size291):
+              _elem296 = iprot.readI16();
+              _elem290.append(_elem296)
+            iprot.readListEnd()
+            self.span_xpaths.append(_elem290)
+          iprot.readListEnd()
+        else:
+          iprot.skip(ftype)
+      elif fid == 22:
+        if ftype == TType.LIST:
+          self.normalized_spans = []
+          (_etype300, _size297) = iprot.readListBegin()
+          for _i301 in xrange(_size297):
+            _elem302 = []
+            (_etype306, _size303) = iprot.readListBegin()
+            for _i307 in xrange(_size303):
+              _elem308 = iprot.readString();
+              _elem302.append(_elem308)
+            iprot.readListEnd()
+            self.normalized_spans.append(_elem302)
+          iprot.readListEnd()
+        else:
+          iprot.skip(ftype)
+      elif fid == 23:
+        if ftype == TType.LIST:
+          self.sentence_spans = []
+          (_etype312, _size309) = iprot.readListBegin()
+          for _i313 in xrange(_size309):
+            _elem314 = []
+            (_etype318, _size315) = iprot.readListBegin()
+            for _i319 in xrange(_size315):
+              _elem320 = iprot.readI32();
+              _elem314.append(_elem320)
+            iprot.readListEnd()
+            self.sentence_spans.append(_elem314)
+          iprot.readListEnd()
+        else:
+          iprot.skip(ftype)
+      elif fid == 24:
+        if ftype == TType.MAP:
+          self.entities = {}
+          (_ktype322, _vtype323, _size321 ) = iprot.readMapBegin() 
+          for _i325 in xrange(_size321):
+            _key326 = iprot.readString();
+            _val327 = Entity()
+            _val327.read(iprot)
+            self.entities[_key326] = _val327
+          iprot.readMapEnd()
+        else:
+          iprot.skip(ftype)
+      elif fid == 25:
+        if ftype == TType.LIST:
+          self.contexts = []
+          (_etype331, _size328) = iprot.readListBegin()
+          for _i332 in xrange(_size328):
+            _elem333 = iprot.readString();
+            self.contexts.append(_elem333)
+          iprot.readListEnd()
         else:
           iprot.skip(ftype)
       else:
@@ -2831,46 +3725,46 @@ class ContentItem(object):
     if self.logs is not None:
       oprot.writeFieldBegin('logs', TType.LIST, 6)
       oprot.writeListBegin(TType.STRING, len(self.logs))
-      for iter209 in self.logs:
-        oprot.writeString(iter209)
+      for iter334 in self.logs:
+        oprot.writeString(iter334)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.taggings is not None:
       oprot.writeFieldBegin('taggings', TType.MAP, 7)
       oprot.writeMapBegin(TType.STRING, TType.STRUCT, len(self.taggings))
-      for kiter210,viter211 in self.taggings.items():
-        oprot.writeString(kiter210)
-        viter211.write(oprot)
+      for kiter335,viter336 in self.taggings.items():
+        oprot.writeString(kiter335)
+        viter336.write(oprot)
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.labels is not None:
       oprot.writeFieldBegin('labels', TType.MAP, 8)
       oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.labels))
-      for kiter212,viter213 in self.labels.items():
-        oprot.writeString(kiter212)
-        oprot.writeListBegin(TType.STRUCT, len(viter213))
-        for iter214 in viter213:
-          iter214.write(oprot)
+      for kiter337,viter338 in self.labels.items():
+        oprot.writeString(kiter337)
+        oprot.writeListBegin(TType.STRUCT, len(viter338))
+        for iter339 in viter338:
+          iter339.write(oprot)
         oprot.writeListEnd()
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.sentences is not None:
       oprot.writeFieldBegin('sentences', TType.MAP, 9)
       oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.sentences))
-      for kiter215,viter216 in self.sentences.items():
-        oprot.writeString(kiter215)
-        oprot.writeListBegin(TType.STRUCT, len(viter216))
-        for iter217 in viter216:
-          iter217.write(oprot)
+      for kiter340,viter341 in self.sentences.items():
+        oprot.writeString(kiter340)
+        oprot.writeListBegin(TType.STRUCT, len(viter341))
+        for iter342 in viter341:
+          iter342.write(oprot)
         oprot.writeListEnd()
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.sentence_blobs is not None:
       oprot.writeFieldBegin('sentence_blobs', TType.MAP, 10)
       oprot.writeMapBegin(TType.STRING, TType.STRING, len(self.sentence_blobs))
-      for kiter218,viter219 in self.sentence_blobs.items():
-        oprot.writeString(kiter218)
-        oprot.writeString(viter219)
+      for kiter343,viter344 in self.sentence_blobs.items():
+        oprot.writeString(kiter343)
+        oprot.writeString(viter344)
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.language is not None:
@@ -2880,59 +3774,129 @@ class ContentItem(object):
     if self.relations is not None:
       oprot.writeFieldBegin('relations', TType.MAP, 12)
       oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.relations))
-      for kiter220,viter221 in self.relations.items():
-        oprot.writeString(kiter220)
-        oprot.writeListBegin(TType.STRUCT, len(viter221))
-        for iter222 in viter221:
-          iter222.write(oprot)
+      for kiter345,viter346 in self.relations.items():
+        oprot.writeString(kiter345)
+        oprot.writeListBegin(TType.STRUCT, len(viter346))
+        for iter347 in viter346:
+          iter347.write(oprot)
         oprot.writeListEnd()
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.attributes is not None:
       oprot.writeFieldBegin('attributes', TType.MAP, 13)
       oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.attributes))
-      for kiter223,viter224 in self.attributes.items():
-        oprot.writeString(kiter223)
-        oprot.writeListBegin(TType.STRUCT, len(viter224))
-        for iter225 in viter224:
-          iter225.write(oprot)
+      for kiter348,viter349 in self.attributes.items():
+        oprot.writeString(kiter348)
+        oprot.writeListBegin(TType.STRUCT, len(viter349))
+        for iter350 in viter349:
+          iter350.write(oprot)
         oprot.writeListEnd()
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.external_ids is not None:
       oprot.writeFieldBegin('external_ids', TType.MAP, 14)
       oprot.writeMapBegin(TType.STRING, TType.MAP, len(self.external_ids))
-      for kiter226,viter227 in self.external_ids.items():
-        oprot.writeString(kiter226)
-        oprot.writeMapBegin(TType.I32, TType.STRING, len(viter227))
-        for kiter228,viter229 in viter227.items():
-          oprot.writeI32(kiter228)
-          oprot.writeString(viter229)
+      for kiter351,viter352 in self.external_ids.items():
+        oprot.writeString(kiter351)
+        oprot.writeMapBegin(TType.I32, TType.STRING, len(viter352))
+        for kiter353,viter354 in viter352.items():
+          oprot.writeI32(kiter353)
+          oprot.writeString(viter354)
         oprot.writeMapEnd()
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.selectors is not None:
       oprot.writeFieldBegin('selectors', TType.MAP, 15)
       oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.selectors))
-      for kiter230,viter231 in self.selectors.items():
-        oprot.writeString(kiter230)
-        oprot.writeListBegin(TType.STRUCT, len(viter231))
-        for iter232 in viter231:
-          iter232.write(oprot)
+      for kiter355,viter356 in self.selectors.items():
+        oprot.writeString(kiter355)
+        oprot.writeListBegin(TType.STRUCT, len(viter356))
+        for iter357 in viter356:
+          iter357.write(oprot)
         oprot.writeListEnd()
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.zones is not None:
       oprot.writeFieldBegin('zones', TType.MAP, 16)
       oprot.writeMapBegin(TType.STRING, TType.MAP, len(self.zones))
-      for kiter233,viter234 in self.zones.items():
-        oprot.writeString(kiter233)
-        oprot.writeMapBegin(TType.I32, TType.STRUCT, len(viter234))
-        for kiter235,viter236 in viter234.items():
-          oprot.writeI32(kiter235)
-          viter236.write(oprot)
+      for kiter358,viter359 in self.zones.items():
+        oprot.writeString(kiter358)
+        oprot.writeMapBegin(TType.I32, TType.STRUCT, len(viter359))
+        for kiter360,viter361 in viter359.items():
+          oprot.writeI32(kiter360)
+          viter361.write(oprot)
         oprot.writeMapEnd()
       oprot.writeMapEnd()
+      oprot.writeFieldEnd()
+    if self.raw_characters is not None:
+      oprot.writeFieldBegin('raw_characters', TType.STRING, 17)
+      oprot.writeString(self.raw_characters)
+      oprot.writeFieldEnd()
+    if self.span_lengths is not None:
+      oprot.writeFieldBegin('span_lengths', TType.LIST, 18)
+      oprot.writeListBegin(TType.I32, len(self.span_lengths))
+      for iter362 in self.span_lengths:
+        oprot.writeI32(iter362)
+      oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    if self.span_types is not None:
+      oprot.writeFieldBegin('span_types', TType.LIST, 19)
+      oprot.writeListBegin(TType.I32, len(self.span_types))
+      for iter363 in self.span_types:
+        oprot.writeI32(iter363)
+      oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    if self.spans is not None:
+      oprot.writeFieldBegin('spans', TType.LIST, 20)
+      oprot.writeListBegin(TType.STRING, len(self.spans))
+      for iter364 in self.spans:
+        oprot.writeString(iter364)
+      oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    if self.span_xpaths is not None:
+      oprot.writeFieldBegin('span_xpaths', TType.LIST, 21)
+      oprot.writeListBegin(TType.LIST, len(self.span_xpaths))
+      for iter365 in self.span_xpaths:
+        oprot.writeListBegin(TType.I16, len(iter365))
+        for iter366 in iter365:
+          oprot.writeI16(iter366)
+        oprot.writeListEnd()
+      oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    if self.normalized_spans is not None:
+      oprot.writeFieldBegin('normalized_spans', TType.LIST, 22)
+      oprot.writeListBegin(TType.LIST, len(self.normalized_spans))
+      for iter367 in self.normalized_spans:
+        oprot.writeListBegin(TType.STRING, len(iter367))
+        for iter368 in iter367:
+          oprot.writeString(iter368)
+        oprot.writeListEnd()
+      oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    if self.sentence_spans is not None:
+      oprot.writeFieldBegin('sentence_spans', TType.LIST, 23)
+      oprot.writeListBegin(TType.LIST, len(self.sentence_spans))
+      for iter369 in self.sentence_spans:
+        oprot.writeListBegin(TType.I32, len(iter369))
+        for iter370 in iter369:
+          oprot.writeI32(iter370)
+        oprot.writeListEnd()
+      oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    if self.entities is not None:
+      oprot.writeFieldBegin('entities', TType.MAP, 24)
+      oprot.writeMapBegin(TType.STRING, TType.STRUCT, len(self.entities))
+      for kiter371,viter372 in self.entities.items():
+        oprot.writeString(kiter371)
+        viter372.write(oprot)
+      oprot.writeMapEnd()
+      oprot.writeFieldEnd()
+    if self.contexts is not None:
+      oprot.writeFieldBegin('contexts', TType.LIST, 25)
+      oprot.writeListBegin(TType.STRING, len(self.contexts))
+      for iter373 in self.contexts:
+        oprot.writeString(iter373)
+      oprot.writeListEnd()
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
@@ -3052,20 +4016,20 @@ class Rating(object):
       elif fid == 6:
         if ftype == TType.LIST:
           self.mentions = []
-          (_etype240, _size237) = iprot.readListBegin()
-          for _i241 in xrange(_size237):
-            _elem242 = iprot.readString();
-            self.mentions.append(_elem242)
+          (_etype377, _size374) = iprot.readListBegin()
+          for _i378 in xrange(_size374):
+            _elem379 = iprot.readString();
+            self.mentions.append(_elem379)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
       elif fid == 7:
         if ftype == TType.LIST:
           self.flags = []
-          (_etype246, _size243) = iprot.readListBegin()
-          for _i247 in xrange(_size243):
-            _elem248 = iprot.readI32();
-            self.flags.append(_elem248)
+          (_etype383, _size380) = iprot.readListBegin()
+          for _i384 in xrange(_size380):
+            _elem385 = iprot.readI32();
+            self.flags.append(_elem385)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -3102,16 +4066,153 @@ class Rating(object):
     if self.mentions is not None:
       oprot.writeFieldBegin('mentions', TType.LIST, 6)
       oprot.writeListBegin(TType.STRING, len(self.mentions))
-      for iter249 in self.mentions:
-        oprot.writeString(iter249)
+      for iter386 in self.mentions:
+        oprot.writeString(iter386)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.flags is not None:
       oprot.writeFieldBegin('flags', TType.LIST, 7)
       oprot.writeListBegin(TType.I32, len(self.flags))
-      for iter250 in self.flags:
-        oprot.writeI32(iter250)
+      for iter387 in self.flags:
+        oprot.writeI32(iter387)
       oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, getattr(self, key))
+      for key in self.__slots__]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    if not isinstance(other, self.__class__):
+      return False
+    for attr in self.__slots__:
+      my_val = getattr(self, attr)
+      other_val = getattr(other, attr)
+      if my_val != other_val:
+        return False
+    return True
+
+  def __ne__(self, other):
+    return not (self == other)
+
+
+class HttpTransaction(object):
+  """
+  When content is retrieved from remote servers, useful data can be
+  buried in the request-response data of HTTP Transactions.  In
+  particular, redirect chains can help identify duplicate documents,
+  and information can be embedded in the various URLs that point at a
+  document.
+
+  For more details, see http://blog.catchpoint.com/2010/09/17/anatomyhttp/
+
+  Attributes:
+   - hostname: hostname sent to DNS
+   - ip_address: IP address obtained from DNS
+   - request: byte string of HTTP Request
+   - response: byte string of HTTP Response headers *without* the body.
+   - body: Data from an HTTP *before* the final transaction.  The final
+  transaction creates the `body` property on the `StreamItem`.  It
+  is possible for an HTTP Redirect to have a non-empty body,
+  e.g. an interstitial page saying "standby". This `body` property
+  is intended to capture that data when present.
+  """
+
+  __slots__ = [ 
+    'hostname',
+    'ip_address',
+    'request',
+    'response',
+    'body',
+   ]
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.STRING, 'hostname', None, None, ), # 1
+    (2, TType.STRING, 'ip_address', None, None, ), # 2
+    (3, TType.STRING, 'request', None, None, ), # 3
+    (4, TType.STRING, 'response', None, None, ), # 4
+    (5, TType.STRUCT, 'body', (ContentItem, ContentItem.thrift_spec), None, ), # 5
+  )
+
+  def __init__(self, hostname=None, ip_address=None, request=None, response=None, body=None,):
+    self.hostname = hostname
+    self.ip_address = ip_address
+    self.request = request
+    self.response = response
+    self.body = body
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.STRING:
+          self.hostname = iprot.readString();
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.STRING:
+          self.ip_address = iprot.readString();
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.STRING:
+          self.request = iprot.readString();
+        else:
+          iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.STRING:
+          self.response = iprot.readString();
+        else:
+          iprot.skip(ftype)
+      elif fid == 5:
+        if ftype == TType.STRUCT:
+          self.body = ContentItem()
+          self.body.read(iprot)
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('HttpTransaction')
+    if self.hostname is not None:
+      oprot.writeFieldBegin('hostname', TType.STRING, 1)
+      oprot.writeString(self.hostname)
+      oprot.writeFieldEnd()
+    if self.ip_address is not None:
+      oprot.writeFieldBegin('ip_address', TType.STRING, 2)
+      oprot.writeString(self.ip_address)
+      oprot.writeFieldEnd()
+    if self.request is not None:
+      oprot.writeFieldBegin('request', TType.STRING, 3)
+      oprot.writeString(self.request)
+      oprot.writeFieldEnd()
+    if self.response is not None:
+      oprot.writeFieldBegin('response', TType.STRING, 4)
+      oprot.writeString(self.response)
+      oprot.writeFieldEnd()
+    if self.body is not None:
+      oprot.writeFieldBegin('body', TType.STRUCT, 5)
+      self.body.write(oprot)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
@@ -3185,6 +4286,15 @@ class StreamItem(object):
   record IDs with individual doc_id or stream_id of this document.
   The keys in the second level map can be either doc_id or
   stream_id, or possibly other IDs in the future.
+   - http_transactions: If provided, this lists the sequence of possibly multiple HTTP
+  Transactions that led to the `body` `ContentItem`.  The first
+  item in the list is the initial request-response, and the last
+  item in the list is the request-response that carried the body
+  content that became the `body` attribute on this `StreamItem`.
+  Multiple transactions result from *redirects*.  The `abs_url` is
+  the *final* URL in the redirect chain, and the `original_url` is
+  the original string that may have required cleanup before
+  initiating the first request that started the chain.
   """
 
   __slots__ = [ 
@@ -3201,11 +4311,12 @@ class StreamItem(object):
     'other_content',
     'ratings',
     'external_ids',
+    'http_transactions',
    ]
 
   thrift_spec = (
     None, # 0
-    (1, TType.I32, 'version', None,     1, ), # 1
+    (1, TType.I32, 'version', None,     2, ), # 1
     (2, TType.STRING, 'doc_id', None, None, ), # 2
     (3, TType.STRING, 'abs_url', None, None, ), # 3
     (4, TType.STRING, 'schost', None, None, ), # 4
@@ -3223,9 +4334,11 @@ class StreamItem(object):
     None, # 13
     (14, TType.MAP, 'external_ids', (TType.STRING,None,TType.MAP,(TType.STRING,None,TType.STRING,None)), {
     }, ), # 14
+    (15, TType.LIST, 'http_transactions', (TType.STRUCT,(HttpTransaction, HttpTransaction.thrift_spec)), [
+    ], ), # 15
   )
 
-  def __init__(self, version=thrift_spec[1][4], doc_id=None, abs_url=None, schost=None, original_url=None, source=None, body=None, source_metadata=thrift_spec[8][4], stream_id=None, stream_time=None, other_content=thrift_spec[11][4], ratings=thrift_spec[12][4], external_ids=thrift_spec[14][4],):
+  def __init__(self, version=thrift_spec[1][4], doc_id=None, abs_url=None, schost=None, original_url=None, source=None, body=None, source_metadata=thrift_spec[8][4], stream_id=None, stream_time=None, other_content=thrift_spec[11][4], ratings=thrift_spec[12][4], external_ids=thrift_spec[14][4], http_transactions=thrift_spec[15][4],):
     self.version = version
     self.doc_id = doc_id
     self.abs_url = abs_url
@@ -3251,6 +4364,10 @@ class StreamItem(object):
       external_ids = {
     }
     self.external_ids = external_ids
+    if http_transactions is self.thrift_spec[15][4]:
+      http_transactions = [
+    ]
+    self.http_transactions = http_transactions
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -3300,11 +4417,11 @@ class StreamItem(object):
       elif fid == 8:
         if ftype == TType.MAP:
           self.source_metadata = {}
-          (_ktype252, _vtype253, _size251 ) = iprot.readMapBegin() 
-          for _i255 in xrange(_size251):
-            _key256 = iprot.readString();
-            _val257 = iprot.readString();
-            self.source_metadata[_key256] = _val257
+          (_ktype389, _vtype390, _size388 ) = iprot.readMapBegin() 
+          for _i392 in xrange(_size388):
+            _key393 = iprot.readString();
+            _val394 = iprot.readString();
+            self.source_metadata[_key393] = _val394
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
@@ -3322,47 +4439,58 @@ class StreamItem(object):
       elif fid == 11:
         if ftype == TType.MAP:
           self.other_content = {}
-          (_ktype259, _vtype260, _size258 ) = iprot.readMapBegin() 
-          for _i262 in xrange(_size258):
-            _key263 = iprot.readString();
-            _val264 = ContentItem()
-            _val264.read(iprot)
-            self.other_content[_key263] = _val264
+          (_ktype396, _vtype397, _size395 ) = iprot.readMapBegin() 
+          for _i399 in xrange(_size395):
+            _key400 = iprot.readString();
+            _val401 = ContentItem()
+            _val401.read(iprot)
+            self.other_content[_key400] = _val401
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
       elif fid == 12:
         if ftype == TType.MAP:
           self.ratings = {}
-          (_ktype266, _vtype267, _size265 ) = iprot.readMapBegin() 
-          for _i269 in xrange(_size265):
-            _key270 = iprot.readString();
-            _val271 = []
-            (_etype275, _size272) = iprot.readListBegin()
-            for _i276 in xrange(_size272):
-              _elem277 = Rating()
-              _elem277.read(iprot)
-              _val271.append(_elem277)
+          (_ktype403, _vtype404, _size402 ) = iprot.readMapBegin() 
+          for _i406 in xrange(_size402):
+            _key407 = iprot.readString();
+            _val408 = []
+            (_etype412, _size409) = iprot.readListBegin()
+            for _i413 in xrange(_size409):
+              _elem414 = Rating()
+              _elem414.read(iprot)
+              _val408.append(_elem414)
             iprot.readListEnd()
-            self.ratings[_key270] = _val271
+            self.ratings[_key407] = _val408
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
       elif fid == 14:
         if ftype == TType.MAP:
           self.external_ids = {}
-          (_ktype279, _vtype280, _size278 ) = iprot.readMapBegin() 
-          for _i282 in xrange(_size278):
-            _key283 = iprot.readString();
-            _val284 = {}
-            (_ktype286, _vtype287, _size285 ) = iprot.readMapBegin() 
-            for _i289 in xrange(_size285):
-              _key290 = iprot.readString();
-              _val291 = iprot.readString();
-              _val284[_key290] = _val291
+          (_ktype416, _vtype417, _size415 ) = iprot.readMapBegin() 
+          for _i419 in xrange(_size415):
+            _key420 = iprot.readString();
+            _val421 = {}
+            (_ktype423, _vtype424, _size422 ) = iprot.readMapBegin() 
+            for _i426 in xrange(_size422):
+              _key427 = iprot.readString();
+              _val428 = iprot.readString();
+              _val421[_key427] = _val428
             iprot.readMapEnd()
-            self.external_ids[_key283] = _val284
+            self.external_ids[_key420] = _val421
           iprot.readMapEnd()
+        else:
+          iprot.skip(ftype)
+      elif fid == 15:
+        if ftype == TType.LIST:
+          self.http_transactions = []
+          (_etype432, _size429) = iprot.readListBegin()
+          for _i433 in xrange(_size429):
+            _elem434 = HttpTransaction()
+            _elem434.read(iprot)
+            self.http_transactions.append(_elem434)
+          iprot.readListEnd()
         else:
           iprot.skip(ftype)
       else:
@@ -3406,9 +4534,9 @@ class StreamItem(object):
     if self.source_metadata is not None:
       oprot.writeFieldBegin('source_metadata', TType.MAP, 8)
       oprot.writeMapBegin(TType.STRING, TType.STRING, len(self.source_metadata))
-      for kiter292,viter293 in self.source_metadata.items():
-        oprot.writeString(kiter292)
-        oprot.writeString(viter293)
+      for kiter435,viter436 in self.source_metadata.items():
+        oprot.writeString(kiter435)
+        oprot.writeString(viter436)
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.stream_id is not None:
@@ -3422,33 +4550,40 @@ class StreamItem(object):
     if self.other_content is not None:
       oprot.writeFieldBegin('other_content', TType.MAP, 11)
       oprot.writeMapBegin(TType.STRING, TType.STRUCT, len(self.other_content))
-      for kiter294,viter295 in self.other_content.items():
-        oprot.writeString(kiter294)
-        viter295.write(oprot)
+      for kiter437,viter438 in self.other_content.items():
+        oprot.writeString(kiter437)
+        viter438.write(oprot)
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.ratings is not None:
       oprot.writeFieldBegin('ratings', TType.MAP, 12)
       oprot.writeMapBegin(TType.STRING, TType.LIST, len(self.ratings))
-      for kiter296,viter297 in self.ratings.items():
-        oprot.writeString(kiter296)
-        oprot.writeListBegin(TType.STRUCT, len(viter297))
-        for iter298 in viter297:
-          iter298.write(oprot)
+      for kiter439,viter440 in self.ratings.items():
+        oprot.writeString(kiter439)
+        oprot.writeListBegin(TType.STRUCT, len(viter440))
+        for iter441 in viter440:
+          iter441.write(oprot)
         oprot.writeListEnd()
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.external_ids is not None:
       oprot.writeFieldBegin('external_ids', TType.MAP, 14)
       oprot.writeMapBegin(TType.STRING, TType.MAP, len(self.external_ids))
-      for kiter299,viter300 in self.external_ids.items():
-        oprot.writeString(kiter299)
-        oprot.writeMapBegin(TType.STRING, TType.STRING, len(viter300))
-        for kiter301,viter302 in viter300.items():
-          oprot.writeString(kiter301)
-          oprot.writeString(viter302)
+      for kiter442,viter443 in self.external_ids.items():
+        oprot.writeString(kiter442)
+        oprot.writeMapBegin(TType.STRING, TType.STRING, len(viter443))
+        for kiter444,viter445 in viter443.items():
+          oprot.writeString(kiter444)
+          oprot.writeString(viter445)
         oprot.writeMapEnd()
       oprot.writeMapEnd()
+      oprot.writeFieldEnd()
+    if self.http_transactions is not None:
+      oprot.writeFieldBegin('http_transactions', TType.LIST, 15)
+      oprot.writeListBegin(TType.STRUCT, len(self.http_transactions))
+      for iter446 in self.http_transactions:
+        iter446.write(oprot)
+      oprot.writeListEnd()
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()

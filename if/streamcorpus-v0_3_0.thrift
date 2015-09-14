@@ -244,7 +244,7 @@ struct Offset {
   /**
    * This enables Offset to be less bloated.
    */
-  7: optional ContentCleanseLevel content_cleanse_level,
+  9: optional ContentCleanseLevel content_cleanse_level,
 }
 
 
@@ -433,7 +433,7 @@ enum EntityType {
  * because in the spirit of thrift or protobufs, clients can fail
  * gracefully for values not in its version of the IDL file.
  **/
-typedef enum hierenum
+//typedef enum hierenum
 
 /**
  * A hierarchical enumeration of types of entities designed to support
@@ -452,19 +452,22 @@ typedef enum hierenum
  *
  * However, an entity may receive mentions from varying contexts that
  * come from different parts of the hierarchy. For example, a spine
- * surgeon may receive mentions of `PER.medical.surgeon.spine` in one
- * context and also `PER.sports.coach.soccer` in an article describing
+ * surgeon may receive mentions of `PER_medical_surgeon_spine` in one
+ * context and also `PER_sports_coach_soccer` in an article describing
  * her weekend activities with youth.  The top level taxonomy is
  * intended to be mutually exclusive, e.g. the surgeon should not
- * receive mentions of `NATURALFORM.animal.homo.sapiens`, which has
+ * receive mentions of `NATURALFORM_animal_homo_sapiens`, which has
  * been explicitly excluded from NATURALFORM in order to create the
  * top-level type `person`.
  *
- * These six top-level types are intended to not exapnd, and
+ * NB: the delimiter "_" is likely to work in most programming
+ * languages.
+ *
+ * These six top-level types are intended to not expand, and
  * enhancements are intended to appear at lower levels in the
  * hierarchy.
  */
-hierenum EntityClass {
+enum EntityClass {
  /**
   * Natural forms are phenomena defined by their independent existence
   * from humans.  These are non-man-made things, so the inverse of
@@ -523,18 +526,48 @@ hierenum EntityClass {
   artifact = 6,
 }
 
-hierenum artifact {
+enum location {
+ facility = 1,
+ coordinates = 2,
+
+}
+
+enum artifact {
  product = 1,
  vehicle = 2,
  weapon = 3,
  cyber = 4,
+ money = 5,
 }
 
-hierenum artifact.cyber {
+enum event {
+ date = 1,
+ time = 2,
+}
+
+enum artifact_product {
+ partnumber = 1,
+}
+
+enum artifact_cyber {
  phone = 1,
  email = 2,
  IPv4 = 3,
  IPv6 = 4,
+
+ skype = 5,
+ ICQ = 6,
+ QQ = 7,
+ AIM = 8,
+
+ MD5 = 9,
+ URL = 10,
+ file_path = 11,
+ CVE_ID = 12,
+ hex_value = 13,
+ byte_sequence = 14,
+ magic_value = 15,
+
 }
 
 /**
@@ -1053,34 +1086,39 @@ struct Entity { // v4
   1: optional CorefChainID coref_chain_id,
 
   /**
-   * Best mention is first and its (first, length) in cars is
-   * CorefChainID.
+   * List of `Mention` objects in order of appearance in text.
    */
-  2: optional list<Mention> mentions,
+  2: optional list<Mention> mentions = [],
+
+  /**
+   * Index position in mentions of a representative mention, which is
+   * also used to construct the coref_chain_id
+   */
+  3: optional i32 best_id,
 
   /**
    * See discussion of hierarchical entity classes.
    */
-  3: optional list<EntityClassAddress> entity_classes,
+  4: optional list<EntityClassAddress> entity_classes = [],
 
   /**
    * A general structure for holding attribute-like information that
    * has not yet been reified to a particular ontology or schema.
    */
-  4: optional list<ContextID> descriptions,
+  5: optional list<ContextID> descriptions = [],
 
   /**
    * A general structure for holding entity-to-entity relation-like
    * information that has not yet been reified to a particular
    * ontology or schema.
    */
-  5: optional map<CorefChainID, list<ContextID>> associations,
+  6: optional map<CorefChainID, list<ContextID>> associations = {},
 
   /**
    * When an Entity is resolved, its meaning should be recorded in a
    * `Label` object.
    */
-  6: optional list<Label> kb_links,
+  7: optional list<Label> kb_links = [],
 
 }
 
@@ -1246,7 +1284,7 @@ struct ContentItem {
    * relative to the previous MARKUP span.  For example, a MARKUP span
    * of "</p></li></ol><div>" would be [0, 0, 0, 36].
    */
-  21: optional list<list<i8>> span_xpaths,
+  21: optional list<list<i16>> span_xpaths,
 
   /**
    * For each position in spans, a list of other strings that a system
@@ -1259,7 +1297,7 @@ struct ContentItem {
    * TODO: assess whether this should change to something simpler,
    * like a bag-of-word-variants for the whole document.
    */
-  22: optional list<list<string>>> normalized_spans,
+  22: optional list<list<string>> normalized_spans,
 
   /**
    * List of begin/end ranges of spans for sentence chunking; index
@@ -1270,7 +1308,7 @@ struct ContentItem {
   /**
    * Index from CorefChainID --> Entity structs
    */
-  24: optional map<CorefChainID, Entity> entities,
+  24: optional map<CorefChainID, Entity> entities = {},
 
   /**
    * ContextId is indexes into this list
@@ -1279,7 +1317,7 @@ struct ContentItem {
    * such as dossier.fc.FeatureCollection or other data that is
    * constructed and defined by a particular system.
    */
-  25: optional list<binary> contexts,
+  25: optional list<binary> contexts = [],
 
 }
 

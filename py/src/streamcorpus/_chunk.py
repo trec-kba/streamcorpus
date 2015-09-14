@@ -56,6 +56,7 @@ except ImportError:
 from .ttypes import StreamItem as StreamItem_v0_3_0
 from .ttypes_v0_1_0 import StreamItem as StreamItem_v0_1_0
 from .ttypes_v0_2_0 import StreamItem as StreamItem_v0_2_0
+from .ttypes import Versions
 
 logger = logging.getLogger('streamcorpus')
 
@@ -455,6 +456,8 @@ class Chunk(BaseChunk):
         ## use the Thrift Binary Protocol
         i_protocol = protocol(i_transport)
 
+        expected_version = self.message().version
+
         ## read message instances until input buffer is exhausted
         while 1:
 
@@ -465,13 +468,25 @@ class Chunk(BaseChunk):
                 ## read it from the thrift protocol instance
                 msg.read(i_protocol)
 
-                if hasattr(msg, 'version'):
-                    ## compare the read version to the default version
-                    ## value on the identified message
-                    if not (msg.version == self.message().version):
+                if not hasattr(msg, 'version'):
+                    logger.warn('message lacks `version`')
+                elif expected_version in set([0, 1]):
+                    # compare the read version to the default version
+                    # value on the identified message
+                    if not (msg.version == expected_version):
                         raise VersionMismatchError(
-                            'read msg.version = %d != %d = message().version):' % \
-                                (msg.version, self.message().version))
+                            'read msg.version = %d != %d = expected_version' % \
+                                (Versions._VALUES_TO_NAMES[msg.version], 
+                                 Versions._VALUES_TO_NAMES[expected_version]))
+                elif expected_version == 2:
+                    if not (msg.version in set([1, 2])):
+                        raise VersionMismatchError(
+                            'read msg.version = %d not in [v0_3_0, v0_4_0]' % \
+                                Versions._VALUES_TO_NAMES[msg.version])
+                else:
+                    logger.warn('expected message type has unhandled version: %r',
+                                expected_version)
+
                 yield msg
 
             except EOFError:

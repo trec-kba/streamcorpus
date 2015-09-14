@@ -39,9 +39,14 @@ from datetime import datetime
 
 # import the KBA-specific thrift types
 from streamcorpus.ttypes import StreamItem, ContentItem, Label, StreamTime, Selector, \
+    Mention, Entity, EntityClassAddress, EntityClass, \
+    artifact, artifact_cyber, \
+    SpanType, \
+    HttpTransaction, \
     Offset, Rating, Annotator, Versions, Token, Sentence, EntityType, \
     Tagging, OffsetType, Target, \
     Zone, ZoneType, \
+    SpanType, \
     Language, \
     MentionType, AttributeType, Attribute, Gender, \
     RelationType, FlagType
@@ -76,10 +81,15 @@ __all__ = ['Chunk', 'PickleChunk', 'JsonChunk', 'CborChunk',
            'add_annotation',
            'StreamItem', 'ContentItem', 'Label', 'StreamTime', 'Selector',
            'Offset', 'Rating', 'Annotator', 'Versions', 'Token', 'Sentence',
+           'Mention', 'Entity', 'EntityClassAddress', 'EntityClass',
+           'artifact', 'artifact_cyber',
+           'SpanType',
+           'HttpTransaction',
            'EntityType',
            'Target',
            'Tagging', 'OffsetType',
            'Zone', 'ZoneType',
+           'SpanType',
            'Language',
            'MentionType',
            'Attribute',
