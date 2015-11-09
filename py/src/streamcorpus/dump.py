@@ -170,14 +170,13 @@ def _dump(fpath, args):
             if si.abs_url and (si.abs_url != si.original_url):
                 print si.abs_url
 
-        elif not (args.show_all or args.smart_dump):
+        elif not (args.show_all or args.smart_dump or args.show_content_field):
             si.body = None
             if getattr(si, 'other_content', None):
                 for oc in si.other_content:
                     si.other_content[oc] = None
 
         elif args.show_content_field and si.body:
-
             print getattr(si.body, args.show_content_field)
 
         elif args.smart_dump:
@@ -379,18 +378,22 @@ num_valid_label_offsets: %d
 ''' % (num_valid_byte_offsets, num_valid_line_offsets, num_valid_label_offsets)
 
 
-def _find(fpaths, stream_id, dump_binary_stream_item=False):
+def _find(fpaths, stream_id=None, abs_url=None, dump_binary_stream_item=False):
     '''
     Read in a streamcorpus.Chunk file and if any of its stream_ids
     match stream_id, then print stream_item.body.raw to stdout
     '''
-    sys.stderr.write('hunting for %r\n' % stream_id)
     offsets = None
-    if "#" in stream_id:
-        stream_id, offsets = stream_id.split('#')
+    if stream_id:
+        sys.stderr.write('hunting for stream_id=%r\n' % stream_id)
+        if "#" in stream_id:
+            stream_id, offsets = stream_id.split('#')
+    if abs_url:
+        sys.stderr.write('hunting for abs_url=%r\n' % abs_url)
     for fpath in fpaths:
         for si in Chunk(path=fpath, mode='rb'):
-            if si.stream_id == stream_id:
+            if (stream_id and stream_id == si.stream_id) or \
+               (abs_url and abs_url == si.abs_url):
                 if dump_binary_stream_item:
                     o_chunk = Chunk(file_obj=sys.stdout, mode='wb')
                     o_chunk.add(si)
@@ -657,7 +660,8 @@ def main():
                         help='print out the .body.raw of a specific stream_id')
     parser.add_argument('--tagger-stats', action='store_true', default=False,
                         help='Print the *relative* size of data contributed by each tagger.')
-    parser.add_argument('--find', dest='find', metavar='STREAM_ID', help='print out the .body.raw of a specific stream_id')
+    parser.add_argument('--find-stream-id', metavar='STREAM_ID', help='print out the .body.raw of a specific stream_id')
+    parser.add_argument('--find-abs-url', metavar='ABS_URL', help='print out the .body.raw of abs_url')
     parser.add_argument('--binary', dest='dump_binary_stream_item',
                         action='store_true', default=False,
                         help='Use with --find to write full binary StreamItem of specific stream_id to stdout intead of .body.raw')
@@ -744,8 +748,11 @@ def main():
         _tagger_stats(args, args.input_path)
     elif args.stats:
         _stats(args.input_path)
-    elif args.find:
-        _find(args.input_path, args.find,
+    elif args.find_stream_id:
+        _find(args.input_path, stream_id=args.find_stream_id,
+              dump_binary_stream_item=args.dump_binary_stream_item)
+    elif args.find_abs_url:
+        _find(args.input_path, abs_url=args.find_abs_url,
               dump_binary_stream_item=args.dump_binary_stream_item)
     elif args.tokens:
         _dump_tokens(args.input_path, args.annotator_ids, args.tagger_ids)
