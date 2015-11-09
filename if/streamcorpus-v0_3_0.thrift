@@ -251,6 +251,7 @@ struct Offset {
 typedef binary CorefChainID // see discussion in `struct Entity`
 typedef i32 ContextID  // index position into ContentItem.contexts
 typedef i32 SentenceID // index position into ContentItem.sentence_spans
+typedef i32 SpanID
 typedef double Confidence
 typedef string KbID
 typedef string ProfileID
@@ -782,7 +783,7 @@ enum SpanType {
  * two-tuple indicating *inclusive* start and *non-inclusive* end
  * indexes in `spans`.  So a span of length=1 is [n, n+1]
  */
-typedef list<i32> SpanRange
+typedef list<SpanID> SpanRange
 
 /**
  * TaggerID is used as a key on maps in ContentItem.
@@ -1119,7 +1120,27 @@ struct Entity { // v4
    * `Label` object.
    */
   7: optional list<Label> kb_links = [],
+}
 
+
+/**
+ * 
+ */
+struct TransformedValue {
+  /**
+   * 
+   */
+  1: optional binary bytes,
+
+  /**
+   * 
+   */
+  2: optional i32 hash,
+
+  /**
+   * 
+   */
+  3: optional string value,
 }
 
 
@@ -1317,7 +1338,13 @@ struct ContentItem {
    * such as dossier.fc.FeatureCollection or other data that is
    * constructed and defined by a particular system.
    */
-  25: optional list<binary> contexts = [],
+  25: optional map<ContextID, binary> contexts = {},
+
+  /**
+   * transformed_span_ranges is a map from transform name (string) to
+   * a map of ContextID --> list of `TransformedValue` instances.
+   */
+  26: optional map<string, map<ContextID, list<TransformedValue>>> context_values = {},
 
 }
 

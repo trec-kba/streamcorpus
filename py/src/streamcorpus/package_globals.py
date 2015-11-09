@@ -42,6 +42,7 @@ from streamcorpus.ttypes import StreamItem, ContentItem, Label, StreamTime, Sele
     Mention, Entity, EntityClassAddress, EntityClass, \
     artifact, artifact_cyber, \
     SpanType, \
+    TransformedValue, \
     HttpTransaction, \
     Offset, Rating, Annotator, Versions, Token, Sentence, EntityType, \
     Tagging, OffsetType, Target, \
@@ -84,6 +85,7 @@ __all__ = ['Chunk', 'PickleChunk', 'JsonChunk', 'CborChunk',
            'Mention', 'Entity', 'EntityClassAddress', 'EntityClass',
            'artifact', 'artifact_cyber',
            'SpanType',
+           'TransformedValue',
            'HttpTransaction',
            'EntityType',
            'Target',
