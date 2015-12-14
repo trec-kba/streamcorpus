@@ -138,7 +138,12 @@ setup(
     install_requires=[
         'cbor>=0.1.15',
         'lxml',
-        'thrift>=0.9',
+        # Thrift version 0.9.3 introduced a maximum list size of
+        # 10,000, which is a problem for us. We have some data
+        # structures, like body.sentences, which may exceed the 10,000
+        # hard cap. So, we pin the version 0.9.2, the version immediately
+        # before.
+        'thrift == 0.9.2',
     ],
     extras_require = {
         'snappy': [
