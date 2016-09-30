@@ -648,6 +648,26 @@ def _to_html(args):
             break
 
 
+def _to_clean_visible(args):
+    count = 0
+    if args.stdin:
+        ichunk = Chunk(file_obj=sys.stdin, mode='rb')
+        for si in ichunk:
+            print si.body.clean_visible
+            count += 1
+            if args.limit is not None and count >= args.limit:
+                break
+    else:
+        for fpath in args.input_path:
+            ichunk = Chunk(path=fpath, mode='rb')
+            for si in ichunk:
+                count += 1
+                print si.body.clean_visible
+            ichunk.close()
+            if args.limit is not None and count >= args.limit:
+                break
+
+
 def main():
     import argparse
     parser = argparse.ArgumentParser()
@@ -712,7 +732,8 @@ def main():
     # paths. Several of the subcommands could easily have Chunk()
     # opening lifted and receive chunks instead of paths.
     #
-    # parser.add_argument('--stdin', action='store_true', default=False)
+    parser.add_argument('--stdin', action='store_true', default=False)
+    parser.add_argument('--clean-visible', action='store_true', default=False)
     args = parser.parse_args()
 
     if args.verbose:
@@ -770,6 +791,8 @@ def main():
         _to_cbor(args)
     elif args.html:
         _to_html(args)
+    elif args.clean_visible:
+        _to_clean_visible(args)
     else:
         for fpath in args.input_path:
             _dump(fpath, args)
