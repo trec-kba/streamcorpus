@@ -133,6 +133,7 @@ setup(
     entry_points={
         'console_scripts': [
             'streamcorpus_dump = streamcorpus.dump:main',
+            'streamcorpus_stats = streamcorpus.stats:main',
         ]
     },
     install_requires=[
